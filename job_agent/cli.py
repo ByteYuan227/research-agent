@@ -671,7 +671,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("queue", help="job ids to apply to, best first").set_defaults(fn=cmd_queue)
 
-    s = sub.add_parser("settle", help=argparse.SUPPRESS)
+    s = sub.add_parser("settle", help="(used by daily_run.sh) make sure a job got an outcome")
     s.add_argument("job_id")
     s.add_argument("--stopped", default="")
     s.add_argument("--exit", default="0")
@@ -696,7 +696,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("first-run", help="has the agent never filled a form yet?").set_defaults(fn=cmd_first_run)
 
-    s = sub.add_parser("set-run", help=argparse.SUPPRESS)
+    s = sub.add_parser("set-run", help="(used by scripts) store a value in the run record")
     s.add_argument("key")
     s.add_argument("value")
     s.set_defaults(fn=cmd_set_run)
