@@ -128,3 +128,16 @@ def test_personal_data_only_goes_to_employer_or_ats(site, profile, browser):
     web.open_job(state, job, profile)
     with pytest.raises(web.WebError):
         web.goto(state, profile, "https://evil.example.com/collect")
+
+
+def test_form_inside_an_iframe(site, profile, browser):
+    job = _job(site).model_copy(update={"url": f"{site}/wd/embedded.html", "apply_url": f"{site}/wd/embedded.html"})
+    state = State()
+    state.jobs[job.id] = job
+    v = web.open_job(state, job, profile)
+    assert v["form_in_frame"] and v["form_in_frame"].endswith("/wd/step1.html")
+    assert {f["key"] for f in v["fields"]} >= {"hdyh", "first", "last", "phone", "cit"}
+    r = web.fill(state, profile, None)
+    assert not r["errors"] and not r["required_empty"], r
+    v = web.click(state, profile, _button(r, "Save and Continue"))
+    assert "My Experience" in v["text"]

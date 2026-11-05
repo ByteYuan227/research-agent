@@ -123,17 +123,21 @@ def start() -> None:
         exe, "--headless=new", f"--remote-debugging-port={_port()}", f"--user-data-dir={_dir() / 'profile'}",
         "--no-first-run", "--no-default-browser-check", "--window-size=1280,1600", "--lang=en-US",
         f"--user-agent={USER_AGENT}", "--disable-dev-shm-usage",
+        # Like Playwright's own launcher: CI runners (e.g. Ubuntu 24.04) block Chromium's sandbox.
+        "--no-sandbox",
     ]
-    if os.environ.get("JOBAGENT_CHROMIUM") or (hasattr(os, "geteuid") and os.geteuid() == 0):
-        args.append("--no-sandbox")
-    proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    log = open(_dir() / "browser.log", "ab")  # noqa: SIM115 - handed to the child process
+    proc = subprocess.Popen(args, stdout=log, stderr=log, start_new_session=True)
     (_dir() / "browser.pid").write_text(str(proc.pid))
-    deadline = time.time() + 20
+    deadline = time.time() + 30
     while time.time() < deadline:
         if _alive():
             return
+        if proc.poll() is not None:
+            break
         time.sleep(0.3)
-    raise WebError("browser did not start")
+    tail = (_dir() / "browser.log").read_bytes()[-600:].decode(errors="replace")
+    raise WebError(f"browser did not start: {tail.strip().splitlines()[-1] if tail.strip() else 'no output'}")
 
 
 def stop() -> None:
@@ -157,6 +161,44 @@ def page() -> Iterator[Any]:
         ctx = browser.contexts[0] if browser.contexts else browser.new_context()
         tabs = [t for t in ctx.pages if not t.url.startswith(("devtools://", "chrome://"))]
         yield tabs[-1] if tabs else ctx.new_page()
+
+
+class FrameView:
+    """An embedded frame that also offers the page-level pieces forms.py uses (keyboard, title)."""
+
+    def __init__(self, frame: Any) -> None:
+        self._frame = frame
+        self.keyboard = frame.page.keyboard
+        self.context = frame.page.context
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._frame, name)
+
+    def title(self) -> str:
+        return self._frame.page.title()
+
+
+COUNT_CONTROLS_JS = "() => document.querySelectorAll('input:not([type=hidden]), select, textarea').length"
+
+
+def target(pg, job: Job | None) -> Any:
+    """Where the application form lives: the page itself, or a form embedded in an iframe
+    (iCIMS portals, Greenhouse boards embedded on company sites) on an allowed domain."""
+    try:
+        main_n = pg.main_frame.evaluate(COUNT_CONTROLS_JS)
+    except Exception:  # noqa: BLE001
+        return pg
+    best, best_n = None, main_n
+    for frame in pg.frames:
+        if frame == pg.main_frame or not frame.url.startswith("http") or not allowed(frame.url, job):
+            continue
+        try:
+            n = frame.evaluate(COUNT_CONTROLS_JS)
+        except Exception:  # noqa: BLE001
+            continue
+        if n > best_n + 2:
+            best, best_n = frame, n
+    return FrameView(best) if best is not None else pg
 
 
 def _settle(pg, ms: int = 1200) -> None:
@@ -226,6 +268,8 @@ def _files(job: Job, profile: Profile) -> dict[str, Path]:
 def look(pg, job: Job, profile: Profile, gather_options: bool = True, memory: dict[str, Any] | None = None) -> dict[str, Any]:
     from .apply import _compact
 
+    top = pg
+    pg = target(top, job)
     data = pg.evaluate(forms.EXTRACT_JS)
     files = _files(job, profile)
     for f in data["fields"]:
@@ -242,14 +286,15 @@ def look(pg, job: Job, profile: Profile, gather_options: bool = True, memory: di
         fields.append(c)
     text = summary["text"]
     return {
-        "url": pg.url,
-        "title": pg.title(),
+        "url": top.url,
+        "form_in_frame": pg.url if pg is not top else None,
+        "title": top.title(),
         "headings": summary["headings"],
         "alerts": summary["alerts"],
         "fields": fields,
         "required_empty": [f["key"] for f in fields if f.get("required") and not f["filled"]],
         "buttons": summary["clickables"],
-        "captcha_challenge": forms._visible_challenge(pg),
+        "captcha_challenge": forms._visible_challenge(top),
         "looks_submitted": bool(forms.SUCCESS_RE.search(text)),
         "asks_for_code": bool(forms.CODE_RE.search(text)),
         "text": text[:2500],
@@ -269,10 +314,10 @@ def open_job(state: State, job: Job, profile: Profile) -> dict[str, Any]:
 def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
     job = _current_job(state)
     with page() as pg:
-        target = pg.locator(f'[data-ja-ref="{ref}"]').first
-        if not target.count():
+        button = target(pg, job).locator(f'[data-ja-ref="{ref}"]').first
+        if not button.count():
             raise WebError(f"no element {ref!r} on this page; run `jobagent web look` again")
-        label = (target.inner_text(timeout=2000) or target.get_attribute("value") or "").strip()
+        label = (button.inner_text(timeout=2000) or button.get_attribute("value") or "").strip()
         if dry_run() and SIDE_EFFECT_RE.search(label):
             raise WebError(
                 f"dry run: not pressing {label!r} (it would submit or create something). "
@@ -282,7 +327,7 @@ def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
         s = _session()
         s["last_action"] = time.time()
         _save_session(s)
-        target.click(timeout=10000)
+        button.click(timeout=10000)
         _settle(pg)
     with page() as pg:  # a new tab may have opened
         result = look(pg, job, profile, memory=state.memory)
@@ -304,7 +349,8 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
     """Fill the current page: profile suggestions for empty fields, then Claude's answers."""
     job = _current_job(state)
     answers = dict(answers or {})
-    with page() as pg:
+    with page() as top:
+        pg = target(top, job)
         if not allowed(pg.url, job):
             raise WebError(f"refusing to type personal data into {urlparse(pg.url).hostname}")
         data = pg.evaluate(forms.EXTRACT_JS)
@@ -326,7 +372,7 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
             if f["kind"] == "password" or v == forms.SITE_PASSWORD:
                 # Rehearsals must not create accounts: never generate or type a real password.
                 values[k] = ("DryRun-Not-A-Real-Password-1!" if dry_run()
-                             else vault.get_or_create(state, pg.url, profile.personal.email).password)
+                             else vault.get_or_create(state, top.url, profile.personal.email).password)
             elif f["kind"] == "file":
                 token = str(v)
                 path = files.get(token) or next((p for p in files.values() if p.name == Path(token).name), None)
@@ -344,7 +390,7 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
         s = _session()
         s["last_action"] = time.time()
         _save_session(s)
-        after = look(pg, job, profile, gather_options=False, memory=state.memory)
+        after = look(top, job, profile, gather_options=False, memory=state.memory)
     return {
         "filled": report.filled,
         "errors": report.errors,
@@ -363,7 +409,7 @@ def email_code(state: State, profile: Profile, hint: str = "") -> dict[str, Any]
     if not code:
         raise WebError("no verification code arrived (is JOBAGENT_IMAP_* configured?)")
     with page() as pg:
-        if not forms.enter_code(pg, code):
+        if not forms.enter_code(target(pg, job), code) and not forms.enter_code(pg, code):
             raise WebError("found a code but no field to type it into")
         _settle(pg)
         return look(pg, job, profile, memory=state.memory)

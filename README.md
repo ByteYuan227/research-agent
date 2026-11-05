@@ -74,6 +74,18 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 
 7. **演练**：Actions → job-hunt → Run workflow → 勾选 dry_run。
 
+### 一个开关控制运行模式
+
+仓库 → Settings → Secrets and variables → Actions → **Variables** 标签 → New repository variable，名字填 `JOBAGENT_MODE`：
+
+| 值 | 效果 |
+|---|---|
+| `apply`（或不设置） | 正常：找岗位、打分、投递、发日报 |
+| `rehearse` | 演练：所有申请都准备好但不提交，日报照发 |
+| `off` | 暂停投递：只找岗位、发日报 |
+
+想换模型的话，再加一个变量 `JOBAGENT_CLAUDE_MODEL`（例如 `claude-opus-5-5`）。
+
 ### 个人资料：怎么让 Agent 按你的情况回答
 
 `profile.yaml` 是 Agent 唯一的事实来源。它不会编造任何经历、数字或身份信息。
@@ -88,7 +100,7 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 | `answers` | 常用回答（开始日期、是否愿意搬迁、薪资期望、EEO 等），以及：服务条款 / 仲裁 / 隐私协议自动同意（`accept_agreements`），AI 写回答（`write_answers`） |
 | `preferences` | 岗位类型、实习季、关键词、地点、排除公司、最低分（`min_score`）、每天上限（`max_applications_per_day: null` 表示不限） |
 
-Claude 回答过的非标准问题会被记住（「学到的回答」），下次遇到同样的问题自动使用，日报里会列出来；答错了就在 `custom_answers` 里写正确答案覆盖。
+Claude 回答过的非标准问题会被记住（「学到的回答」），下次遇到同样的问题自动使用，日报里会列出来。敏感问题（EEO、健康、犯罪记录、薪资、身份信息）和长文回答不会被记住。答错了就在 `custom_answers` 里写正确答案覆盖。
 
 ### 日报和「待你手动投递」清单
 
@@ -217,6 +229,18 @@ Done. Go to GitHub → Actions → **job-hunt** → Run workflow with **dry_run*
 
 7. **Rehearse**: Actions → job-hunt → Run workflow → check dry_run.
 
+### One switch for the run mode
+
+Repository → Settings → Secrets and variables → Actions → **Variables** tab → New repository variable named `JOBAGENT_MODE`:
+
+| Value | Effect |
+|---|---|
+| `apply` (or unset) | Normal: find, score, apply, report |
+| `rehearse` | Rehearsal: every application is prepared but nothing is submitted; the report still comes |
+| `off` | Paused: find jobs and report only |
+
+To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5`).
+
 ### Your profile: how answers are tailored to you
 
 `profile.yaml` is the agent's only source of facts; it never invents experience, numbers or eligibility.
@@ -231,7 +255,7 @@ Done. Go to GitHub → Actions → **job-hunt** → Run workflow with **dry_run*
 | `answers` | Common answers (start date, relocation, salary, EEO…), plus automatic acceptance of terms / arbitration / privacy notices (`accept_agreements`) and AI-written answers (`write_answers`) |
 | `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited) |
 
-Answers Claude gives to non-standard questions are remembered and reused for the same question later (listed in the report as learned answers). If one is wrong, add the correct answer to `custom_answers`.
+Answers Claude gives to non-standard questions are remembered and reused for the same question later (listed in the report as learned answers). Sensitive questions (EEO, health, criminal record, salary, identity details) and essays are never remembered. If a learned answer is wrong, add the correct answer to `custom_answers`.
 
 ### The report and the apply-by-hand checklist
 

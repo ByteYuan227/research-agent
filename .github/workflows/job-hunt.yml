@@ -38,6 +38,8 @@ jobs:
       JOBAGENT_IMAP_USER: ${{ secrets.JOBAGENT_IMAP_USER }}
       JOBAGENT_IMAP_PASSWORD: ${{ secrets.JOBAGENT_IMAP_PASSWORD }}
       JOBAGENT_CLAUDE_MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
+      # Repository variable: apply (default) | rehearse (prepare, never submit) | off (find jobs + report only)
+      JOBAGENT_MODE: ${{ vars.JOBAGENT_MODE }}
       JOBAGENT_MAX_MINUTES: "300"
       HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
       GITHUB_TOKEN: ${{ github.token }}
@@ -99,17 +101,21 @@ jobs:
           if [ -n "$SUBSCRIPTION_TOKEN" ]; then export CLAUDE_CODE_OAUTH_TOKEN="$SUBSCRIPTION_TOKEN";
           elif [ -n "$API_KEY" ]; then export ANTHROPIC_API_KEY="$API_KEY"; fi
           unset SUBSCRIPTION_TOKEN API_KEY
-          if [ "$DRY_RUN_INPUT" = "true" ]; then export JOBAGENT_DRY_RUN=1; fi
+          if [ "$DRY_RUN_INPUT" = "true" ] || [ "$JOBAGENT_MODE" = "rehearse" ]; then export JOBAGENT_DRY_RUN=1; fi
           # The very first scheduled run is a rehearsal, so you can check the answers and
           # resumes in the report before anything is submitted.
           if [ "${{ github.event_name }}" = "schedule" ] && jobagent first-run | grep -q '"first_run": true'; then
             export JOBAGENT_DRY_RUN=1
             jobagent note "🧪 第一次运行按规则只做演练：所有申请都准备好了但没有提交。请检查这份日报，明天开始正式投递。"
           fi
-          if [ "$HAS_CLAUDE" != "true" ]; then
+          if [ "$HAS_CLAUDE" != "true" ] || [ "$JOBAGENT_MODE" = "off" ]; then
             jobagent sync-checklist > /dev/null || true
             jobagent discover > /dev/null
-            jobagent note "还没有配置 CLAUDE_CODE_OAUTH_TOKEN（或 ANTHROPIC_API_KEY），今天只做了岗位发现。配置方法见 README。"
+            if [ "$JOBAGENT_MODE" = "off" ]; then
+              jobagent note "⏸️ 投递已暂停（仓库变量 JOBAGENT_MODE=off），今天只做了岗位发现。改成 apply 即可恢复。"
+            else
+              jobagent note "还没有配置 CLAUDE_CODE_OAUTH_TOKEN（或 ANTHROPIC_API_KEY），今天只做了岗位发现。配置方法见 README。"
+            fi
             exit 0
           fi
           # The logs of each Claude session stay on the runner: they can contain personal data.

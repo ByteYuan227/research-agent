@@ -254,6 +254,17 @@ def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None)
                     parts.append(f"Compensation: {comp}")
                 parts.append(data.get("descriptionPlain") or html_to_text(data.get("descriptionHtml", "")))
                 return "\n".join(p for p in parts if p)
+        if ref.ats == "workable" and ref.company and ref.job_id:
+            r = c.get(f"https://apply.workable.com/api/v2/accounts/{ref.company}/jobs/{ref.job_id}")
+            if r.status_code == 200:
+                data = r.json()
+                parts = [data.get("title", ""), str((data.get("location") or {}).get("city", ""))]
+                for section in ("description", "requirements", "benefits"):
+                    if data.get(section):
+                        parts.append(html_to_text(data[section]))
+                text = "\n".join(p for p in parts if p)
+                if len(text) > 300:
+                    return text
         if ref.ats == "workday":
             data = workday_job(url, c)
             if data and data.get("jobDescription"):

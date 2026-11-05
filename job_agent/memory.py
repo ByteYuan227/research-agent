@@ -17,6 +17,14 @@ from .store import State
 
 REMEMBER_KINDS = {"select", "combobox", "listbox", "radio", "button_group", "checkbox", "checkbox_group",
                   "text", "email", "tel", "url", "number", "date"}
+# Never remembered, even if Claude answered them: personal, sensitive or job-specific facts.
+SENSITIVE_RE = re.compile(
+    r"gender|race|ethnic|hispanic|latin[oa]|veteran|disab|health|medical|pregnan|religio|sexual|orientation|"
+    r"criminal|convict|felony|salary|compensation|pay (rate|range)|\bssn\b|social security|date of birth|birth ?date|"
+    r"\bage\b|address|zip|postal|passport|driver'?s licen[cs]e|bank|account number|password|reference|"
+    r"phone|e-?mail|name",
+    re.I,
+)
 ESSAY_RE = re.compile(r"\bwhy\b|describe|tell us|explain|cover letter|anything else|additional information|"
                       r"what (excit|interest|motivat)|how would you|share (a|an|your)", re.I)
 
@@ -32,7 +40,7 @@ def question_key(label: str, company: str = "") -> str:
 
 def rememberable(field: dict[str, Any], value: Any, company: str) -> bool:
     label = field.get("label") or ""
-    if field.get("kind") not in REMEMBER_KINDS or not label or ESSAY_RE.search(label):
+    if field.get("kind") not in REMEMBER_KINDS or not label or ESSAY_RE.search(label) or SENSITIVE_RE.search(label):
         return False
     if isinstance(value, str):
         if len(value) > 120 or value.startswith("/") or value.startswith("__"):
@@ -57,7 +65,8 @@ def remember(state: State, fields: list[dict[str, Any]], answers: dict[str, Any]
         if entry is None:
             learned.append(f["label"][:160])
         state.memory[qk] = {"question": f["label"][:200], "answer": v, "kind": f["kind"],
-                            "uses": (entry or {}).get("uses", 0) + 1, "updated": time.time()}
+                            "uses": (entry or {}).get("uses", 0) + 1, "updated": time.time(),
+                            "learned_from": (entry or {}).get("learned_from") or company}
     if learned:
         state.last_run.setdefault("learned", []).extend(learned)
     return learned
