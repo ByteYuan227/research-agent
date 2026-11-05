@@ -335,13 +335,15 @@ def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
         if not button.count():
             raise WebError(f"no element {ref!r} on this page; run `jobagent web look` again")
         label = (button.inner_text(timeout=2000) or button.get_attribute("value") or "").strip()
-        on_form = 0
+        filled = 0
         try:
-            on_form = target(pg, job).evaluate(COUNT_CONTROLS_JS)
+            fields = target(pg, job).evaluate(forms.EXTRACT_JS)["fields"]
+            filled = sum(1 for f in fields if f.get("filled") and f["kind"] not in ("file",))
         except Exception:  # noqa: BLE001
             pass
-        # "Apply" starts an application on a job page, but submits one at the end of a form.
-        submitting = SIDE_EFFECT_RE.search(label) or (re.search(r"\bapply\b", label, re.I) and on_form >= 3)
+        # "Apply" starts an application on a job page (empty search boxes at most), but submits
+        # one at the end of a form that has been filled in.
+        submitting = SIDE_EFFECT_RE.search(label) or (re.search(r"\bapply\b", label, re.I) and filled >= 2)
         if dry_run() and submitting:
             raise WebError(
                 f"dry run: not pressing {label!r} (it would submit or create something). "
