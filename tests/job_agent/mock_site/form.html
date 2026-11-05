@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Mock Co - ML Intern - Apply</title></head>
+<body>
+<h1>Machine Learning Intern</h1>
+<form id="f">
+  <div class="field-wrapper"><label for="first_name">First Name<span>*</span></label><input id="first_name" name="first_name" required></div>
+  <div class="field-wrapper"><label for="last_name">Last Name<span>*</span></label><input id="last_name" name="last_name" required></div>
+  <div class="field-wrapper"><label for="email">Email<span>*</span></label><input id="email" name="email" type="email" required></div>
+  <div class="field-wrapper"><label for="phone">Phone</label><input id="phone" name="phone" type="tel"></div>
+  <div class="field-wrapper"><label for="resume">Resume/CV<span>*</span></label><input type="file" id="resume" name="resume" required></div>
+  <div class="field-wrapper"><label for="q_auth">Are you legally authorized to work in the United States?<span>*</span></label>
+    <select id="q_auth" name="q_auth" required><option value="">Select...</option><option>Yes</option><option>No</option></select></div>
+  <fieldset><legend>Will you now or in the future require visa sponsorship? *</legend>
+    <label><input type="radio" name="q_spons" value="yes" required> Yes</label>
+    <label><input type="radio" name="q_spons" value="no"> No</label></fieldset>
+  <div class="ashby-application-form-field-entry" data-field-path="relocate">
+    <label class="title _required_x">Are you willing to relocate?</label>
+    <div class="ashby-application-form-input-yesno">
+      <button type="button" data-option="yes" aria-pressed="false">Yes</button>
+      <button type="button" data-option="no" aria-pressed="false">No</button>
+      <input type="checkbox" name="relocate_hidden" style="display:none">
+    </div>
+  </div>
+  <div class="field-wrapper"><label for="why">Why do you want to join Mock Co?<span>*</span></label><textarea id="why" name="why" required></textarea></div>
+  <div class="field-wrapper"><label for="references">References</label><textarea id="references" name="references"></textarea></div>
+  <div class="field-wrapper"><label for="gender">Gender</label>
+    <select id="gender" name="gender"><option value="">Select...</option><option>Male</option><option>Female</option><option>Decline to self-identify</option></select></div>
+  <div class="field-wrapper"><label><input type="checkbox" id="privacy" name="privacy" required> I have read the privacy notice *</label></div>
+  <button type="submit">Submit application</button>
+</form>
+<script>
+  window.relocate = "";
+  document.querySelectorAll("[data-option]").forEach((b) => {
+    b.addEventListener("click", () => {
+      b.parentElement.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      window.relocate = b.dataset.option;
+    });
+  });
+  document.getElementById("f").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const data = Object.fromEntries(new FormData(f));
+    data.relocate = window.relocate;
+    data.resume = (f.resume.files[0] || {}).name || "";
+    localStorage.setItem("submitted", JSON.stringify(data));
+    if (location.hash === "#code") {
+      document.body.innerHTML =
+        '<p>We sent a verification code to your email.</p><label for="security_code">Security code</label>' +
+        '<input id="security_code" name="security_code"><button id="verify">Verify</button>';
+      document.getElementById("verify").addEventListener("click", () => {
+        const ok = document.getElementById("security_code").value === "AB12CD34";
+        document.body.innerHTML = ok ? "<h1>Thank you for applying!</h1>" : "<p>Invalid code</p>";
+      });
+      return;
+    }
+    document.body.innerHTML = "<h1>Thank you for applying!</h1>";
+  });
+</script>
+</body>
+</html>

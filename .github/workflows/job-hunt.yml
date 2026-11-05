@@ -1,0 +1,157 @@
+# Daily job hunt: discover roles, let Claude score/tailor/apply, post a report.
+#
+# Claude runs through Claude Code with your Claude subscription
+# (secret CLAUDE_CODE_OAUTH_TOKEN, created with `claude setup-token`), or an
+# API key (secret ANTHROPIC_API_KEY). Setup: docs/job-agent.md.
+name: job-hunt
+
+on:
+  schedule:
+    # Cron is UTC. One of these is 19:17 in New York depending on daylight
+    # saving; the gate below lets only that one through, so the report lands
+    # around 8pm Eastern all year.
+    - cron: "17 23 * * *"
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Fill application forms but never submit
+        type: boolean
+        default: false
+      max_turns:
+        description: Max Claude turns
+        default: "300"
+
+permissions:
+  contents: write # encrypted state on the jobagent-data branch
+  issues: write # the daily report
+
+concurrency:
+  group: job-hunt
+  cancel-in-progress: false
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    env:
+      JOBAGENT_HOME: ${{ github.workspace }}/.jobagent
+      JOBAGENT_PROFILE_YAML: ${{ secrets.JOBAGENT_PROFILE_YAML }}
+      JOBAGENT_STATE_KEY: ${{ secrets.JOBAGENT_STATE_KEY }}
+      JOBAGENT_IMAP_USER: ${{ secrets.JOBAGENT_IMAP_USER }}
+      JOBAGENT_IMAP_PASSWORD: ${{ secrets.JOBAGENT_IMAP_PASSWORD }}
+      HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Only run at 7pm New York time
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ] || [ "$(TZ=America/New_York date +%H)" = "19" ]; then
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.go == 'true'
+
+      - name: Detect repository visibility
+        id: repo
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          private=$(curl -fsS -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY" \
+            | python -c "import json,sys; print(str(json.load(sys.stdin).get('private', False)).lower())")
+          echo "private=$private" >> "$GITHUB_OUTPUT"
+          # Public repositories get a report without score reasons or answers.
+          if [ "$private" = "true" ]; then echo "JOBAGENT_REPORT_DETAIL=full" >> "$GITHUB_ENV"; else echo "JOBAGENT_REPORT_DETAIL=public" >> "$GITHUB_ENV"; fi
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          pip install -q -e .
+          python -m playwright install --with-deps chromium > /dev/null
+
+      - name: Restore state
+        if: steps.gate.outputs.go == 'true'
+        run: |
+          if [ -z "$JOBAGENT_STATE_KEY" ]; then
+            echo "::warning::JOBAGENT_STATE_KEY is not set: the agent cannot remember past runs."
+            exit 0
+          fi
+          if git fetch -q origin jobagent-data 2>/dev/null; then
+            git show FETCH_HEAD:state.enc > "$RUNNER_TEMP/state.enc"
+            jobagent state import "$RUNNER_TEMP/state.enc"
+          fi
+
+      - name: Discover jobs
+        if: steps.gate.outputs.go == 'true'
+        run: jobagent discover > "$RUNNER_TEMP/discover.json"
+
+      - name: Claude runs the job hunt
+        if: steps.gate.outputs.go == 'true' && env.HAS_CLAUDE == 'true' && env.JOBAGENT_PROFILE_YAML != ''
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          MAX_TURNS: ${{ inputs.max_turns || '300' }}
+        run: |
+          npm install -g @anthropic-ai/claude-code > /dev/null
+          PROMPT="Run today's job hunt. Follow .claude/skills/job-hunt/SKILL.md exactly (read it first). Discovery has already run; start at step 1 with 'jobagent check'."
+          if [ "$DRY_RUN" = "true" ]; then
+            PROMPT="$PROMPT This is a DRY RUN: always call 'jobagent submit' with --dry-run and never submit for real."
+          fi
+          ARGS=(--max-turns "$MAX_TURNS" --permission-mode acceptEdits --allowedTools "Bash(jobagent:*)" Read Write Edit Glob)
+          if [ -n "$MODEL" ]; then ARGS+=(--model "$MODEL"); fi
+          # Only Claude's final one-line summary is printed: the transcript can contain personal data.
+          set +e
+          claude -p "$PROMPT" "${ARGS[@]}" > "$RUNNER_TEMP/claude.txt" 2> "$RUNNER_TEMP/claude.err"
+          status=$?
+          set -e
+          tail -c 1500 "$RUNNER_TEMP/claude.txt"
+          if [ $status -ne 0 ]; then
+            echo "::warning::Claude exited with status $status"
+            jobagent note "Claude 运行异常退出（状态码 $status），部分岗位可能没处理完，明天会继续。"
+            tail -c 600 "$RUNNER_TEMP/claude.err" | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/[email]/g'
+          fi
+
+      - name: Explain missing setup
+        if: steps.gate.outputs.go == 'true' && (env.HAS_CLAUDE != 'true' || env.JOBAGENT_PROFILE_YAML == '')
+        run: |
+          if [ "$HAS_CLAUDE" != "true" ]; then
+            jobagent note "还没有配置 CLAUDE_CODE_OAUTH_TOKEN（或 ANTHROPIC_API_KEY），今天只做了岗位发现。配置方法见 docs/job-agent.md。"
+          fi
+
+      - name: Post the daily report
+        if: always() && steps.gate.outputs.go == 'true'
+        run: |
+          jobagent set-run run_url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          jobagent report --out "$RUNNER_TEMP/report.md"
+          jobagent notify --report "$RUNNER_TEMP/report.md"
+
+      - name: Save state
+        if: always() && steps.gate.outputs.go == 'true' && env.JOBAGENT_STATE_KEY != ''
+        run: |
+          mkdir -p "$RUNNER_TEMP/data"
+          jobagent state export "$RUNNER_TEMP/data/state.enc"
+          cd "$RUNNER_TEMP/data"
+          git init -q -b jobagent-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state.enc
+          git commit -qm "job agent state $(date -u +%FT%TZ)"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" jobagent-data
+
+      # Resumes and screenshots contain personal data: only kept for private repositories.
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.gate.outputs.go == 'true' && steps.repo.outputs.private == 'true'
+        with:
+          name: job-hunt-${{ github.run_id }}
+          path: .jobagent/work
+          retention-days: 14
+          if-no-files-found: ignore

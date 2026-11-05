@@ -39,13 +39,30 @@ def _is_us(locations: list[str]) -> bool:
     return any(not NON_US.search(l) or re.search(r"\b(US|USA|United States|Remote)\b", l) for l in locs)
 
 
+CATEGORY_ALIASES = {
+    "software engineering": "Software",
+    "data science, ai & machine learning": "AI/ML/Data",
+    "product management": "Product",
+}
+
+
+def _category(c: str) -> str:
+    return CATEGORY_ALIASES.get(c.lower(), c)
+
+
+def dedupe_key(job: Job) -> tuple[str, str]:
+    norm = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()  # noqa: E731
+    company = re.sub(r"\b(inc|corp|corporation|llc|ltd|co)\b", "", norm(job.company)).strip()
+    return company, norm(job.title)
+
+
 def filter_reason(job: Job, profile: Profile, now: float) -> str | None:
     """Why this job is not worth Claude's time, or None if it passes."""
     p = profile.preferences
     title = job.title or ""
     if p.job_types and job.job_type and job.job_type not in p.job_types:
         return f"job type {job.job_type}"
-    if p.categories and job.category and job.category not in p.categories:
+    if p.categories and job.category and _category(job.category) not in {_category(c) for c in p.categories}:
         return f"category {job.category}"
     if job.posted_at and now - job.posted_at > p.posted_within_days * 86400:
         return "too old"
@@ -97,16 +114,24 @@ def select_candidates(jobs: list[Job], profile: Profile, state: State, now: floa
     now = now or time.time()
     stats: dict[str, int] = {}
     out: list[Candidate] = []
+    # The same role is often listed several times (one per location or source).
+    decided_keys = {dedupe_key(j) for j in state.jobs.values() if j.status in DECIDED or j.status == "scored"}
+    taken: set[tuple[str, str]] = set()
     for job in jobs:
         existing = state.jobs.get(job.id)
         if existing and (existing.status in DECIDED or existing.status == "scored"):
             stats["already decided"] = stats.get("already decided", 0) + 1
+            continue
+        key = dedupe_key(job)
+        if key in decided_keys or key in taken:
+            stats["duplicate"] = stats.get("duplicate", 0) + 1
             continue
         reason = filter_reason(job, profile, now)
         if reason:
             key = reason.split(" (")[0]
             stats[key] = stats.get(key, 0) + 1
             continue
+        taken.add(key)
         r, why = rank(job, profile, now)
         out.append(Candidate(job, r, why))
     out.sort(key=lambda c: c.rank, reverse=True)
