@@ -664,7 +664,9 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
                     el.fill(query[:60], timeout=3000)
                     page.wait_for_timeout(2000 if is_place else 900)  # place search hits a remote API
                     if not _click_option(page, key, wanted) and not (is_place and _click_option(page, key, query)):
-                        page.keyboard.press("Enter")
+                        # Enter picks the highlighted suggestion. With no suggestion showing, Enter in a
+                        # form field submits the whole form, so close the menu instead.
+                        page.keyboard.press("Enter" if _option_showing(page) else "Escape")
                 page.wait_for_timeout(300)
         elif kind == "listbox":
             wanted = str(value)
@@ -702,7 +704,11 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
             choice = match_option(value, field.get("options") or [])
             if choice is None:
                 return f"no option matches {value!r}"
-            el.get_by_role("button", name=choice, exact=True).first.click(timeout=4000)
+            button = el.get_by_role("button", name=choice, exact=True).first
+            # A <button> without a type inside a <form> is a submit button: answering the
+            # question must not send the form.
+            button.evaluate("b => { if (b.form && b.type === 'submit') b.setAttribute('type', 'button'); }")
+            button.click(timeout=4000)
         else:
             return f"unsupported field kind {kind}"
     except Exception as exc:  # noqa: BLE001
@@ -797,6 +803,18 @@ def fill_all(page, fields: list[dict[str, Any]], answers: dict[str, Any]) -> Fil
         else:
             report.filled.append(f["key"])
     return report
+
+
+OPTION_SHOWING_JS = """() => Array.from(document.querySelectorAll(
+    "[role=option], [class*='select__option'], [class*='option' i][id*='option' i], [data-automation-id='promptOption']"))
+  .some(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; })"""
+
+
+def _option_showing(page) -> bool:
+    try:
+        return bool(page.evaluate(OPTION_SHOWING_JS))
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def fill_and_verify(page, fields: list[dict[str, Any]], answers: dict[str, Any]) -> FillReport:

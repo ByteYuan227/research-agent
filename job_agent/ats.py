@@ -235,7 +235,8 @@ CLOSED_TEXT = re.compile(
     r"no longer (accepting (new )?applications|available|open|active|posted)|not accepting (new )?applications|"
     r"(job|position|posting|requisition|opening) (has been|was|is) (closed|filled|removed|expired|no longer)|"
     r"(this|the) (job|position|posting|opening) (has )?(expired|closed)|job not found|position not found|"
-    r"\b(job|position|posting|opening|requisition)\b[^.]{0,40}\b(has expired|has been (closed|filled|removed))",
+    r"\b(job|position|posting|opening|requisition)\b[^.]{0,40}\b(has expired|has been (closed|filled|removed))|"
+    r"(page|job) (you('re| are) looking for )?(doesn'?t|does not) exist|(page|job) (couldn'?t|could not|can'?t|cannot|can not) be found",
     re.I,
 )
 
@@ -292,7 +293,9 @@ def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None)
                 parts.append(html_to_text(data["jobDescription"]))
                 return "\n".join(p for p in parts if p)
     except httpx.HTTPError as exc:
-        if _gone(exc) and ref.ats in ("greenhouse", "lever", "workday"):
+        # Greenhouse and Lever answer for the board named in the posting URL itself. (A Workday 404 may
+        # just mean an unusual URL shape, so Workday postings are judged by their page below.)
+        if _gone(exc) and ref.ats in ("greenhouse", "lever"):
             raise PostingClosed(f"{ref.ats} no longer lists this posting (HTTP {exc.response.status_code})") from exc
     except (ValueError, KeyError):
         pass

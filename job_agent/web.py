@@ -76,7 +76,7 @@ STEP_RE = re.compile(
     re.I,
 )
 ELEMENT_INFO_JS = """e => ({tag: e.tagName.toLowerCase(), type: (e.getAttribute('type') || '').toLowerCase(),
-                         in_form: !!e.closest('form')})"""
+                         in_form: !!e.closest('form'), href: e.tagName === 'A' ? (e.getAttribute('href') || '') : ''})"""
 CLOSED_RE = re.compile(
     r"no longer (accepting (new )?applications|available|open|active|posted)|not accepting (new )?applications|"
     r"(job|position|posting|requisition|role|opening) (has been|was|is) (closed|filled|removed|expired|no longer)|"
@@ -376,6 +376,9 @@ def sends_application(label: str, info: dict[str, Any], filled: int) -> bool:
     """Whether pressing this button would send the application. In doubt on a filled-in form, it would."""
     if ACCOUNT_RE.search(label):
         return False
+    href = (info.get("href") or "").strip().lower()
+    if info.get("tag") == "a" and href and not href.startswith(("#", "javascript:")):
+        return False  # a real link only opens another page; it cannot send form data
     if SUBMIT_APP_RE.search(label):
         return True
     # "Apply" starts an application on a job page (empty search boxes at most), but submits

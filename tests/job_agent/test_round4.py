@@ -92,6 +92,10 @@ def test_sends_application():
     assert not web.sends_application("Apply", {"tag": "a"}, 0)  # starts an application
     assert web.sends_application("Apply", {"tag": "button", "type": "submit", "in_form": True}, filled_form)
     assert not web.sends_application("Apply Manually", {"tag": "button"}, filled_form)
+    # A link to another page (job pages with pre-filled search boxes) only navigates.
+    assert not web.sends_application("Apply", {"tag": "a", "href": "/Recruiting/Jobs/Apply/4640810"}, filled_form)
+    assert web.sends_application("Apply", {"tag": "a", "href": "#"}, filled_form)
+    assert web.sends_application("Submit", {"tag": "a", "href": "javascript:void(0)"}, 0)
 
 
 # ---------------------------------------------------------------------------
@@ -380,3 +384,24 @@ def test_form_flow_refuses_answers_that_contradict_the_profile(site, profile, ho
     assert apply_mod.submit(job, profile, state, answers, dry_run=True, force=True)["status"] == "dry_run_ok"
     answers.write_text(json.dumps({"answers": {"why": "Grounded answer."}}))
     assert apply_mod.submit(job, profile, state, answers, dry_run=True)["status"] == "dry_run_ok"
+
+
+@needs_browser
+def test_typing_into_a_combobox_never_submits_the_form(site):  # noqa: F811
+    from playwright.sync_api import sync_playwright
+
+    from job_agent.browser.launch import launch, new_context
+
+    with sync_playwright() as pw:
+        b = launch(pw)
+        page = new_context(b).new_page()
+        page.goto(f"{site}/enter.html")
+        fields = {f["key"]: f for f in page.evaluate(forms.EXTRACT_JS)["fields"]}
+        assert fields["school"]["kind"] == "combobox"
+        relocate = next(f for f in fields.values() if f["kind"] == "button_group")
+        report = forms.fill_all(page, [fields["first_name"], fields["school"], relocate],
+                                {"first_name": "Alex", "school": "Carnegie Mellon University", relocate["key"]: "Yes"})
+        assert not report.errors, report.errors
+        assert page.evaluate("window.submitted") is False
+        assert page.evaluate("document.querySelector('[data-option=yes]').getAttribute('aria-pressed')") == "true"
+        b.close()

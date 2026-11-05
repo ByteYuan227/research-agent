@@ -44,9 +44,9 @@ TIMEOUT_BIN="$(command -v timeout || command -v gtimeout || true)"  # gtimeout: 
 run_claude() {  # run_claude <log name> <max turns> <timeout minutes> <prompt>
   local log="$LOG_DIR/$1.log"
   if [ -n "$TIMEOUT_BIN" ]; then
-    "$TIMEOUT_BIN" "${3}m" claude -p "$4$DRY" --max-turns "$2" "${ARGS[@]}" > "$log" 2>&1
+    "$TIMEOUT_BIN" "${3}m" claude -p "$4$DRY" --max-turns "$2" "${ARGS[@]}" < /dev/null > "$log" 2>&1
   else
-    claude -p "$4$DRY" --max-turns "$2" "${ARGS[@]}" > "$log" 2>&1
+    claude -p "$4$DRY" --max-turns "$2" "${ARGS[@]}" < /dev/null > "$log" 2>&1
   fi
   local status=$?
   if [ $status -ne 0 ]; then

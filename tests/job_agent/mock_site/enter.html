@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Enter must not submit</title></head>
+<body>
+<form id="f">
+  <div class="field-wrapper"><label for="school">School</label>
+    <input id="school" name="school" role="combobox" aria-autocomplete="list" aria-expanded="false"></div>
+  <div class="field-wrapper"><label for="first_name">First Name</label><input id="first_name" name="first_name"></div>
+  <div class="field-wrapper"><label>Are you willing to relocate?</label>
+    <div class="yesno"><button data-option="yes" aria-pressed="false">Yes</button><button data-option="no" aria-pressed="false">No</button></div></div>
+  <button type="submit">Submit application</button>
+</form>
+<script>
+  window.submitted = false;
+  document.querySelectorAll("[data-option]").forEach((b) => b.addEventListener("click", () => {
+    b.parentElement.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+    b.setAttribute("aria-pressed", "true");
+  }));
+  document.getElementById("f").addEventListener("submit", (e) => { e.preventDefault(); window.submitted = true; });
+</script>
+</body>
+</html>
