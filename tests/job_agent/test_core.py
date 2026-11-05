@@ -340,3 +340,26 @@ def test_init_creates_profile_once(tmp_path, monkeypatch):
     assert p.exists()
     p.write_text("edited")
     assert main(["init"]) == 0 and p.read_text() == "edited"  # never overwritten
+
+
+def test_materials_survive_across_runs(tmp_path, home, monkeypatch, profile):
+    from job_agent import materials
+    from job_agent.apply import work_dir
+    from job_agent.store import generate_key
+
+    monkeypatch.setenv("JOBAGENT_STATE_KEY", generate_key())
+    state = State()
+    j = job(id="url:old", company="Old Co", title="Intern")
+    state.set_status(j, "manual", "CAPTCHA")
+    (work_dir(j) / "Alex_Chen_Resume.pdf").write_bytes(b"%PDF-old")
+    bundle = tmp_path / "materials.enc"
+    assert materials.export(state, bundle)["jobs"] == 1
+
+    # Next run on a fresh machine: the work folder is gone until the bundle is restored.
+    import shutil
+
+    shutil.rmtree(work_dir(j))
+    assert materials.restore(state, bundle) == {"restored": 1}
+    assert (work_dir(j) / "Alex_Chen_Resume.pdf").read_bytes() == b"%PDF-old"
+    out = materials.unpack(bundle, tmp_path / "out")
+    assert out["jobs"] == ["Old Co - Intern"] and not (tmp_path / "out" / "manifest.json").exists()

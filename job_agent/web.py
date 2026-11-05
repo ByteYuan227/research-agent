@@ -359,7 +359,8 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
         unknown = [k for k in answers if k not in by_key]
         values: dict[str, Any] = {}
         for f in data["fields"]:
-            if f["kind"] in ("combobox", "listbox") and not f.get("options"):
+            needed = f["key"] in answers or overwrite or not f.get("filled")
+            if needed and f["kind"] in ("combobox", "listbox") and not f.get("options"):
                 f["options"] = forms.combobox_options(pg, f["key"], limit=200)
             if f["key"] in answers:
                 values[f["key"]] = answers[f["key"]]

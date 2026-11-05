@@ -46,6 +46,8 @@ says which. If it does not, do SCORE, then APPLY each job in `jobagent queue`, t
    outside what the posting accepts; not the wanted kind of role.
 3. `jobagent score <id> <score> --reason "<one specific sentence>" --decision apply|skip`
    (`apply` only when score >= `preferences.min_score` and no blocker).
+4. If the prompt gives a limit ("score at most N"), score that many in the listed order and
+   stop; the next session continues with the rest.
 
 ## Mode APPLY `<job_id>`
 

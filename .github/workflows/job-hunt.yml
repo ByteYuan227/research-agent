@@ -88,6 +88,9 @@ jobs:
           if git fetch -q origin jobagent-data 2>/dev/null; then
             git show FETCH_HEAD:state.enc > "$RUNNER_TEMP/state.enc"
             jobagent state import "$RUNNER_TEMP/state.enc"
+            if git show FETCH_HEAD:materials.enc > "$RUNNER_TEMP/materials.enc" 2>/dev/null; then
+              jobagent materials restore "$RUNNER_TEMP/materials.enc" > /dev/null || true
+            fi
           fi
 
       - name: Job hunt
@@ -106,7 +109,7 @@ jobs:
           # resumes in the report before anything is submitted.
           if [ "${{ github.event_name }}" = "schedule" ] && jobagent first-run | grep -q '"first_run": true'; then
             export JOBAGENT_DRY_RUN=1
-            jobagent note "🧪 第一次运行按规则只做演练：所有申请都准备好了但没有提交。请检查这份日报，明天开始正式投递。"
+            export JOBAGENT_RUN_NOTE="🧪 第一次运行按规则只做演练：所有申请都准备好了但没有提交。请检查这份日报，明天开始正式投递。"
           fi
           if [ "$HAS_CLAUDE" != "true" ] || [ "$JOBAGENT_MODE" = "off" ]; then
             jobagent sync-checklist > /dev/null || true

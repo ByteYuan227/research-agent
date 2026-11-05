@@ -67,13 +67,21 @@ run_claude() {  # run_claude <log name> <max turns> <timeout minutes> <prompt>
 
 jobagent sync-checklist > /dev/null || true
 jobagent discover > "$LOG_DIR/discover.json" || echo "::warning::discovery failed"
+if [ -n "${JOBAGENT_RUN_NOTE:-}" ]; then jobagent note "$JOBAGENT_RUN_NOTE" > /dev/null; fi
 
 if ! jobagent check | grep -q '"profile": "ok"'; then
   echo "No valid profile: discovery only."
   exit 0
 fi
 
-run_claude score 400 120 "Mode SCORE of the job-hunt skill ($SKILL): read the skill first, then score today's candidates."
+# Score in batches so each session's context stays small and progress is saved as it goes.
+BATCH="${JOBAGENT_SCORE_BATCH:-40}"
+for round in 1 2 3 4 5 6 7 8; do
+  left=$(jobagent candidates | grep -c '"id"' || true)
+  if [ "$left" -eq 0 ] || [ -n "$STOP" ]; then break; fi
+  run_claude "score-$round" $((BATCH * 3 + 20)) 60 "Mode SCORE of the job-hunt skill ($SKILL): read the skill first, then score at most $BATCH of the remaining candidates (best-ranked first) and stop."
+  if [ "$(jobagent candidates | grep -c '"id"' || true)" -ge "$left" ]; then break; fi  # no progress: do not loop
+done
 
 if [ -z "$STOP" ]; then
   for id in $(jobagent queue); do

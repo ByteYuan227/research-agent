@@ -52,9 +52,13 @@ def build_zip(state: State) -> tuple[bytes, int]:
     buf = io.BytesIO()
     count = 0
     total = 0
+    manifest: dict[str, str] = {}
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for job in pending_manual(state):
             folder = _folder_name(job)
+            if folder in manifest:  # same company + title twice
+                folder = f"{folder} ({len(manifest)})"
+            manifest[folder] = job.id
             reason = next((e.detail for e in reversed(state.events) if e.job_id == job.id and e.type == "manual"), "")
             zf.writestr(f"{folder}/answers.md", answers_markdown(job, reason))
             wd = work_dir(job)
@@ -67,6 +71,7 @@ def build_zip(state: State) -> tuple[bytes, int]:
                 zf.write(f, f"{folder}/{f.name}")
                 total += size
             count += 1
+        zf.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=1))
     return buf.getvalue(), count
 
 
@@ -86,13 +91,39 @@ def unpack(path: Path, out: Path) -> dict[str, Any]:
     out.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
         for name in zf.namelist():
-            if name.startswith("/") or ".." in Path(name).parts:
+            if name.startswith("/") or ".." in Path(name).parts or name == "manifest.json":
                 continue  # never write outside the target folder
             target = out / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(zf.read(name))
-        names = sorted({n.split("/")[0] for n in zf.namelist()})
+        names = sorted({n.split("/")[0] for n in zf.namelist() if "/" in n})
     return {"folder": str(out), "jobs": names}
+
+
+def restore(state: State, path: Path) -> dict[str, Any]:
+    """Put files from an earlier bundle back into each job's work folder, so older
+    apply-by-hand jobs keep their materials across runs on throwaway CI machines."""
+    from .apply import work_dir
+    from .store import _fernet
+
+    if not path.exists():
+        return {"restored": 0}
+    with zipfile.ZipFile(io.BytesIO(_fernet().decrypt(path.read_bytes()))) as zf:
+        try:
+            manifest = json.loads(zf.read("manifest.json"))
+        except KeyError:
+            return {"restored": 0}
+        restored = 0
+        for name in zf.namelist():
+            folder, _, filename = name.partition("/")
+            job_id = manifest.get(folder)
+            if not filename or "/" in filename or job_id not in state.jobs or filename == "answers.md":
+                continue
+            target = work_dir(state.jobs[job_id]) / filename
+            if not target.exists():
+                target.write_bytes(zf.read(name))
+                restored += 1
+    return {"restored": restored}
 
 
 def resumes_for_email(state: State, since: float, limit: int = 12) -> list[tuple[Path, str]]:

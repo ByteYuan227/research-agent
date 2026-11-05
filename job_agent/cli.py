@@ -512,6 +512,8 @@ def cmd_materials(args) -> int:
 
     if args.action == "export":
         out(materials.export(load_state(), Path(args.file)))
+    elif args.action == "restore":
+        out(materials.restore(load_state(), Path(args.file)))
     else:
         out(materials.unpack(Path(args.file), Path(args.out)))
     return 0
@@ -582,7 +584,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("jd", help="print a job description")
     s.add_argument("job_id")
-    s.add_argument("--max-chars", type=int, default=7000)
+    s.add_argument("--max-chars", type=int, default=4500)
     s.set_defaults(fn=cmd_jd)
 
     s = sub.add_parser("workdir", help="folder for this job's plan, answers, resume and screenshots")
@@ -679,7 +681,7 @@ def build_parser() -> argparse.ArgumentParser:
         fn=cmd_sync_checklist)
 
     s = sub.add_parser("materials", help="resumes + answers for manual applications (encrypted bundle)")
-    s.add_argument("action", choices=["export", "open"])
+    s.add_argument("action", choices=["export", "open", "restore"])
     s.add_argument("file", help="bundle path (materials.enc)")
     s.add_argument("--out", default="jobagent-materials", help="open: folder to unpack into")
     s.set_defaults(fn=cmd_materials)
