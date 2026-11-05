@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import os
+import re
 from zoneinfo import ZoneInfo
 
 from .profile import Profile
@@ -41,7 +42,8 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
     closed = [j for j in jobs if j.status in ("closed", "duplicate")]
     retry = [j for j in jobs if j.status == "scored" and any(
         e.job_id == j.id and e.type == "scored" and "will retry next run" in e.detail for e in events)]
-    scored_today = [e for e in events if e.type in ("scored", "skipped")]
+    # Claude's verdicts only (`jobagent score` records "<score>: <reason>"), not re-queues or manual marks.
+    scored_today = [e for e in events if e.type in ("scored", "skipped") and re.match(r"\d+: ", e.detail)]
     new_manual = {j.id for j in jobs if j.status == "manual"}
     pending = sorted((j for j in state.jobs.values() if j.status == "manual"),
                      key=lambda j: (j.id not in new_manual, -(j.score or 0)))
@@ -125,7 +127,8 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
     if full and skipped:
         lines += ["<details><summary>跳过的岗位</summary>", ""]
         for j in sorted(skipped, key=lambda j: -(j.score or 0))[:40]:
-            lines.append(f"- {j.score or '-'} 分 · {_md(j.company)} - {_md(j.title)}：{_md(j.reason)[:160]}")
+            why = j.reason or next((e.detail for e in reversed(state.events) if e.job_id == j.id and e.type == "skipped"), "")
+            lines.append(f"- {j.score or '-'} 分 · {_md(j.company)} - {_md(j.title)}：{_md(why)[:160]}")
         lines += ["", "</details>", ""]
 
     learned = run.get("learned") or []

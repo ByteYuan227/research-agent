@@ -430,3 +430,15 @@ def test_typing_into_a_combobox_never_submits_the_form(site):  # noqa: F811
         assert page.evaluate("window.submitted") is False
         assert page.evaluate("document.querySelector('[data-option=yes]').getAttribute('aria-pressed')") == "true"
         b.close()
+
+
+def test_report_counts_only_claude_scores(profile):
+    state = State()
+    a, b, c = _job(id="a"), _job(id="b"), _job(id="c", company="Gamma")
+    state.set_status(a, "scored", "88: strong match")             # jobagent score
+    state.set_status(b, "skipped", "40: weak match")              # jobagent score
+    state.set_status(a, "scored", "rehearsed (dry run); will apply for real in the next run")  # settle
+    state.set_status(c, "skipped", "already applied elsewhere")   # jobagent mark
+    report = build_report(state, profile, detail="full")
+    assert "Claude 打分：2 个" in report
+    assert "Gamma - Software Engineer Intern：already applied elsewhere" in report
