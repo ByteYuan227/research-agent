@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-agent"
+version = "0.1.0"
+description = "深度研究 Agent：用 Claude API 自动检索、阅读、核实，输出带引用的研究报告"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=2.5,<3",
+    "pydantic>=2.7",
+    "rich>=13",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+research-agent = "research_agent.cli:main"
+
+[tool.setuptools]
+packages = ["research_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
