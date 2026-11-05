@@ -57,9 +57,10 @@ ATS_DOMAINS = (
 )
 SIDE_EFFECT_RE = re.compile(
     r"\b(submit|send|create (an |my )?account|sign ?up|register|verify|confirm|finish|complete (my )?application|"
-    r"review and submit|apply now)\b",
+    r"review and submit)\b",
     re.I,
 )
+COOKIE_RE = re.compile(r"^(accept( all)?( cookies)?|allow all( cookies)?|i accept|i agree|agree|got it|ok(ay)?|accept & close)$", re.I)
 
 
 class WebError(RuntimeError):
@@ -196,7 +197,7 @@ def target(pg, job: Job | None) -> Any:
             n = frame.evaluate(COUNT_CONTROLS_JS)
         except Exception:  # noqa: BLE001
             continue
-        if n > best_n + 2:
+        if n > best_n:  # embedded application forms (iCIMS) can start with a single e-mail field
             best, best_n = frame, n
     return FrameView(best) if best is not None else pg
 
@@ -303,11 +304,27 @@ def look(pg, job: Job, profile: Profile, gather_options: bool = True, memory: di
     }
 
 
+def dismiss_cookie_banner(pg) -> bool:
+    """Accept the cookie banner if one covers the page (it would intercept clicks otherwise)."""
+    for name in ("button", "link"):
+        for el in pg.get_by_role(name).all()[:80]:
+            try:
+                text = (el.inner_text(timeout=500) or "").strip()
+                if COOKIE_RE.match(text) and el.is_visible():
+                    el.click(timeout=3000)
+                    pg.wait_for_timeout(500)
+                    return True
+            except Exception:  # noqa: BLE001
+                continue
+    return False
+
+
 def open_job(state: State, job: Job, profile: Profile) -> dict[str, Any]:
     _save_session({"job_id": job.id, "opened": time.time(), "last_action": time.time()})
     with page() as pg:
         pg.goto(job.apply_url or job.url, wait_until="domcontentloaded", timeout=60000)
         _settle(pg)
+        dismiss_cookie_banner(pg)
         return look(pg, job, profile, memory=state.memory)
 
 
@@ -318,7 +335,14 @@ def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
         if not button.count():
             raise WebError(f"no element {ref!r} on this page; run `jobagent web look` again")
         label = (button.inner_text(timeout=2000) or button.get_attribute("value") or "").strip()
-        if dry_run() and SIDE_EFFECT_RE.search(label):
+        on_form = 0
+        try:
+            on_form = target(pg, job).evaluate(COUNT_CONTROLS_JS)
+        except Exception:  # noqa: BLE001
+            pass
+        # "Apply" starts an application on a job page, but submits one at the end of a form.
+        submitting = SIDE_EFFECT_RE.search(label) or (re.search(r"\bapply\b", label, re.I) and on_form >= 3)
+        if dry_run() and submitting:
             raise WebError(
                 f"dry run: not pressing {label!r} (it would submit or create something). "
                 "This is as far as a rehearsal goes - record it with `jobagent web finish dry_run`."
@@ -327,12 +351,32 @@ def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
         s = _session()
         s["last_action"] = time.time()
         _save_session(s)
-        button.click(timeout=10000)
+        _robust_click(button)
         _settle(pg)
     with page() as pg:  # a new tab may have opened
         result = look(pg, job, profile, memory=state.memory)
+        if not result["fields"] and len(result["buttons"]) < 3:  # single-page apps still loading
+            pg.wait_for_timeout(3000)
+            result = look(pg, job, profile, memory=state.memory)
         result["opened_new_tab"] = len(pg.context.pages) > before
         return result
+
+
+def _robust_click(button: Any) -> None:
+    """Click, coping with overlays that swallow pointer events (Workday's click_filter layer)."""
+    attempts = (
+        lambda: button.click(timeout=6000),
+        lambda: button.click(timeout=4000, force=True),
+        lambda: button.evaluate("e => e.click()"),
+    )
+    last: Exception | None = None
+    for attempt in attempts:
+        try:
+            attempt()
+            return
+        except Exception as exc:  # noqa: BLE001
+            last = exc
+    raise WebError(f"could not click: {str(last).splitlines()[0][:200] if last else 'unknown'}")
 
 
 def goto(state: State, profile: Profile, url: str) -> dict[str, Any]:

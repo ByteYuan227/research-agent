@@ -256,6 +256,9 @@
     }
 
     let label = labelFor(el, container);
+    // Honeypots: fields meant to stay empty ("This input is for robots only"). Filling one marks you as a bot.
+    const hint = `${label} ${el.getAttribute("aria-label") || ""} ${el.name || ""} ${el.id || ""} ${textOf(container)}`;
+    if (/robots only|do not (fill|enter|complete)|leave (this |it )?(field )?(blank|empty)|honey ?pot/i.test(hint)) continue;
     // Greenhouse labels file inputs with their button text ("Attach"); use the question title.
     if (type === "file" && /^(attach|upload|choose|browse|select|drop)\b/i.test(label)) {
       const title = containerTitle(container, el);

@@ -141,3 +141,15 @@ def test_form_inside_an_iframe(site, profile, browser):
     assert not r["errors"] and not r["required_empty"], r
     v = web.click(state, profile, _button(r, "Save and Continue"))
     assert "My Experience" in v["text"]
+
+
+def test_honeypot_never_filled_and_cookie_banner_dismissed(site, profile, browser):
+    job = _job(site).model_copy(update={"url": f"{site}/wd/honeypot.html", "apply_url": f"{site}/wd/honeypot.html"})
+    state = State()
+    state.jobs[job.id] = job
+    v = web.open_job(state, job, profile)
+    assert {f["key"] for f in v["fields"]} == {"email"}  # the honeypot is invisible to the agent
+    assert "Accept Cookies" not in [b["text"] for b in v["buttons"]]  # banner accepted on open
+    web.fill(state, profile, {"website": "https://example.com"})  # even if asked, it is not a field
+    with web.page() as pg:
+        assert pg.evaluate("document.getElementById('website').value") == ""

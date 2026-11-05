@@ -14,7 +14,13 @@ personal:
   preferred_name: ""
   email: alex.chen.example@gmail.com
   phone: "+1 555-010-0199"
-  location: {city: Pittsburgh, state: PA, country: United States, zip: "15213"}
+  location:                         # 有些网站（如 Workday）要求填写邮寄地址
+    street: "5000 Forbes Ave"
+    street2: ""
+    city: Pittsburgh
+    state: PA
+    country: United States
+    zip: "15213"
   linkedin: https://www.linkedin.com/in/alex-chen-example
   github: https://github.com/alex-chen-example
   website: ""

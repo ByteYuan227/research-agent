@@ -45,14 +45,16 @@ OPTIONS_JS = """(key) => {
   }
   scopes.push(...Array.from(document.querySelectorAll(
     "[role=listbox], [data-automation-id='activeListContainer'], [data-automation-id*='promptOption' i]")).filter(visible));
+  const OPT = "[role=option], [data-automation-id='promptOption'], [data-automation-id='menuItem']";
+  const label = (o) => clean(o.getAttribute('data-automation-label') || o.innerText || o.textContent);
+  const tag = (opts) => opts.slice(0, 400).map((o, i) => { o.setAttribute('data-ja-opt', String(i)); return label(o); });
   for (const scope of scopes) {
-    const opts = Array.from(scope.querySelectorAll(
-      "[role=option], [data-automation-id='promptOption'], [data-automation-id='menuItem']")).filter(visible);
-    if (opts.length) {
-      return opts.slice(0, 400).map((o, i) => { o.setAttribute('data-ja-opt', String(i)); return clean(o.innerText || o.textContent); });
-    }
+    const opts = Array.from(scope.querySelectorAll(OPT)).filter(visible);
+    if (opts.length) return tag(opts);
   }
-  return [];
+  // Popups rendered elsewhere in the document (Workday prompt options are their own containers).
+  const loose = Array.from(document.querySelectorAll(OPT)).filter(visible);
+  return loose.length ? tag(loose) : [];
 }"""
 
 SUCCESS_RE = re.compile(
@@ -206,6 +208,25 @@ def _month(s: str) -> str | None:
     return None
 
 
+US_STATES = {
+    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado",
+    "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida", "GA": "Georgia",
+    "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky",
+    "LA": "Louisiana", "ME": "Maine", "MD": "Maryland", "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota",
+    "MS": "Mississippi", "MO": "Missouri", "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire",
+    "NJ": "New Jersey", "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota",
+    "OH": "Ohio", "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+    "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia",
+    "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming",
+}
+
+
+def _state_name(state: str, f: dict) -> str:
+    """Dropdowns list full state names; text boxes take whatever the profile says."""
+    full = US_STATES.get(state.upper().strip(), state)
+    return full if f["kind"] != "text" else state
+
+
 def _degree(p: Profile, f: dict) -> Suggestion | None:
     degree = p.education[0].degree
     options = f.get("options") or []
@@ -259,8 +280,20 @@ RULES: list[Rule] = [
          lambda p, f, c: Suggestion(p.personal.full_name, "personal.full_name")),
     Rule(r"e-?mail", ("text", "email"), lambda p, f, c: Suggestion(p.personal.email, "personal.email")),
     Rule(r"phone|mobile", ("text", "tel"), lambda p, f, c: Suggestion(p.personal.phone, "personal.phone") if p.personal.phone else None),
+    Rule(r"address line ?1|street address|^address$|^street$", ("text",),
+         lambda p, f, c: Suggestion(p.personal.location.street, "personal.location.street") if p.personal.location.street else None),
+    Rule(r"address line ?2|apartment|suite|unit", ("text",),
+         lambda p, f, c: Suggestion(p.personal.location.street2, "personal.location.street2") if p.personal.location.street2 else None),
+    Rule(r"^city$|^city / town|^town$", ("text", "combobox"),
+         lambda p, f, c: Suggestion(p.personal.location.city, "personal.location.city") if p.personal.location.city else None),
+    Rule(r"^(state|province|state/province|region)$|^state or province", ("text", "select", "combobox", "listbox"),
+         lambda p, f, c: Suggestion(_state_name(p.personal.location.state, f), "personal.location.state") if p.personal.location.state else None),
+    Rule(r"postal code|zip", ("text", "number"),
+         lambda p, f, c: Suggestion(p.personal.location.zip, "personal.location.zip") if p.personal.location.zip else None),
+    Rule(r"phone (device )?type|type of phone", ("select", "listbox", "combobox", "radio"),
+         lambda p, f, c: Suggestion("Mobile", "default")),
     Rule(r"^country$|country (do|will) you (intend|plan|expect) to (work|reside|live)|country of residence|"
-         r"which country.{0,30}(work|reside|live|based)", ("combobox", "select", "text"),
+         r"which country.{0,30}(work|reside|live|based)", ("combobox", "select", "text", "listbox"),
          lambda p, f, c: Suggestion(p.personal.location.country, "personal.location.country")),
     Rule(r"^(current )?location\b|current (city|location)|city.*state|where are you (currently )?(located|based)", TEXTY + ("combobox",),
          lambda p, f, c: Suggestion(_location(p), "personal.location") if _location(p) else None),

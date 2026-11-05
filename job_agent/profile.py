@@ -24,8 +24,10 @@ class _Model(BaseModel):
 
 
 class Location(_Model):
+    street: str = ""  # Workday and some portals require a mailing address
+    street2: str = ""
     city: str = ""
-    state: str = ""
+    state: str = ""  # two-letter code, e.g. PA
     country: str = "United States"
     zip: str = ""
 
