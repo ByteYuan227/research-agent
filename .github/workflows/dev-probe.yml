@@ -1,0 +1,35 @@
+# Developer tool: open real application forms and record their structure.
+# Read-only: it never submits an application. Results go to the probe-data branch.
+name: dev-probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls_file:
+        description: JSON file with a list of job/application URLs
+        default: scripts/probe_urls.json
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install httpx beautifulsoup4 playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: python scripts/probe_forms.py "${{ inputs.urls_file }}" probe-out
+      - name: Push results to the probe-data branch
+        run: |
+          cd probe-out
+          git init -q -b probe-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "probe run ${{ github.run_id }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" probe-data
