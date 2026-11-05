@@ -1,0 +1,130 @@
+{
+ "url": "https://jobs.lever.co/humble-robotics/93ca2ae3-c549-402f-b6a6-ff0b84f554f9/apply",
+ "title": "Humble Robotics - Autonomy Engineer, Data",
+ "fields": [
+  {
+   "key": "resume",
+   "kind": "file",
+   "label": "Resume/CV ATTACH RESUME/CVCouldn't auto-read resume.Analyzing resume...Success!",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "name",
+   "kind": "text",
+   "label": "Full name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "phone",
+   "kind": "text",
+   "label": "Phone",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "+1 555-010-0199"
+  },
+  {
+   "key": "location",
+   "kind": "text",
+   "label": "Current location No location found. Try entering a different locationLoading",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "org",
+   "kind": "text",
+   "label": "Current company",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "urls[LinkedIn]",
+   "kind": "text",
+   "label": "LinkedIn URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "urls[Twitter]",
+   "kind": "text",
+   "label": "Twitter URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "urls[GitHub]",
+   "kind": "text",
+   "label": "GitHub URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "urls[Portfolio]",
+   "kind": "text",
+   "label": "Portfolio URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "urls[Other]",
+   "kind": "text",
+   "label": "Humble Robotics",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "cards[088bcfd2-2835-4b5d-8e13-0e84ded8665c][field0]",
+   "kind": "textarea",
+   "label": "Describe a project where you wrote software to process robotics, video, or other sensor data. What did you personally build, what was the hardest technical problem, and how did you check the results? Research, internships, and personal projects are welcome. Include a link if available; public code is not required. Please keep your response under 150 words.",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": false,
+  "hcaptcha": true,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

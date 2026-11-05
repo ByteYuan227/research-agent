@@ -1,0 +1,1354 @@
+[
+ {
+  "url": "https://job-boards.greenhouse.io/paretocaptiveservicesllc/jobs/4726117006",
+  "n_fields": 23,
+  "filled": 17,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "candidate-location": "Pittsburgh, PA",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "question_8790979006": "https://www.linkedin.com/in/alex-chen-example",
+   "question_8790980006": "Yes",
+   "question_8790981006": "Yes",
+   "question_8797455006": "Online job board",
+   "label:how_would_you_describe_your_gender_identity_mark_all_that_ap": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "candidate-location": [],
+   "question_8790980006": [
+    "Yes",
+    "No"
+   ],
+   "question_8790981006": [
+    "Yes",
+    "No"
+   ],
+   "question_8790982006": [
+    "Yes",
+    "No"
+   ],
+   "question_8790983006": [
+    "Yes",
+    "No"
+   ],
+   "question_8790984006": [
+    "Yes",
+    "No"
+   ],
+   "question_8790985006": [
+    "Yes",
+    "No"
+   ],
+   "question_8790986006": [
+    "Yes",
+    "No"
+   ],
+   "label:how_would_you_describe_your_gender_identity_mark_all_that_ap": [
+    "Man",
+    "Non-binary",
+    "Woman",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ],
+   "label:how_would_you_describe_your_racial_ethnic_background_mark_al": [
+    "Black or of African descent",
+    "East Asian",
+    "Hispanic, Latinx or of Spanish Origin",
+    "Indigenous, American Indian or Alaska Native",
+    "Middle Eastern or North African",
+    "Native Hawaiian or Pacific Islander",
+    "South Asian",
+    "Southeast Asian"
+   ],
+   "label:how_would_you_describe_your_sexual_orientation_mark_all_that": [
+    "Asexual",
+    "Bisexual and/or pansexual",
+    "Gay",
+    "Heterosexual",
+    "Lesbian",
+    "Queer",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ],
+   "label:do_you_identify_as_transgender": [
+    "Yes",
+    "No",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ],
+   "label:do_you_have_a_disability_or_chronic_condition_physical_visua": [
+    "Yes",
+    "No",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ],
+   "label:are_you_a_veteran_or_active_member_of_the_united_states_arme": [
+    "Yes, I am a veteran or active member",
+    "No, I am not a veteran or active member",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/co-op_intern/jobs/4473614009",
+  "n_fields": 55,
+  "filled": 46,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "candidate-location": "Pittsburgh, PA",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "school--0": "Carnegie Mellon University",
+   "degree--0": "Master's Degree",
+   "discipline--0": "Computer Science",
+   "start-month--0": "August",
+   "start-year--0": "2025",
+   "end-month--0": "May",
+   "end-year--0": "2027",
+   "question_8199507009": "United States",
+   "question_8199508009": "Pennsylvania",
+   "question_8199509009": "5000 Forbes Ave",
+   "question_8199512009": "Pittsburgh",
+   "question_8199514009": "15213",
+   "question_8199515009": "https://www.linkedin.com/in/alex-chen-example",
+   "question_8199516009": "https://github.com/alex-chen-example",
+   "question_8199519009": "No",
+   "question_8199522009": "May 2027",
+   "question_8199523009": "Open / negotiable",
+   "question_8199524009": "No",
+   "question_8199527009": "Yes",
+   "question_8199528009": "No",
+   "question_8199529009": "May 2027",
+   "question_8199532009": "Yes",
+   "question_8199533009": "Yes",
+   "question_8199535009": "Yes",
+   "question_8199537009": "Yes",
+   "question_8199540009": "No",
+   "question_8199541009": "Yes",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer",
+   "gdpr_retention_consent_given": "True"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "candidate-location": [],
+   "school--0": [
+    "Aalborg University",
+    "Aalto University",
+    "Aarhus University",
+    "Abertay University",
+    "Aberystwyth University",
+    "Abilene Christian University",
+    "Abo Akademi University",
+    "Abraham Baldwin Agricultural College"
+   ],
+   "degree--0": [
+    "Associate's Degree",
+    "Bachelor's Degree",
+    "Doctor of Medicine (M.D.)",
+    "Doctor of Philosophy (Ph.D.)",
+    "Engineer's Degree",
+    "High School",
+    "Juris Doctor (J.D.)",
+    "Master of Business Administration (M.B.A.)"
+   ],
+   "discipline--0": [
+    "Accounting",
+    "African Studies",
+    "Agriculture",
+    "Anthropology",
+    "Applied Health Services",
+    "Architecture",
+    "Art",
+    "Asian Studies"
+   ],
+   "start-month--0": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August"
+   ],
+   "end-month--0": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August"
+   ],
+   "question_8199507009": [
+    "Afghanistan",
+    "\u00c5land Islands",
+    "Albania",
+    "Algeria",
+    "American Samoa",
+    "Andorra",
+    "Angola",
+    "Anguilla"
+   ],
+   "question_8199508009": [
+    "\u2018Adan",
+    "\u2018Ajl\u016bn",
+    "\u2018Ajm\u0101n",
+    "\u2018Akk\u0101r",
+    "\u2018Al\u012b \u015eab\u012b\u1e29",
+    "\u2018Amr\u0101n",
+    "\u2018Art\u0101",
+    "A'ana"
+   ],
+   "question_8199517009": [
+    "High School Diploma",
+    "GED",
+    "Technical Degree or Certification",
+    "Associate's Degree",
+    "Bachelor's Degree",
+    "Master's Degree",
+    "Doctorate",
+    "Other"
+   ],
+   "question_8199518009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199519009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199521009": [
+    "No",
+    "Less than 25%",
+    "Up to 50%",
+    "Up to 75%",
+    "100%"
+   ],
+   "question_8199524009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199527009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199528009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199530009[]": [
+    "Summer (May-August)",
+    "Fall (August-December)",
+    "Spring (January-May)"
+   ],
+   "question_8199532009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199533009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199534009": [
+    "Yes",
+    "No"
+   ],
+   "question_8199535009": [
+    "Yes"
+   ],
+   "question_8199536009": [
+    "Yes"
+   ],
+   "question_8199537009": [
+    "Yes"
+   ],
+   "question_8199541009": [
+    "Yes"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/anthropic/jobs/5438311008",
+  "n_fields": 31,
+  "filled": 23,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "question_18827863008": "He/him",
+   "question_18827864008": "https://github.com/alex-chen-example",
+   "question_18827870008": "Yes",
+   "question_18827871008": "Yes",
+   "question_18827873008": "https://www.linkedin.com/in/alex-chen-example",
+   "question_18827874008": "Yes",
+   "question_18827876008": "No",
+   "question_18827877008": "I will read the arbitration agreement below.",
+   "question_18827878008": "I understand and agree to the terms of the Agreement to Arbi",
+   "question_19180903008": "Online job board",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "question_18827865008": [
+    "Yes",
+    "No"
+   ],
+   "question_18827868008": [
+    "Yes",
+    "No"
+   ],
+   "question_18827870008": [
+    "Yes",
+    "No"
+   ],
+   "question_18827871008": [
+    "Yes",
+    "No"
+   ],
+   "question_18827874008": [
+    "Yes",
+    "No"
+   ],
+   "question_18827876008": [
+    "Yes",
+    "No"
+   ],
+   "question_18827877008": [
+    "I will read the arbitration agreement below."
+   ],
+   "question_18827878008": [
+    "I understand and agree to the terms of the Agreement to Arbitrate set forth above."
+   ],
+   "question_19099270008[]": [
+    "AI safety & alignment (e.g. scalable oversight, adversarial robustness and AI control, model organisms)",
+    "Interpretability (understanding the internal workings of large language models)",
+    "AI security & frontier red-teaming (e.g. cybersecurity, robotics, cryptography)",
+    "ML systems & reinforcement learning (e.g. model architecture, accelerator simulators, RL environment pipelines)",
+    "Not sure yet"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/parallel/jobs/5275690007",
+  "n_fields": 18,
+  "filled": 17,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "school--0": "Carnegie Mellon University",
+   "degree--0": "Master's Degree",
+   "discipline--0": "Computer Science",
+   "start-year--0": "2025",
+   "end-year--0": "2027",
+   "question_13241096007": "https://www.linkedin.com/in/alex-chen-example",
+   "question_13241097007": "https://github.com/alex-chen-example",
+   "question_13241098007": "Pittsburgh, PA",
+   "question_13241349007": "May 2027"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "school--0": [
+    "Aalborg University",
+    "Aalto University",
+    "Aarhus University",
+    "Abertay University",
+    "Aberystwyth University",
+    "Abilene Christian University",
+    "Abo Akademi University",
+    "Abraham Baldwin Agricultural College"
+   ],
+   "degree--0": [
+    "Associate's Degree",
+    "Bachelor's Degree",
+    "Doctor of Medicine (M.D.)",
+    "Doctor of Philosophy (Ph.D.)",
+    "Engineer's Degree",
+    "High School",
+    "Juris Doctor (J.D.)",
+    "Master of Business Administration (M.B.A.)"
+   ],
+   "discipline--0": [
+    "Accounting",
+    "African Studies",
+    "Agriculture",
+    "Anthropology",
+    "Applied Health Services",
+    "Architecture",
+    "Art",
+    "Asian Studies"
+   ],
+   "question_13241099007": [
+    "Yes",
+    "No"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/andurilindustries/jobs/5278662007",
+  "n_fields": 25,
+  "filled": 24,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "school--0": "Carnegie Mellon University",
+   "degree--0": "Master's Degree",
+   "discipline--0": "Computer Science",
+   "end-month--0": "May",
+   "end-year--0": "2027",
+   "question_13284180007": "https://github.com/alex-chen-example",
+   "question_13284181007": "https://www.linkedin.com/in/alex-chen-example",
+   "question_13284184007": "None of the above",
+   "question_13284185007": "Yes",
+   "question_13284186007": "Yes",
+   "question_13284189007": "Alex",
+   "question_13284190007": "Chen",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "school--0": [
+    "Aalborg University",
+    "Aalto University",
+    "Aaniiih Nakoda College",
+    "Aarhus University",
+    "Abertay University",
+    "Aberystwyth University",
+    "Abilene Christian University",
+    "Abo Akademi University"
+   ],
+   "degree--0": [
+    "Accelerated Master's",
+    "Advanced Certificate",
+    "Associates",
+    "Associate's Degree",
+    "Bachelors",
+    "Bachelor's Degree",
+    "Certificate",
+    "Community / Technical College"
+   ],
+   "discipline--0": [
+    "Accounting",
+    "Actuarial/Risk Analysis",
+    "Advertising",
+    "Aerospace Engineering",
+    "African Studies",
+    "Agricultural Production Operations",
+    "Agriculture",
+    "Agriculture & Biological Engineering"
+   ],
+   "end-month--0": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August"
+   ],
+   "question_13284183007": [
+    "Santa Ana, CA"
+   ],
+   "question_13284184007": [
+    "A United States citizen or national",
+    "A person lawfully admitted for permanent residence of the United States (i.e., \u201cGreen Card\u201d holder)",
+    "A person admitted as a refugee to the United States under 8 U.S.C. 1157",
+    "A person admitted as an asylee to the United States under 8 U.S.C. 1158",
+    "None of the above"
+   ],
+   "question_13284185007": [
+    "Yes",
+    "No"
+   ],
+   "question_13284186007": [
+    "Yes",
+    "No"
+   ],
+   "question_13284187007": [
+    "Google job search",
+    "News coverage of Anduril",
+    "Don't Work at Anduril campaign",
+    "Friend/know someone at the company",
+    "Outreach from an Anduril recruiter",
+    "JobsOhio",
+    "BuiltIn",
+    "Indeed"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.ashbyhq.com/ariesglobal/f5f204ad-8b51-4aee-a269-9a5d2ee7e3b8/application",
+  "n_fields": 7,
+  "filled": 6,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "_systemfield_name": "Alex Chen",
+   "_systemfield_email": "alex.chen.example@gmail.com",
+   "_systemfield_resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "2466c4c8-95a3-4741-9775-ab228cf2aab8": "https://www.linkedin.com/in/alex-chen-example",
+   "84cbdd11-9b33-4b19-b705-1295fab0ea48": "May 2027"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.ashbyhq.com/normalcomputing/edfcbcf6-047f-4c12-801b-c78b199e0080/application",
+  "n_fields": 12,
+  "filled": 12,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "_systemfield_name": "Alex Chen",
+   "a52a2a18-1251-4fa4-a32d-57d416a2df53": "Alex",
+   "_systemfield_email": "alex.chen.example@gmail.com",
+   "de88fed6-1920-4d2c-a1c0-18cd807627be": "+1 555-010-0199",
+   "_systemfield_resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "0ba55e06-dc74-4335-b697-7beafe3b4326": "https://www.linkedin.com/in/alex-chen-example",
+   "036382d6-a347-4c0d-b748-60eaf022fe27": "Open / negotiable",
+   "_systemfield_location": "United States",
+   "6b699cb7-d473-422b-90b6-9499e31aee74": "True"
+  },
+  "combobox_options": {
+   "38c23985-b095-4fae-ad5f-9b302fabf2a6": [
+    "LinkedIn",
+    "Employee referral",
+    "Our recruiting team reached out",
+    "Event or conference",
+    "Podcast",
+    "Normal's research, blog, or GitHub",
+    "A Normal customer or partner",
+    "Glassdoor"
+   ],
+   "_systemfield_location": []
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.ashbyhq.com/subtotal/3891929c-0ee6-46ea-a833-4efba2862801/application",
+  "n_fields": 5,
+  "filled": 5,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "_systemfield_name": "Alex Chen",
+   "_systemfield_email": "alex.chen.example@gmail.com",
+   "9b9a19a8-b8cd-4621-9630-ad6ceb77426d": "https://github.com/alex-chen-example",
+   "55f28f43-d399-46b1-ac9f-51efa3c59b9d": "https://www.linkedin.com/in/alex-chen-example",
+   "_systemfield_resume": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.lever.co/tri/e7cc38d2-2b08-4349-b322-4d56cac9fb1b/apply",
+  "n_fields": 22,
+  "filled": 16,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "name": "Alex Chen",
+   "email": "alex.chen.example@gmail.com",
+   "phone": "+1 555-010-0199",
+   "location": "Pittsburgh, PA",
+   "urls[LinkedIn]": "https://www.linkedin.com/in/alex-chen-example",
+   "urls[GitHub]": "https://github.com/alex-chen-example",
+   "urls[Portfolio]": "https://github.com/alex-chen-example",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field0]": "Yes",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field1]": "No",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field2]": "No",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field3]": "I have read and understand the selection criteria.",
+   "eeo[gender]": "Decline to self-identify"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.lever.co/tri/828d98d0-f914-404f-b537-5d05236128bb/apply",
+  "n_fields": 22,
+  "filled": 16,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "name": "Alex Chen",
+   "email": "alex.chen.example@gmail.com",
+   "phone": "+1 555-010-0199",
+   "location": "Pittsburgh, PA",
+   "urls[LinkedIn]": "https://www.linkedin.com/in/alex-chen-example",
+   "urls[GitHub]": "https://github.com/alex-chen-example",
+   "urls[Portfolio]": "https://github.com/alex-chen-example",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field0]": "Yes",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field1]": "No",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field2]": "No",
+   "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field3]": "I have read and understand the selection criteria.",
+   "eeo[gender]": "Decline to self-identify"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/bottomlinetechnologies/jobs/8927156002",
+  "n_fields": 24,
+  "filled": 21,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "candidate-location": "Pittsburgh, PA",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "question_39102793002": "Alex",
+   "question_39102795002": "https://www.linkedin.com/in/alex-chen-example",
+   "question_39102796002": "https://github.com/alex-chen-example",
+   "question_39102798002": "Yes",
+   "question_39102799002": "Yes",
+   "question_39102800002": "No, I have never worked for Bottomline",
+   "question_39102801002": "Available from May 2027",
+   "question_39102802002": "Open / negotiable",
+   "question_39102803002": "Acknowledge/Confirm",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "candidate-location": [],
+   "question_39102798002": [
+    "Yes",
+    "No"
+   ],
+   "question_39102799002": [
+    "Yes",
+    "No"
+   ],
+   "question_39102800002": [
+    "I am a current Bottomline employee",
+    "I am a previous Bottomline employee",
+    "No, I have never worked for Bottomline"
+   ],
+   "question_39102803002": [
+    "Acknowledge/Confirm"
+   ],
+   "question_39102804002": [
+    "Yes",
+    "No"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/vestwell/jobs/8108684003",
+  "n_fields": 19,
+  "filled": 18,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "candidate-location": "Pittsburgh, PA",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "question_34135394003": "Yes",
+   "question_34135395003": "Open / negotiable",
+   "question_34135396003": "Pittsburgh, PA",
+   "question_34135399003": "Online job board",
+   "question_34135400003": "https://www.linkedin.com/in/alex-chen-example",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "candidate-location": [],
+   "question_34135394003": [
+    "Yes",
+    "No"
+   ],
+   "question_34135397003": [
+    "Yes",
+    "No"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://job-boards.greenhouse.io/rocketlab/jobs/8182050003",
+  "n_fields": 29,
+  "filled": 27,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "candidate-location": "Pittsburgh, PA",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "school--0": "Carnegie Mellon University",
+   "degree--0": "Master's Degree",
+   "discipline--0": "Computer Science",
+   "start-year--0": "2025",
+   "end-year--0": "2027",
+   "question_35148809003": "No",
+   "question_35148810003": "No",
+   "question_35148814003": "Open / negotiable",
+   "question_35148815003": "Yes",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "candidate-location": [],
+   "school--0": [
+    "Aalborg University",
+    "Aalto University",
+    "Aarhus University",
+    "Abertay University",
+    "Aberystwyth University",
+    "Abilene Christian University",
+    "Abo Akademi University",
+    "Abraham Baldwin Agricultural College"
+   ],
+   "degree--0": [
+    "Associate's Degree",
+    "Bachelor's Degree",
+    "Doctor of Medicine (M.D.)",
+    "Doctor of Philosophy (Ph.D.)",
+    "Engineer's Degree",
+    "High School",
+    "Juris Doctor (J.D.)",
+    "Master of Business Administration (M.B.A.)"
+   ],
+   "discipline--0": [
+    "Accounting",
+    "African Studies",
+    "Agriculture",
+    "Anthropology",
+    "Applied Health Services",
+    "Architecture",
+    "Art",
+    "Asian Studies"
+   ],
+   "question_35148804003": [
+    "1) U.S. citizen or national of the United States",
+    "2) U.S. lawful permanent resident",
+    "3) Refugee under 8 U.S.C 1157",
+    "4) Asylee under 8 U.S.C 1158",
+    "5) Authorized to work in the United States under the Deferred Action For Childhood Arrivals (DACA Program)",
+    "6) Other (please explain)"
+   ],
+   "question_35148806003": [
+    "Yes",
+    "No"
+   ],
+   "question_35148807003": [
+    "Yes",
+    "No"
+   ],
+   "question_35148808003": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+   ],
+   "question_35148809003": [
+    "Yes",
+    "No"
+   ],
+   "question_35148810003": [
+    "Yes",
+    "No"
+   ],
+   "question_35148811003": [
+    "Campus",
+    "Company Website",
+    "Company Social Media",
+    "Event - Industry",
+    "Event - Recruiting",
+    "Employee of Rocket Lab",
+    "Facebook",
+    "Friend or Family"
+   ],
+   "question_35148815003": [
+    "Yes",
+    "No"
+   ],
+   "question_35148816003[]": [
+    "None",
+    "High School Diploma OR Equivalent Certification",
+    "Some College, No Degree",
+    "Bachelor's Degree Or Equivalent",
+    "Graduate Degree"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://boards.greenhouse.io/embed/job_app?token=8847747002",
+  "n_fields": 21,
+  "filled": 18,
+  "errors": {},
+  "missing_required": [
+   "question_38545878002"
+  ],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "school--0": "Carnegie Mellon University",
+   "degree--0": "Master's Degree",
+   "end-month--0": "May",
+   "end-year--0": "2027",
+   "question_38545880002": "https://www.linkedin.com/in/alex-chen-example",
+   "question_38545881002": "https://github.com/alex-chen-example",
+   "question_38545882002": "Yes",
+   "question_38545884002": "No"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "school--0": [
+    "Aalborg University",
+    "Aalto University",
+    "Aarhus University",
+    "Abertay University",
+    "Aberystwyth University",
+    "Abilene Christian University",
+    "Abo Akademi University",
+    "Abraham Baldwin Agricultural College"
+   ],
+   "degree--0": [
+    "Associate's Degree",
+    "Bachelor's Degree",
+    "Doctor of Medicine (M.D.)",
+    "Doctor of Philosophy (Ph.D.)",
+    "Engineer's Degree",
+    "High School",
+    "Juris Doctor (J.D.)",
+    "Master of Business Administration (M.B.A.)"
+   ],
+   "end-month--0": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August"
+   ],
+   "question_38545879002[]": [
+    "LinkedIn",
+    "Databricks Careers Site",
+    "Campus Recruiting Event (including virtual)",
+    "Social Media",
+    "Word of mouth"
+   ],
+   "question_38545882002": [
+    "Yes",
+    "No"
+   ],
+   "question_38545883002": [
+    "Yes",
+    "No"
+   ],
+   "question_38545884002": [
+    "No",
+    "Yes - I currently work at Databricks",
+    "Yes - Previous Full-Time Employee",
+    "Yes - Previous Contractor",
+    "Yes - Previous Intern"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://boards.greenhouse.io/embed/job_app?token=6865698002",
+  "n_fields": 28,
+  "filled": 26,
+  "errors": {},
+  "missing_required": [
+   "question_24379870002"
+  ],
+  "suggested": {
+   "first_name": "Alex",
+   "last_name": "Chen",
+   "preferred_name": "Alex",
+   "email": "alex.chen.example@gmail.com",
+   "country": "United States +1",
+   "phone": "+1 555-010-0199",
+   "candidate-location": "Pittsburgh, PA",
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "school--0": "Carnegie Mellon University",
+   "degree--0": "Master's Degree",
+   "end-month--0": "May",
+   "end-year--0": "2027",
+   "question_24379874002": "https://www.linkedin.com/in/alex-chen-example",
+   "question_30149443002": "Yes",
+   "question_30149450002": "No",
+   "gender": "Decline To Self Identify",
+   "hispanic_ethnicity": "Decline To Self Identify",
+   "veteran_status": "I don't wish to answer"
+  },
+  "combobox_options": {
+   "country": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244"
+   ],
+   "candidate-location": [],
+   "school--0": [
+    "Aalborg University",
+    "Aalto University",
+    "Aarhus University",
+    "Abertay University",
+    "Aberystwyth University",
+    "Abilene Christian University",
+    "Abo Akademi University",
+    "Abraham Baldwin Agricultural College"
+   ],
+   "degree--0": [
+    "Associate's Degree",
+    "Bachelor's Degree",
+    "Doctor of Medicine (M.D.)",
+    "Doctor of Philosophy (Ph.D.)",
+    "Engineer's Degree",
+    "High School",
+    "Juris Doctor (J.D.)",
+    "Master of Business Administration (M.B.A.)"
+   ],
+   "end-month--0": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August"
+   ],
+   "question_33725511002": [
+    "2.4 or below",
+    "2.5 - 2.7 (out of 4.0)",
+    "2.8 - 3.0 (out of 4.0)",
+    "3.1 - 3.3 (out of 4.0)",
+    "3.4 - 3.5 (out of 4.0)",
+    "3.6 or above (out of 4.0)",
+    "80% or above (Canadian Institutions)",
+    "70-79% (Canadian Institutions)"
+   ],
+   "question_33725517002": [
+    "Earlier than Fall 2026",
+    "Fall 2026",
+    "Spring 2027",
+    "Later than Summer 2027"
+   ],
+   "question_24379872002[]": [
+    "Mountain View, CA",
+    "San Francisco, CA",
+    "Bellevue, WA",
+    "Vancouver, Canada"
+   ],
+   "question_24379873002": [
+    "LinkedIn Job Posting",
+    "Recruiter Reach Out",
+    "BrickFest",
+    "School Career Fair and/or Event",
+    "Referral from Employee",
+    "Referral from Intern",
+    "I am a previous Databricks intern"
+   ],
+   "question_30149443002": [
+    "Yes",
+    "No"
+   ],
+   "question_30149446002": [
+    "Yes",
+    "No"
+   ],
+   "question_30149450002": [
+    "No",
+    "Yes - I currently work at Databricks",
+    "Yes - Previous Full-Time Employee",
+    "Yes - Previous Contractor",
+    "Yes - Previous Intern"
+   ],
+   "gender": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "hispanic_ethnicity": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "veteran_status": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.ashbyhq.com/fab2/d9edb922-6cae-4e65-9b20-ba452f3e2edf/application",
+  "n_fields": 14,
+  "filled": 12,
+  "errors": {},
+  "missing_required": [
+   "e27fb180-7bda-47d1-abae-2c0476a81e7a"
+  ],
+  "suggested": {
+   "db56b2e9-4a03-46a0-874e-f2d17b3c904f": "Yes",
+   "7a5064ba-8201-4e6f-b30c-4dc0dfbad1eb": "Yes",
+   "25b2a54e-603b-45da-9c7d-bb1e59102db9": "No",
+   "_systemfield_name": "Alex Chen",
+   "_systemfield_email": "alex.chen.example@gmail.com",
+   "_systemfield_resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "_systemfield_location": "Pittsburgh, PA",
+   "7f170837-7c78-411e-901d-7dc12d997ffb": "May 2027"
+  },
+  "combobox_options": {
+   "_systemfield_location": []
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.ashbyhq.com/f7d8749a-72d6-407c-bf98-292ea630c73a/0e7ecf76-b4f6-4159-aa44-4814af263c86/application",
+  "n_fields": 37,
+  "filled": 20,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "0eab6688-0a9a-459a-9752-48958c82b752": "Yes",
+   "_systemfield_name": "Alex Chen",
+   "_systemfield_email": "alex.chen.example@gmail.com",
+   "currentLocation": "Pittsburgh, PA",
+   "phone": "+1 555-010-0199",
+   "_systemfield_resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "LinkedIn": "https://www.linkedin.com/in/alex-chen-example",
+   "GitHub": "https://github.com/alex-chen-example",
+   "Portfolio": "https://github.com/alex-chen-example",
+   "c98d628d-ed79-4c56-9d04-6bf6c5b5e507": "Yes",
+   "cfd19f1c-6dc5-4df9-8d96-444ff5d80894": "Yes",
+   "ff57e21f-98d3-49fb-adf6-d24139ff5383": "Alex Chen",
+   "21331f5b-7c60-44da-9505-c1720081a21f": "May 2027",
+   "b73b64d8-b9f8-46e1-a543-c2e7682f6cc3": "Yes",
+   "ddc9b858-7da4-4b27-81e9-73244d8dc19a": "English"
+  },
+  "combobox_options": {
+   "625c56ed-b3d9-4e44-a9d0-cd1d9678eaa4": [
+    "Campus visit",
+    "LinkedIn Post",
+    "LinkedIn Sponsored Job/Ad",
+    "Industry Conference",
+    "Twitter/X",
+    "Instagram",
+    "Referral",
+    "Handshake"
+   ]
+  },
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.ashbyhq.com/morningconsult/ef45d90e-877e-4bfb-9635-29de8881aa89/application",
+  "n_fields": 15,
+  "filled": 13,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "9417d0d7-cea1-44f0-b748-9357e582023f": "Yes",
+   "_systemfield_name": "Alex Chen",
+   "_systemfield_email": "alex.chen.example@gmail.com",
+   "0d5cba9d-d74e-4493-b364-ef4dc7552c5e": "He/him",
+   "_systemfield_resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "2d2d9fc0-af9c-4229-b4d9-6989b168b834": "Pittsburgh, PA",
+   "_systemfield_eeoc_gender": "Decline to self-identify",
+   "_systemfield_eeoc_race": "Decline to self-identify",
+   "_systemfield_eeoc_veteran_status": "I decline to self-identify for protected veteran status"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.lever.co/humble-robotics/93ca2ae3-c549-402f-b6a6-ff0b84f554f9/apply",
+  "n_fields": 12,
+  "filled": 9,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "name": "Alex Chen",
+   "email": "alex.chen.example@gmail.com",
+   "phone": "+1 555-010-0199",
+   "location": "Pittsburgh, PA",
+   "urls[LinkedIn]": "https://www.linkedin.com/in/alex-chen-example",
+   "urls[GitHub]": "https://github.com/alex-chen-example",
+   "urls[Portfolio]": "https://github.com/alex-chen-example"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ },
+ {
+  "url": "https://jobs.lever.co/crosscountry-consulting/eb6ab6cf-6f93-486f-b4bf-6137bc67feb7/apply",
+  "n_fields": 18,
+  "filled": 17,
+  "errors": {},
+  "missing_required": [],
+  "suggested": {
+   "resume": "probe-out/_resume/Alex_Chen_Resume.pdf",
+   "name": "Alex Chen",
+   "label:pronouns": "['He/him']",
+   "email": "alex.chen.example@gmail.com",
+   "phone": "+1 555-010-0199",
+   "location": "Pittsburgh, PA",
+   "urls[LinkedIn]": "https://www.linkedin.com/in/alex-chen-example",
+   "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field6]": "Yes",
+   "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field7]": "Yes",
+   "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field8]": "F-1"
+  },
+  "combobox_options": {},
+  "errors_on_page": []
+ }
+]

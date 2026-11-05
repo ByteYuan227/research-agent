@@ -1,0 +1,463 @@
+{
+ "url": "https://job-boards.greenhouse.io/anthropic/jobs/5438311008",
+ "title": "Job Application for Anthropic Research Resident at Anthropic",
+ "fields": [
+  {
+   "key": "first_name",
+   "kind": "text",
+   "label": "First Name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Alex"
+  },
+  {
+   "key": "last_name",
+   "kind": "text",
+   "label": "Last Name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Chen"
+  },
+  {
+   "key": "email",
+   "kind": "text",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "country",
+   "kind": "combobox",
+   "label": "Country",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244",
+    "Anguilla +1",
+    "Antigua & Barbuda +1",
+    "Argentina +54",
+    "Armenia +374",
+    "Aruba +297",
+    "Ascension Island +247",
+    "Australia +61",
+    "Austria +43",
+    "Azerbaijan +994",
+    "Bahamas +1",
+    "Bahrain +973",
+    "Bangladesh +880",
+    "Barbados +1",
+    "Belarus +375",
+    "Belgium +32",
+    "Belize +501",
+    "Benin +229",
+    "Bermuda +1",
+    "Bhutan +975",
+    "Bolivia +591",
+    "Bosnia & Herzegovina +387",
+    "Botswana +267",
+    "Brazil +55",
+    "British Indian Ocean Territory +246",
+    "British Virgin Islands +1",
+    "Brunei +673",
+    "Bulgaria +359",
+    "Burkina Faso +226",
+    "Burundi +257",
+    "Cambodia +855",
+    "Cameroon +237",
+    "Canada +1",
+    "Cape Verde +238",
+    "Caribbean Netherlands +599",
+    "Cayman Islands +1",
+    "Central African Republic +236",
+    "Chad +235",
+    "Chile +56",
+    "China +86",
+    "Christmas Island +61",
+    "Cocos (Keeling) Islands +61",
+    "Colombia +57",
+    "Comoros +269",
+    "Congo - Brazzaville +242",
+    "Congo - Kinshasa +243",
+    "Cook Islands +682",
+    "Costa Rica +506",
+    "C\u00f4te d\u2019Ivoire +225",
+    "Croatia +385",
+    "Cuba +53",
+    "Cura\u00e7ao +599",
+    "Cyprus +357",
+    "Czechia +420",
+    "Denmark +45",
+    "Djibouti +253",
+    "Dominica +1",
+    "Dominican Republic +1",
+    "Ecuador +593",
+    "Egypt +20",
+    "El Salvador +503",
+    "Equatorial Guinea +240",
+    "Eritrea +291",
+    "Estonia +372",
+    "Eswatini +268",
+    "Ethiopia +251",
+    "Falkland Islands +500",
+    "Faroe Islands +298",
+    "Fiji +679",
+    "Finland +358",
+    "France +33",
+    "French Guiana +594",
+    "French Polynesia +689"
+   ],
+   "suggested": "United States +1"
+  },
+  {
+   "key": "phone",
+   "kind": "tel",
+   "label": "Phone",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "+1 555-010-0199"
+  },
+  {
+   "key": "resume",
+   "kind": "file",
+   "label": "Resume/CV",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "accept": ".pdf,.doc,.docx,.txt,.rtf",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "question_18827863008",
+   "kind": "text",
+   "label": "(Optional) Personal Preferences",
+   "required": false,
+   "description": "How do you pronounce your name?",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "He/him"
+  },
+  {
+   "key": "question_18827864008",
+   "kind": "text",
+   "label": "Website",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "question_18827865008",
+   "kind": "combobox",
+   "label": "Are you open to working in-person in one of our offices 25% of the time?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_18827866008",
+   "kind": "text",
+   "label": "When is the earliest you would want to start working with us?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_18827867008",
+   "kind": "text",
+   "label": "Do you have any deadlines or timeline considerations we should be aware of?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_18827868008",
+   "kind": "combobox",
+   "label": "AI Policy for Application",
+   "required": true,
+   "description": "We believe that AI will have a transformative impact on the world, and we\u2019re seeking exceptional candidates who collaborate thoughtfully with Claude to realize this vision. At the same time, we want to understand your unique skills, expertise, and perspective through our hiring process. We invite you to review our AI partnership guidelines for candidates and confirm your understanding by selecting \u201cYes.\u201d",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_18827869008",
+   "kind": "textarea",
+   "label": "Why Anthropic?",
+   "required": true,
+   "description": "Why do you want to work at Anthropic? (We value this response highly - great answers are often 200-400 words.)",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_18827870008",
+   "kind": "combobox",
+   "label": "Do you require visa sponsorship?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "suggested": "Yes"
+  },
+  {
+   "key": "question_18827871008",
+   "kind": "combobox",
+   "label": "Will you now or will you in the future require employment visa sponsorship to work in the country in which the job you're applying for is located?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "suggested": "Yes"
+  },
+  {
+   "key": "question_18827872008",
+   "kind": "textarea",
+   "label": "Additional Information",
+   "required": false,
+   "description": "Add a cover letter or anything else you want to share.",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_18827873008",
+   "kind": "text",
+   "label": "LinkedIn Profile",
+   "required": false,
+   "description": "Please ensure to provide either your LinkedIn profile or Resume, we require at least one of the two.",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "question_18827874008",
+   "kind": "combobox",
+   "label": "Are you open to relocation for this role?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "suggested": "Yes"
+  },
+  {
+   "key": "question_18827875008",
+   "kind": "text",
+   "label": "What is the address from which you plan on working? If you would need to relocate, please type \"relocating\".",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_18827876008",
+   "kind": "combobox",
+   "label": "Have you ever interviewed at Anthropic before?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "suggested": "No"
+  },
+  {
+   "key": "question_18827877008",
+   "kind": "combobox",
+   "label": "Please read the arbitration agreement below",
+   "required": true,
+   "description": "Agreement to Arbitrate I understand and agree that both Anthropic and I waive our respective rights to trial by jury in connection with any claims covered by this agreement to arbitrate. Instead, any disputes arising out of or related to my application for employment with Anthropic shall be settled by final and binding arbitration pursuant to the Federal Arbitration Act. I understand and agree that Anthropic\u2019s employees/agents, Anthropic\u2019s clients, and their employees/agents are third-party beneficiaries to this agreement. The arbitration shall be conducted in accordance with the Employment Arbitration Rules & Procedures of Judicial Arbitration and Mediation Services, Inc. (\u201cJAMS Rules\u201d), av",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "I will read the arbitration agreement below."
+   ],
+   "suggested": "I will read the arbitration agreement below."
+  },
+  {
+   "key": "question_18827878008",
+   "kind": "combobox",
+   "label": "Agreement to Arbitrate",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "I understand and agree to the terms of the Agreement to Arbitrate set forth above."
+   ],
+   "suggested": "I understand and agree to the terms of the Agreement to Arbitrate set forth above."
+  },
+  {
+   "key": "question_19111555008",
+   "kind": "textarea",
+   "label": "Please share links showcasing your most notable work and accomplishments here.",
+   "required": false,
+   "description": "For each link, please write a short description including details and context on your involvement.",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_19111556008",
+   "kind": "textarea",
+   "label": "What research would you most like to work on during the program, and why?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_19099270008[]",
+   "kind": "combobox",
+   "label": "Residents are paired with a mentor in one of the areas below. Which are you interested in? Select all that apply.",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": true,
+   "filled": false,
+   "options": [
+    "AI safety & alignment (e.g. scalable oversight, adversarial robustness and AI control, model organisms)",
+    "Interpretability (understanding the internal workings of large language models)",
+    "AI security & frontier red-teaming (e.g. cybersecurity, robotics, cryptography)",
+    "ML systems & reinforcement learning (e.g. model architecture, accelerator simulators, RL environment pipelines)",
+    "Not sure yet"
+   ]
+  },
+  {
+   "key": "question_19099271008[]",
+   "kind": "checkbox_group",
+   "label": "Which residency lengths would work for you? Select all that apply.",
+   "required": false,
+   "options": [
+    "Six weeks",
+    "Three months",
+    "Six months"
+   ],
+   "description": "Which residency lengths would work for you? Select all that apply.",
+   "filled": false
+  },
+  {
+   "key": "question_19118266008",
+   "kind": "textarea",
+   "label": "References: Please list 2-3 references who can speak to your work. List one reference per line, with their name, current role, and a short note on how you worked together. (e.g. \u2018Jane Doe, Research Scientist at Y, supervised my 2025 project on Z\u2019).",
+   "required": true,
+   "description": "We won\u2019t contact anyone at this stage. References are only used in later rounds, and we will let you know before reaching out to them.",
+   "placeholder": "",
+   "filled": false
+  },
+  {
+   "key": "question_19180903008",
+   "kind": "text",
+   "label": "How did you hear about this role?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Online job board"
+  },
+  {
+   "key": "gender",
+   "kind": "combobox",
+   "label": "Gender",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Male",
+    "Female",
+    "Decline To Self Identify"
+   ],
+   "suggested": "Decline To Self Identify"
+  },
+  {
+   "key": "hispanic_ethnicity",
+   "kind": "combobox",
+   "label": "Are you Hispanic/Latino?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No",
+    "Decline To Self Identify"
+   ],
+   "suggested": "Decline To Self Identify"
+  },
+  {
+   "key": "veteran_status",
+   "kind": "combobox",
+   "label": "Veteran Status",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "I am not a protected veteran",
+    "I identify as one or more of the classifications of a protected veteran",
+    "I don't wish to answer"
+   ],
+   "suggested": "I don't wish to answer"
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": true
+}

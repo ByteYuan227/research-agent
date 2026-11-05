@@ -1,0 +1,190 @@
+{
+ "url": "https://jobs.ashbyhq.com/morningconsult/ef45d90e-877e-4bfb-9635-29de8881aa89/application",
+ "title": "Research Associate @ Morning Consult",
+ "fields": [
+  {
+   "key": "9417d0d7-cea1-44f0-b748-9357e582023f",
+   "kind": "button_group",
+   "label": "Will you now or in the future require Morning Consult to sponsor an immigration case in order to employ you? (If you require sponsorship for an immigration or work permit case in order to be employed at Morning Consult, either now or at some point in the near future, then you should answer yes. An example of an immigration or work permit case that may require sponsorship now or in the future would be an F-1, STEM-OPT, or other employment-based work permit sponsorship)",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes"
+  },
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Full Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "0d5cba9d-d74e-4493-b364-ef4dc7552c5e",
+   "kind": "text",
+   "label": "Pronouns",
+   "required": false,
+   "description": "Let the employer know what pronouns you use so that they can address you correctly.",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "He/him"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "64b054ba-927e-48c8-ad59-dbc617ebc026",
+   "kind": "file",
+   "label": "Cover Letter",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false
+  },
+  {
+   "key": "853cfccf-534b-43fa-9f26-c2165976abad",
+   "kind": "radio",
+   "label": "The Research Accelerator Program is expected to start on Tuesday, July 13th. Are you able to start then?",
+   "required": true,
+   "options": [
+    "Yes, I can start on that date.",
+    "No, I cannot start on that date."
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "ca07695b-3dcd-4109-9cf7-12bbb97f8256",
+   "kind": "radio",
+   "label": "This is a full-time hybrid role. Participants must be located within commuting distance of a Morning Consult office. Which office(s) can you commute to up to 3 days a week starting in July 2027?",
+   "required": true,
+   "options": [
+    "New York, NY",
+    "Washington, DC",
+    "Chicago, IL",
+    "I will not be based within commuting distance of a Morning Consult office in July 2027."
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "2d2d9fc0-af9c-4229-b4d9-6989b168b834",
+   "kind": "text",
+   "label": "Current Location (city/state)",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "be93876d-5db0-4ca3-96c9-bf7a130ac495",
+   "kind": "radio",
+   "label": "All program participants start at a non-negotiable annual base salary of $66,000. The role also includes an equity grant and is eligible for variable compensation and annual performance increases. Do you understand the starting salary?",
+   "required": true,
+   "options": [
+    "Yes, I understand the starting salary is $66,000 and is non-negotiable.",
+    "No, I do not."
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "cba4d9eb-cf43-4471-8908-0bdeaa3108fc",
+   "kind": "textarea",
+   "label": "Review Morning Consult\u2019s core values on our website (https://morningconsult.com/careers). Which Morning Consult value resonates most with you, and why? Please share a specific example of how you\u2019ve exemplified that value in an academic, professional, or extracurricular setting.",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "9ed39ac8-71f4-47a1-bb81-e4f697959101",
+   "kind": "textarea",
+   "label": "What stands out to you about the Research Associate program at Morning Consult? Tell us why you\u2019d be a strong fit for the role.",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "_systemfield_eeoc_gender",
+   "kind": "radio",
+   "label": "Gender",
+   "required": false,
+   "options": [
+    "Male",
+    "Female",
+    "Decline to self-identify"
+   ],
+   "description": "Input gender",
+   "filled": false,
+   "suggested": "Decline to self-identify"
+  },
+  {
+   "key": "_systemfield_eeoc_race",
+   "kind": "radio",
+   "label": "Race",
+   "required": false,
+   "options": [
+    "Hispanic or Latino",
+    "White (Not Hispanic or Latino)",
+    "Black or African American (Not Hispanic or Latino)",
+    "Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino)",
+    "Asian (Not Hispanic or Latino)",
+    "American Indian or Alaska Native (Not Hispanic or Latino)",
+    "Two or More Races (Not Hispanic or Latino)",
+    "Decline to self-identify"
+   ],
+   "description": "Hispanic or Latino - A person of Cuban, Mexican, Puerto Rican, South or Central American, or other Spanish culture or origin regardless of race. White (Not Hispanic or Latino) - A person having origins in any of the original peoples of Europe, the Middle East, or North Africa. Black or African American (Not Hispanic or Latino) - A person having origins in any of the Black racial groups of Africa. Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino) - A person having origins in any of the peoples of Hawaii, Guam, Samoa, or other Pacific Islands. Asian (Not Hispanic or Latino) - A person having origins in any of the original peoples of the Far East, Southeast Asia, or the Indian ",
+   "filled": false,
+   "suggested": "Decline to self-identify"
+  },
+  {
+   "key": "_systemfield_eeoc_veteran_status",
+   "kind": "radio",
+   "label": "Veteran Status",
+   "required": false,
+   "options": [
+    "I identify as one or more of the classifications of protected veteran listed above",
+    "I am not a protected veteran",
+    "I decline to self-identify for protected veteran status"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "I decline to self-identify for protected veteran status"
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

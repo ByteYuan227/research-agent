@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Alex Chen - Resume</title>
+<style>
+  @page { size: Letter; margin: 0.5in 0.55in; }
+  body { font-family: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif; font-size: 10.2pt;
+         line-height: 1.32; color: #111; margin: 0; }
+  h1 { font-size: 19pt; margin: 0; letter-spacing: 0.3px; }
+  .contact { margin-top: 2px; font-size: 9.6pt; color: #333; }
+  .contact span + span::before { content: "  |  "; color: #888; }
+  h2 { font-size: 10.6pt; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #222;
+       margin: 11px 0 5px; padding-bottom: 1px; }
+  .row { display: flex; justify-content: space-between; gap: 12px; }
+  .row b { font-weight: 700; }
+  .sub { font-style: italic; }
+  .entry { margin-bottom: 6px; page-break-inside: avoid; }
+  ul { margin: 2px 0 0 0; padding-left: 15px; }
+  li { margin: 1px 0; }
+  .summary { margin: 6px 0 0; }
+  .skills div { margin: 1px 0; }
+  a { color: inherit; text-decoration: none; }
+</style></head><body>
+<h1>Alex Chen</h1>
+<div class="contact">
+<span>Pittsburgh, PA</span><span>+1 555-010-0199</span>  <span>alex.chen.example@gmail.com</span>
+<span>linkedin.com/in/alex-chen-example</span><span>github.com/alex-chen-example</span></div>
+<h2>Education</h2>
+<div class="entry">
+  <div class="row"><b>Carnegie Mellon University</b><span>Pittsburgh, PA</span></div>
+  <div class="row"><span class="sub">M.S. in Computer Science; GPA 3.9/4.0</span>
+    <span>Aug 2025 – Expected May 2027</span></div>
+<div>Coursework: Deep Learning Systems, Distributed Systems, Machine Learning</div></div><div class="entry">
+  <div class="row"><b>Zhejiang University</b><span>Hangzhou, China</span></div>
+  <div class="row"><span class="sub">B.Eng. in Computer Science; GPA 3.8/4.0</span>
+    <span>Sep 2021 – Jun 2025</span></div>
+</div><h2>Experience</h2>
+<div class="entry">
+  <div class="row"><b>Machine Learning Engineer Intern, Example AI Labs</b><span>Jun 2024 – Sep 2024</span></div>
+<div class="sub">Beijing, China</div><ul><li>Cut LLM inference latency by 35% by adding continuous batching and paged KV-cache to an internal serving stack (PyTorch, CUDA).</li><li>Built an evaluation harness that ran 12 benchmark suites nightly and caught 3 regressions before release.</li><li>Wrote a Triton kernel for fused RMSNorm, giving a 1.8x speedup over the PyTorch baseline.</li></ul></div><div class="entry">
+  <div class="row"><b>Teaching Assistant, Data Structures, Zhejiang University</b><span>Sep 2023 – Jan 2024</span></div>
+<div class="sub">Hangzhou, China</div><ul><li>Led weekly labs for 60 students and wrote autograded C++ assignments.</li></ul></div><h2>Projects</h2>
+<div class="entry">
+  <div class="row"><b>Research Agent<span style="font-weight:400"> | Python, Claude API, Playwright</span></b>
+    <span>github.com/alex-chen-example/research-agent</span></div>
+<ul><li>Built a tool-using research agent that plans sub-questions, searches the web and writes cited reports.</li><li>Designed an offline test harness with a scripted fake client covering every branch of the agent loop.</li></ul></div><div class="entry">
+  <div class="row"><b>Speculative Decoding Study<span style="font-weight:400"> | PyTorch, vLLM</span></b>
+    <span></span></div>
+<ul><li>Benchmarked speculative decoding on 3 model pairs and reached 2.1x throughput at matched quality.</li></ul></div><h2>Skills</h2>
+<div class="skills"><div><b>Languages:</b> Python, C++, CUDA, SQL, Go</div><div><b>ML &amp; Systems:</b> PyTorch, Triton, vLLM, Ray, Docker, Kubernetes</div><div><b>Tools:</b> Git, Linux, Playwright, FastAPI</div></div>
+</body></html>

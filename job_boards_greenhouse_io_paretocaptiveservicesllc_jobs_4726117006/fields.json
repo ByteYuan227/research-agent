@@ -1,0 +1,408 @@
+{
+ "url": "https://job-boards.greenhouse.io/paretocaptiveservicesllc/jobs/4726117006",
+ "title": "Job Application for Software Engineering Summer Intern at ParetoHealth",
+ "fields": [
+  {
+   "key": "first_name",
+   "kind": "text",
+   "label": "First Name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Alex"
+  },
+  {
+   "key": "last_name",
+   "kind": "text",
+   "label": "Last Name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Chen"
+  },
+  {
+   "key": "email",
+   "kind": "text",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "country",
+   "kind": "combobox",
+   "label": "Country",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "United States +1",
+    "Afghanistan +93",
+    "\u00c5land Islands +358",
+    "Albania +355",
+    "Algeria +213",
+    "American Samoa +1",
+    "Andorra +376",
+    "Angola +244",
+    "Anguilla +1",
+    "Antigua & Barbuda +1",
+    "Argentina +54",
+    "Armenia +374",
+    "Aruba +297",
+    "Ascension Island +247",
+    "Australia +61",
+    "Austria +43",
+    "Azerbaijan +994",
+    "Bahamas +1",
+    "Bahrain +973",
+    "Bangladesh +880",
+    "Barbados +1",
+    "Belarus +375",
+    "Belgium +32",
+    "Belize +501",
+    "Benin +229",
+    "Bermuda +1",
+    "Bhutan +975",
+    "Bolivia +591",
+    "Bosnia & Herzegovina +387",
+    "Botswana +267",
+    "Brazil +55",
+    "British Indian Ocean Territory +246",
+    "British Virgin Islands +1",
+    "Brunei +673",
+    "Bulgaria +359",
+    "Burkina Faso +226",
+    "Burundi +257",
+    "Cambodia +855",
+    "Cameroon +237",
+    "Canada +1",
+    "Cape Verde +238",
+    "Caribbean Netherlands +599",
+    "Cayman Islands +1",
+    "Central African Republic +236",
+    "Chad +235",
+    "Chile +56",
+    "China +86",
+    "Christmas Island +61",
+    "Cocos (Keeling) Islands +61",
+    "Colombia +57",
+    "Comoros +269",
+    "Congo - Brazzaville +242",
+    "Congo - Kinshasa +243",
+    "Cook Islands +682",
+    "Costa Rica +506",
+    "C\u00f4te d\u2019Ivoire +225",
+    "Croatia +385",
+    "Cuba +53",
+    "Cura\u00e7ao +599",
+    "Cyprus +357",
+    "Czechia +420",
+    "Denmark +45",
+    "Djibouti +253",
+    "Dominica +1",
+    "Dominican Republic +1",
+    "Ecuador +593",
+    "Egypt +20",
+    "El Salvador +503",
+    "Equatorial Guinea +240",
+    "Eritrea +291",
+    "Estonia +372",
+    "Eswatini +268",
+    "Ethiopia +251",
+    "Falkland Islands +500",
+    "Faroe Islands +298",
+    "Fiji +679",
+    "Finland +358",
+    "France +33",
+    "French Guiana +594",
+    "French Polynesia +689"
+   ],
+   "suggested": "United States +1"
+  },
+  {
+   "key": "phone",
+   "kind": "tel",
+   "label": "Phone",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "+1 555-010-0199"
+  },
+  {
+   "key": "candidate-location",
+   "kind": "combobox",
+   "label": "Location (City)",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [],
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "resume",
+   "kind": "file",
+   "label": "Resume/CV",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": ".pdf,.doc,.docx,.txt,.rtf",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "cover_letter",
+   "kind": "file",
+   "label": "Cover Letter",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "accept": ".pdf,.doc,.docx,.txt,.rtf",
+   "filled": false
+  },
+  {
+   "key": "question_8790979006",
+   "kind": "text",
+   "label": "LinkedIn Profile",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "question_8790980006",
+   "kind": "combobox",
+   "label": "Are you legally authorized to work in the United States?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "suggested": "Yes"
+  },
+  {
+   "key": "question_8790981006",
+   "kind": "combobox",
+   "label": "Will you now or in the future require sponsorship to work in the United States?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "suggested": "Yes"
+  },
+  {
+   "key": "question_8790982006",
+   "kind": "combobox",
+   "label": "Do you attest to the following statement? Pareto Captive Services (Pareto\") is an equal opportunity employer. Pareto does not discriminate in employment on account of race, color, religion, national origin, citizenship status, ancestry, age, gender, sexual orientation, marital status, physical or mental disability, military status or unfavorable discharge from military service. I understand that neither the completion of this application nor any other part of my consideration for employment establishes any obligation for Pareto to hire me. If I am hired, I understand that either Pareto or I can terminate my employment at any time and for any reason, with or without cause and without prior notice. I understand that no representative of Pareto has the authority to make any assurance to the contrary. I attest with my signature below that I have given to Pareto true and complete information on this application. No requested information has been concealed. I authorize Pareto to contact references provided for employment reference checks with prior notice to me. If any information I have provided is untrue, or if I have concealed material information, I understand that this will constitute cause for the denial of employment or immediate dismissal. Electronic acknowledgement required.",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_8790983006",
+   "kind": "combobox",
+   "label": "Can you commit to attending the full Start Strong Pareto Internship Program, starting on June 7, 2027 and finishing on August 6, 2027?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_8790984006",
+   "kind": "combobox",
+   "label": "Can you commit to commuting to the Philadelphia office 4 days per week for the duration of the internship?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_8790985006",
+   "kind": "combobox",
+   "label": "Are you currently a Rising Senior (December 2027 or May 2028 grad)?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_8790986006",
+   "kind": "combobox",
+   "label": "Can you commit to living in or around a commutable distance (within 20 miles) to Philadelphia/surrounding Philly suburbs for the duration of the internship?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No"
+   ]
+  },
+  {
+   "key": "question_8797455006",
+   "kind": "text",
+   "label": "How did you hear about the ParetoHealth Internship?",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "filled": false,
+   "suggested": "Online job board"
+  },
+  {
+   "key": "label:how_would_you_describe_your_gender_identity_mark_all_that_ap",
+   "kind": "combobox",
+   "label": "How would you describe your gender identity? (mark all that apply)",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Man",
+    "Non-binary",
+    "Woman",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ],
+   "suggested": "I don't wish to answer"
+  },
+  {
+   "key": "label:how_would_you_describe_your_racial_ethnic_background_mark_al",
+   "kind": "combobox",
+   "label": "How would you describe your racial/ethnic background? (mark all that apply)",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Black or of African descent",
+    "East Asian",
+    "Hispanic, Latinx or of Spanish Origin",
+    "Indigenous, American Indian or Alaska Native",
+    "Middle Eastern or North African",
+    "Native Hawaiian or Pacific Islander",
+    "South Asian",
+    "Southeast Asian",
+    "White or European",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ]
+  },
+  {
+   "key": "label:how_would_you_describe_your_sexual_orientation_mark_all_that",
+   "kind": "combobox",
+   "label": "How would you describe your sexual orientation? (mark all that apply)",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Asexual",
+    "Bisexual and/or pansexual",
+    "Gay",
+    "Heterosexual",
+    "Lesbian",
+    "Queer",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ]
+  },
+  {
+   "key": "label:do_you_identify_as_transgender",
+   "kind": "combobox",
+   "label": "Do you identify as transgender?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ]
+  },
+  {
+   "key": "label:do_you_have_a_disability_or_chronic_condition_physical_visua",
+   "kind": "combobox",
+   "label": "Do you have a disability or chronic condition (physical, visual, auditory, cognitive, mental, emotional, or other) that substantially limits one or more of your major life activities, including mobility, communication (seeing, hearing, speaking), and learning?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes",
+    "No",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ]
+  },
+  {
+   "key": "label:are_you_a_veteran_or_active_member_of_the_united_states_arme",
+   "kind": "combobox",
+   "label": "Are you a veteran or active member of the United States Armed Forces?",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "Yes, I am a veteran or active member",
+    "No, I am not a veteran or active member",
+    "I prefer to self-describe",
+    "I don't wish to answer"
+   ]
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

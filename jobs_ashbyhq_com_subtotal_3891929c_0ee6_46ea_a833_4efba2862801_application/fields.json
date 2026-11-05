@@ -1,0 +1,64 @@
+{
+ "url": "https://jobs.ashbyhq.com/subtotal/3891929c-0ee6-46ea-a833-4efba2862801/application",
+ "title": "Software Engineering Intern @ Subtotal",
+ "fields": [
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "9b9a19a8-b8cd-4621-9630-ad6ceb77426d",
+   "kind": "url",
+   "label": "GitHub URL",
+   "required": true,
+   "description": "",
+   "placeholder": "https://example.com...",
+   "filled": false,
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "55f28f43-d399-46b1-ac9f-51efa3c59b9d",
+   "kind": "text",
+   "label": "LinkedIn URL",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

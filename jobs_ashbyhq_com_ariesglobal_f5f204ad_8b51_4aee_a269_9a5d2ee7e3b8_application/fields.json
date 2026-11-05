@@ -1,0 +1,91 @@
+{
+ "url": "https://jobs.ashbyhq.com/ariesglobal/f5f204ad-8b51-4aee-a269-9a5d2ee7e3b8/application",
+ "title": "Software Engineer Intern @ Aries Global",
+ "fields": [
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "2466c4c8-95a3-4741-9775-ab228cf2aab8",
+   "kind": "text",
+   "label": "LinkedIn Profile",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "250a6e88-6467-4ce5-a8d1-4d5a3f224f99",
+   "kind": "textarea",
+   "label": "Why do you want to join Aries?",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "84cbdd11-9b33-4b19-b705-1295fab0ea48",
+   "kind": "text",
+   "label": "Availability / Start Date",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "May 2027"
+  },
+  {
+   "key": "3a5bdc1e-cf44-4fd3-9c36-cd20ff63aeaa",
+   "kind": "radio",
+   "label": "How did you hear about us?",
+   "required": false,
+   "options": [
+    "LinkedIn",
+    "Company Website",
+    "Job Board (Indeed, Glassdoor, etc.)",
+    "Employee Referral",
+    "University / Career Fair",
+    "Social Media",
+    "News / Article",
+    "Other"
+   ],
+   "description": "",
+   "filled": false
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

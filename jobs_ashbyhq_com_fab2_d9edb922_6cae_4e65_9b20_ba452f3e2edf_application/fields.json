@@ -1,0 +1,172 @@
+{
+ "url": "https://jobs.ashbyhq.com/fab2/d9edb922-6cae-4e65-9b20-ba452f3e2edf/application",
+ "title": "Computer Vision Software Engineer @ Fab2",
+ "fields": [
+  {
+   "key": "db56b2e9-4a03-46a0-874e-f2d17b3c904f",
+   "kind": "button_group",
+   "label": "Are you currently authorized to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes"
+  },
+  {
+   "key": "7a5064ba-8201-4e6f-b30c-4dc0dfbad1eb",
+   "kind": "button_group",
+   "label": "Will you, now or in the future, require employer sponsorship to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes"
+  },
+  {
+   "key": "25b2a54e-603b-45da-9c7d-bb1e59102db9",
+   "kind": "button_group",
+   "label": "I am one of the following: (a) a citizen of the United States; (b) a lawful permanent resident of the United States; or (c) a person admitted into the United States as an asylee or refugee:",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "No"
+  },
+  {
+   "key": "50773615-bd40-4517-a6e7-9da8651c211f",
+   "kind": "button_group",
+   "label": "If no, is your home country listed below?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "Armenia, Azerbaijan, Belarus, Burma, Cambodia, China, Cuba, Georgia, Iran, Iraq, Kazakhstan, North Korea, Kyrgyzstan, Laos, Libya, Macao, Moldova, Mongolia, Nicaragua, Russia, Syria, Tajikistan, Turkmenistan, Uzbekistan, Venezuela, Vietnam, Yemen",
+   "filled": false
+  },
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "_systemfield_location",
+   "kind": "combobox",
+   "label": "Location",
+   "required": true,
+   "description": "",
+   "placeholder": "Start typing...",
+   "multiple": false,
+   "filled": false,
+   "options": [],
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "e27fb180-7bda-47d1-abae-2c0476a81e7a",
+   "kind": "file",
+   "label": "Portfolio - File upload",
+   "required": true,
+   "description": "Required - Show us what you've built! Please upload a file AND/OR add a website link below to your portfolio. Any format is fine - youtube video, word doc, personal website. A portfolio submission is required for this role and part of the evaluation process.",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false
+  },
+  {
+   "key": "7f1a591d-211e-4da0-9a57-a54dafd24bdd",
+   "kind": "text",
+   "label": "Portfolio - website link",
+   "required": true,
+   "description": "Required - Show us what you've built! Please add a website link AND/OR upload a file above to your portfolio. Any format is fine - youtube video, word doc, personal website. A portfolio submission is required for this role and part of the evaluation process.",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "2efdcc3e-0de0-44e1-9bc5-5a4bb8b31660",
+   "kind": "textarea",
+   "label": "Tell us a bit about yourself and why you'd like to join fab2",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "9b9cea50-ba3c-47af-94c1-a3cfcd83f215",
+   "kind": "textarea",
+   "label": "What\u2019s something you\u2019ve built, led, or improved that you\u2019re most proud of?",
+   "required": true,
+   "description": "What was the goal, what part did you play, and what impact did it have? (250 words or less)",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "7f170837-7c78-411e-901d-7dc12d997ffb",
+   "kind": "text",
+   "label": "Ideal start date in office",
+   "required": true,
+   "description": "This is an in-office position",
+   "placeholder": "Pick date...",
+   "filled": false,
+   "suggested": "May 2027"
+  },
+  {
+   "key": "2f009e35-6a5a-40f7-8fac-5e96cadbba2d",
+   "kind": "radio",
+   "label": "How did you hear about us?",
+   "required": true,
+   "options": [
+    "Referral",
+    "Word of mouth",
+    "Sam's Youtube",
+    "X",
+    "LinkedIn",
+    "Indeed or other search engine",
+    "Google Search",
+    "Other"
+   ],
+   "description": "",
+   "filled": false
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}
