@@ -237,6 +237,9 @@
     }
 
     const label = labelFor(el, container);
+    // Unlabelled, unfocusable inputs are validation helpers of custom widgets (react-select).
+    if (type !== "file" && el.getAttribute("role") !== "combobox" && (el.getAttribute("aria-hidden") === "true" ||
+        (el.getAttribute("tabindex") === "-1" && !label))) continue;
     if (type === "file") {
       // Ashby's "autofill from resume" helper re-parses the resume and overwrites answers.
       const around = textOf(el.closest("div") && el.closest("div").parentElement);

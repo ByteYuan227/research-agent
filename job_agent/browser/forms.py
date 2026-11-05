@@ -23,7 +23,8 @@ from typing import Any
 from ..profile import Profile
 
 EXTRACT_JS = (Path(__file__).with_name("extract.js")).read_text(encoding="utf-8")
-DECLINE = "__decline__"
+DECLINE = "__decline__"  # pick the "decline to answer" option
+ACK = "__ack__"  # pick the "I acknowledge / agree / yes" option
 
 OPTIONS_JS = """(key) => {
   const el = document.querySelector(`[data-ja-key="${CSS.escape(key)}"]`);
@@ -83,12 +84,17 @@ DECLINE_RE = re.compile(
 )
 
 
+ACK_RE = re.compile(r"acknowledg|confirm|i agree|agree|accept|i have read|i understand|^yes\b", re.I)
+
+
 def match_option(value: Any, options: list[str]) -> str | None:
     """Pick the option that best matches ``value`` (exact > prefix > contains > word overlap)."""
     if not options:
         return None
     if value == DECLINE:
         return next((o for o in options if DECLINE_RE.search(o)), None)
+    if value == ACK:
+        return next((o for o in options if ACK_RE.search(o) and not re.search(r"\bnot\b|\bno\b|decline", o, re.I)), None)
     if isinstance(value, bool):
         value = "Yes" if value else "No"
     v = _norm(str(value))
@@ -161,6 +167,57 @@ def _in(company: str, names: list[str]) -> bool:
     return any(_norm(n) and (_norm(n) in c or c in _norm(n)) for n in names)
 
 
+def degree_aliases(degree: str) -> list[str]:
+    """Ways a degree is spelled in dropdowns: 'M.S.' -> ["Master's Degree", 'Master', ...]."""
+    d = _norm(degree).replace(" ", "")
+    if d.startswith(("ms", "msc", "ma", "meng", "mba", "master", "mphil", "mfa")):
+        return ["Master's Degree", "Master's", "Masters", "Master", degree]
+    if d.startswith(("bs", "bsc", "ba", "beng", "bachelor", "ab", "bfa", "bba")):
+        return ["Bachelor's Degree", "Bachelor's", "Bachelors", "Bachelor", degree]
+    if d.startswith(("phd", "dphil", "doctor")):
+        return ["Doctor of Philosophy (Ph.D.)", "Ph.D.", "PhD", "Doctorate", degree]
+    if d.startswith(("as", "aa", "associate")):
+        return ["Associate's Degree", "Associate", degree]
+    return [degree]
+
+
+_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+           "November", "December"]
+
+
+def _year(s: str) -> str | None:
+    m = re.search(r"(19|20)\d\d", s or "")
+    return m.group(0) if m else None
+
+
+def _month(s: str) -> str | None:
+    for name in _MONTHS:
+        if re.search(rf"\b{name[:3]}", s or "", re.I):
+            return name
+    return None
+
+
+def _degree(p: Profile, f: dict) -> Suggestion | None:
+    degree = p.education[0].degree
+    options = f.get("options") or []
+    if not options:
+        return Suggestion(degree, "education[0].degree")
+    for alias in degree_aliases(degree):
+        picked = match_option(alias, options)
+        if picked:
+            return Suggestion(picked, "education[0].degree")
+    return None
+
+
+def _sponsorship(p: Profile, f: dict) -> Suggestion:
+    """Sponsorship questions: 'now' only when the question clearly asks about now; otherwise now-or-future."""
+    wa = p.work_authorization
+    text = f"{f['label']} {f.get('description', '')}"
+    if re.search(r"currently|at this time|right now|today", text, re.I) and not re.search(r"future", text, re.I):
+        return _yes_no(wa.requires_sponsorship_now, "work_authorization.requires_sponsorship_now")
+    return _yes_no(wa.requires_sponsorship_now or wa.requires_sponsorship_future, "work_authorization.requires_sponsorship_*")
+
+
 TEXTY = ("text", "email", "tel", "url", "textarea")
 CHOICE = ("select", "combobox", "radio", "button_group")
 
@@ -173,9 +230,10 @@ RULES: list[Rule] = [
          lambda p, f, c: Suggestion(p.personal.full_name, "personal.full_name")),
     Rule(r"e-?mail", ("text", "email"), lambda p, f, c: Suggestion(p.personal.email, "personal.email")),
     Rule(r"phone|mobile", ("text", "tel"), lambda p, f, c: Suggestion(p.personal.phone, "personal.phone") if p.personal.phone else None),
-    Rule(r"^country$", ("combobox", "select"),
+    Rule(r"^country$|country (do|will) you (intend|plan|expect) to (work|reside|live)|country of residence|"
+         r"which country.{0,30}(work|reside|live|based)", ("combobox", "select", "text"),
          lambda p, f, c: Suggestion(p.personal.location.country, "personal.location.country")),
-    Rule(r"^(current )?location$|current (city|location)|city.*state|where are you (currently )?(located|based)", TEXTY + ("combobox",),
+    Rule(r"^(current )?location\b|current (city|location)|city.*state|where are you (currently )?(located|based)", TEXTY + ("combobox",),
          lambda p, f, c: Suggestion(_location(p), "personal.location") if _location(p) else None),
     Rule(r"linkedin", TEXTY, lambda p, f, c: Suggestion(p.personal.linkedin, "personal.linkedin") if p.personal.linkedin else None),
     Rule(r"github", TEXTY, lambda p, f, c: Suggestion(p.personal.github, "personal.github") if p.personal.github else None),
@@ -183,49 +241,62 @@ RULES: list[Rule] = [
          lambda p, f, c: Suggestion(p.personal.website or p.personal.github, "personal.website") if (p.personal.website or p.personal.github) else None),
     Rule(r"^(school|university|college)( name)?$|which (school|university)", TEXTY + ("combobox", "select"),
          lambda p, f, c: Suggestion(_latest_school(p).school, "education[0].school")),
-    Rule(r"^degree$|degree (type|level)|highest degree", TEXTY + CHOICE,
-         lambda p, f, c: Suggestion(_latest_school(p).degree, "education[0].degree")),
+    Rule(r"^degree$|degree (type|level)|highest degree", TEXTY + CHOICE, lambda p, f, c: _degree(p, f)),
+    Rule(r"start (date )?year", ("number", "text") + CHOICE,
+         lambda p, f, c: Suggestion(_year(_latest_school(p).start), "education[0].start") if _year(_latest_school(p).start) else None),
+    Rule(r"(end|graduation|completion) (date )?year", ("number", "text") + CHOICE,
+         lambda p, f, c: Suggestion(_year(_latest_school(p).end), "education[0].end") if _year(_latest_school(p).end) else None),
+    Rule(r"start (date )?month", ("text",) + CHOICE,
+         lambda p, f, c: Suggestion(_month(_latest_school(p).start), "education[0].start") if _month(_latest_school(p).start) else None),
+    Rule(r"(end|graduation|completion) (date )?month", ("text",) + CHOICE,
+         lambda p, f, c: Suggestion(_month(_latest_school(p).end), "education[0].end") if _month(_latest_school(p).end) else None),
     Rule(r"^(discipline|major|field of study)$|area of study", TEXTY + ("combobox", "select"),
          lambda p, f, c: Suggestion(_latest_school(p).field, "education[0].field")),
     Rule(r"graduat(ion|e) (date|year)|when (do|will) you graduate|expected graduation", TEXTY + CHOICE,
          lambda p, f, c: Suggestion(p.answers.graduation_date or _latest_school(p).end, "answers.graduation_date")),
     Rule(r"how did you (hear|find|learn)|where did you (hear|find)|referral source|source of application", TEXTY + CHOICE,
          lambda p, f, c: Suggestion(p.answers.how_did_you_hear, "answers.how_did_you_hear")),
-    Rule(r"(legally )?(authorized|eligible|permitted) to work|work authorization|right to work", CHOICE + TEXTY + ("checkbox",),
+    Rule(r"(legally )?(authorized|eligible|permitted) to work|work authorization|right to work", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(p.work_authorization.authorized_to_work_in_us, "work_authorization.authorized_to_work_in_us")),
-    Rule(r"(now or (in the )?future|future).{0,80}sponsor|sponsor.{0,80}(now or (in the )?future|future)", CHOICE + TEXTY + ("checkbox",),
-         lambda p, f, c: _yes_no(p.work_authorization.requires_sponsorship_now or p.work_authorization.requires_sponsorship_future,
-                                 "work_authorization.requires_sponsorship_*")),
-    Rule(r"(require|need).{0,40}sponsor|sponsorship", CHOICE + ("checkbox",),
-         lambda p, f, c: _yes_no(p.work_authorization.requires_sponsorship_now, "work_authorization.requires_sponsorship_now")),
+    Rule(r"(require|need|requir).{0,60}(sponsor|visa)|sponsorship", CHOICE + ("checkbox",), lambda p, f, c: _sponsorship(p, f)),
     Rule(r"(at least|over|older than) (the age of )?18|18 years", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(p.answers.over_18, "answers.over_18")),
     Rule(r"(willing|open|able) to relocat|relocation", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(p.answers.willing_to_relocate, "answers.willing_to_relocate")),
-    Rule(r"(previously|ever) (been )?(employed|worked) (by|for|at)|former employee", CHOICE + ("checkbox",),
+    Rule(r"(previously|ever|in the past) (been )?(employed|worked) (by|for|at)|have you (ever )?(previously )?worked (for|at)|"
+         r"in the past worked for|former employee|current or former", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(_in(c, p.answers.previously_employed_at), "answers.previously_employed_at")),
     Rule(r"(ever|previously) interviewed", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(_in(c, p.answers.previously_interviewed_at), "answers.previously_interviewed_at")),
     Rule(r"earliest (start|available)|start date|when can you start|available to start", TEXTY,
          lambda p, f, c: Suggestion(p.answers.earliest_start_date, "answers.earliest_start_date") if p.answers.earliest_start_date else None),
     Rule(r"salary|compensation expectation|expected (pay|compensation)", None, lambda p, f, c: _salary(p, f)),
-    Rule(r"^gender|gender identity", CHOICE,
-         lambda p, f, c: Suggestion(DECLINE if p.answers.eeo.gender == "decline" else p.answers.eeo.gender, "answers.eeo.gender")),
+    # Voluntary self-identification. Short labels only, so long attestations that
+    # merely mention "veteran" or "disability" are not mistaken for EEO questions.
+    Rule(r"^(what is your )?gender\b|gender identity", CHOICE,
+         lambda p, f, c: _eeo(p.answers.eeo.gender, f, "answers.eeo.gender")),
     Rule(r"hispanic|latin[oa]", CHOICE,
-         lambda p, f, c: Suggestion(DECLINE if p.answers.eeo.hispanic_latino == "decline" else p.answers.eeo.hispanic_latino, "answers.eeo.hispanic_latino")),
-    Rule(r"^race|ethnicity", CHOICE,
-         lambda p, f, c: Suggestion(DECLINE if p.answers.eeo.race == "decline" else p.answers.eeo.race, "answers.eeo.race")),
-    Rule(r"veteran", CHOICE,
-         lambda p, f, c: Suggestion(DECLINE if p.answers.eeo.veteran == "decline" else p.answers.eeo.veteran, "answers.eeo.veteran")),
-    Rule(r"disabilit", CHOICE,
-         lambda p, f, c: Suggestion(DECLINE if p.answers.eeo.disability == "decline" else p.answers.eeo.disability, "answers.eeo.disability")),
-    Rule(r"privacy (notice|policy)|i have read|i acknowledge|acknowledg", ("checkbox", "radio", "button_group", "select", "combobox"),
-         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else "Yes", "answers.acknowledge_privacy_notices")
-         if p.answers.acknowledge_privacy_notices and not re.search(r"arbitrat", f["label"] + " " + f.get("description", ""), re.I) else None),
+         lambda p, f, c: _eeo(p.answers.eeo.hispanic_latino, f, "answers.eeo.hispanic_latino")),
+    Rule(r"^(what is your )?race\b|^ethnicity|race.{0,5}ethnicity", CHOICE,
+         lambda p, f, c: _eeo(p.answers.eeo.race, f, "answers.eeo.race")),
+    Rule(r"^(protected )?veteran|veteran status", CHOICE,
+         lambda p, f, c: _eeo(p.answers.eeo.veteran, f, "answers.eeo.veteran")),
+    Rule(r"^disability|disability status", CHOICE,
+         lambda p, f, c: _eeo(p.answers.eeo.disability, f, "answers.eeo.disability")),
     Rule(r"arbitrat", ("checkbox", "radio", "button_group", "select", "combobox"),
-         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else "Yes", "answers.accept_arbitration_agreements")
+         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else ACK, "answers.accept_arbitration_agreements")
          if p.answers.accept_arbitration_agreements else None),
+    Rule(r"privacy (notice|policy|statement)|i have read|i acknowledge|acknowledg", ("checkbox", "radio", "button_group", "select", "combobox"),
+         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else ACK, "answers.acknowledge_privacy_notices")
+         if p.answers.acknowledge_privacy_notices and not re.search(r"arbitrat", f["label"] + " " + f.get("description", ""), re.I)
+         else None),
 ]
+
+
+def _eeo(choice: str, f: dict, src: str) -> Suggestion | None:
+    if len(f.get("label") or "") > 90:
+        return None
+    return Suggestion(DECLINE if choice == "decline" else choice, src)
 
 
 def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[str, Path]) -> Suggestion | None:
@@ -249,13 +320,16 @@ def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[s
             if s is None or s.value in ("", None):
                 return None
             options = field.get("options") or []
-            if kind in ("select", "radio", "button_group", "checkbox_group") and options:
+            if kind in ("select", "radio", "button_group", "checkbox_group", "combobox") and options:
                 picked = match_option(s.value, options)
-                if picked is None:
-                    return None  # let Claude choose
-                s = Suggestion(picked, s.source)
+                if picked is not None:
+                    s = Suggestion(picked, s.source)
+                elif kind == "combobox" and len(options) >= 80 and s.value not in (DECLINE, ACK):
+                    pass  # long searchable list (schools, cities): type the value and pick the match
+                else:
+                    return None  # no fitting option: leave it for Claude
             if kind == "checkbox" and not isinstance(s.value, bool):
-                s = Suggestion(str(s.value).lower().startswith("y"), s.source)
+                s = Suggestion(str(s.value).lower().startswith("y") or s.value == ACK, s.source)
             return s
     return None
 
@@ -364,39 +438,39 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
             el.select_option(label=choice, timeout=5000)
         elif kind == "combobox":
             values = value if isinstance(value, list) else [value]
+            is_place = bool(re.search(r"location|city", field.get("label", "") + " " + key, re.I))
             for v in values:
-                wanted = v
-                if v == DECLINE:
+                wanted = str(v)
+                if v in (DECLINE, ACK):
                     opts = field.get("options") or combobox_options(page, key)
-                    wanted = match_option(DECLINE, opts) or ""
+                    wanted = match_option(v, opts) or ""
                     if not wanted:
-                        return "no 'decline' option"
+                        return f"no option for {v}"
                 el.scroll_into_view_if_needed(timeout=3000)
                 el.click(timeout=4000)
                 page.wait_for_timeout(300)
-                if not _click_option(page, key, str(wanted)):
-                    el.fill(str(wanted)[:60], timeout=3000)
-                    page.wait_for_timeout(900)
-                    if not _click_option(page, key, str(wanted)):
+                if not _click_option(page, key, wanted):
+                    query = wanted.split(",")[0] if is_place else wanted
+                    el.fill(query[:60], timeout=3000)
+                    page.wait_for_timeout(2000 if is_place else 900)  # place search hits a remote API
+                    if not _click_option(page, key, wanted) and not (is_place and _click_option(page, key, query)):
                         page.keyboard.press("Enter")
                 page.wait_for_timeout(300)
         elif kind in ("radio", "checkbox_group"):
             values = value if isinstance(value, list) else [value]
+            options = field.get("options") or []
             for v in values:
-                choice = match_option(v, field.get("options") or [])
+                choice = match_option(v, options)
                 if choice is None:
                     return f"no option matches {v!r}"
-                target = el.get_by_label(choice, exact=True)
-                if not target.count():
-                    target = el.get_by_text(choice, exact=True)
-                target.first.check(timeout=4000, force=True) if kind == "checkbox_group" else target.first.click(timeout=4000, force=True)
+                err = _set_choice(el, options.index(choice))
+                if err:
+                    return err
         elif kind == "checkbox":
-            want = value if isinstance(value, bool) else str(value).lower() in ("yes", "true", "1", "y")
-            if el.is_checked() != want:
-                try:
-                    el.set_checked(want, timeout=4000)
-                except Exception:  # noqa: BLE001 - custom-styled checkbox: click its label
-                    page.locator(f'label[for="{el.get_attribute("id")}"]').first.click(timeout=4000)
+            want = value if isinstance(value, bool) else str(value).lower() in ("yes", "true", "1", "y") or value == ACK
+            err = _toggle(el, want)
+            if err:
+                return err
         elif kind == "button_group":
             choice = match_option(value, field.get("options") or [])
             if choice is None:
@@ -407,6 +481,63 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
     except Exception as exc:  # noqa: BLE001
         return f"{type(exc).__name__}: {str(exc).splitlines()[0][:160]}"
     return None
+
+
+def _toggle(input_loc, want: bool) -> str | None:
+    """Set a checkbox, coping with custom-styled inputs that ignore normal clicks."""
+    try:
+        if input_loc.is_checked() == want:
+            return None
+    except Exception as exc:  # noqa: BLE001
+        return f"checkbox not found: {str(exc).splitlines()[0][:120]}"
+    attempts = (
+        lambda: input_loc.set_checked(want, timeout=3000),
+        lambda: input_loc.set_checked(want, timeout=3000, force=True),
+        lambda: input_loc.evaluate("e => e.click()"),
+    )
+    for attempt in attempts:
+        try:
+            attempt()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            if input_loc.is_checked() == want:
+                return None
+        except Exception:  # noqa: BLE001
+            pass
+    return "could not change the checkbox"
+
+
+def _set_choice(container, index: int) -> str | None:
+    """Check the index-th radio/checkbox inside a question container."""
+    inputs = container.locator("input[type=radio], input[type=checkbox]")
+    if inputs.count() <= index:
+        # The tag sits on the input itself (single-option groups).
+        inputs = container
+        index = 0
+    target = inputs.nth(index)
+    try:
+        if target.is_checked():
+            return None
+    except Exception:  # noqa: BLE001
+        pass
+    attempts = (
+        lambda: target.check(timeout=3000),
+        lambda: target.check(timeout=3000, force=True),
+        lambda: target.evaluate("e => { const l = e.closest('label') || (e.id && document.querySelector(`label[for=\"${e.id}\"]`)); (l || e).click(); }"),
+        lambda: target.evaluate("e => e.click()"),
+    )
+    for attempt in attempts:
+        try:
+            attempt()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            if target.is_checked():
+                return None
+        except Exception:  # noqa: BLE001
+            pass
+    return "could not select the option"
 
 
 @dataclass
