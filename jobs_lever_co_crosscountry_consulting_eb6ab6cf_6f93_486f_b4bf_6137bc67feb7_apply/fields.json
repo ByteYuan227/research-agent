@@ -1,0 +1,219 @@
+{
+ "url": "https://jobs.lever.co/crosscountry-consulting/eb6ab6cf-6f93-486f-b4bf-6137bc67feb7/apply",
+ "title": "CrossCountry Consulting - Forward Deployed Software Engineer (Recent Graduate) - DC Metro",
+ "fields": [
+  {
+   "key": "resume",
+   "kind": "file",
+   "label": "Resume/CV ATTACH RESUME/CVCouldn't auto-read resume.Analyzing resume...Success!",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "",
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "name",
+   "kind": "text",
+   "label": "Full name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "label:pronouns",
+   "kind": "checkbox_group",
+   "label": "Pronouns",
+   "required": false,
+   "options": [
+    "He/him",
+    "She/her",
+    "They/them",
+    "Xe/xem",
+    "Ze/hir",
+    "Ey/em",
+    "Hir/hir",
+    "Fae/faer",
+    "Hu/hu",
+    "Use name only",
+    "Custom"
+   ],
+   "description": "Let the employer know what pronouns you use so that they can address you correctly."
+  },
+  {
+   "key": "email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "phone",
+   "kind": "text",
+   "label": "Phone",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "+1 555-010-0199"
+  },
+  {
+   "key": "location",
+   "kind": "text",
+   "label": "Current location No location found. Try entering a different locationLoading",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "org",
+   "kind": "text",
+   "label": "Current company",
+   "required": true,
+   "description": "",
+   "placeholder": ""
+  },
+  {
+   "key": "urls[LinkedIn]",
+   "kind": "text",
+   "label": "LinkedIn URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "urls[Other]",
+   "kind": "text",
+   "label": "Other URL",
+   "required": false,
+   "description": "",
+   "placeholder": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field0]",
+   "kind": "radio",
+   "label": "How much combined engineering or technical experience do you have, including internships, co-ops, and professional employment?",
+   "required": true,
+   "options": [
+    "No experience",
+    "Less than 1 year",
+    "1 to 2 years",
+    "2 to 3 years",
+    "More than 3 years"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field1]",
+   "kind": "radio",
+   "label": "Which best describes the type of engineering or technical experience you have?",
+   "required": true,
+   "options": [
+    "Academic or personal projects only",
+    "Internship or co-op experience",
+    "Professional employment experience",
+    "Both internship/co-op and professional employment experience",
+    "None of the above"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field2]",
+   "kind": "radio",
+   "label": "Which option best describes your proficiency with Python, Java, C++, TypeScript/JavaScript, or a similar programming language?",
+   "required": true,
+   "options": [
+    "No programming experience",
+    "Coursework or introductory experience",
+    "Proficient in at least one programming language through academic, project, internship, co-op, or professional work",
+    "Proficient in multiple programming languages through academic, project, internship, co-op, or professional work"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field3]",
+   "kind": "checkbox_group",
+   "label": "Which best describes your educational or technical background?",
+   "required": true,
+   "options": [
+    "Computer Science",
+    "Mathematics",
+    "Engineering",
+    "Physics",
+    "Data Science",
+    "Another engineering or closely related technical field",
+    "My background is not in an engineering or technical field"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field4]",
+   "kind": "radio",
+   "label": "This role requires travel to client sites as needed, with approximately 20\u201325% travel expected. Which statement best describes your ability to meet this requirement?",
+   "required": true,
+   "options": [
+    "I can meet the role's travel requirements",
+    "I cannot meet the role's travel requirements"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field5]",
+   "kind": "checkbox_group",
+   "label": "This role requires candidates to be based in one of our designated markets. Which option best describes your location or relocation plans?",
+   "required": true,
+   "options": [
+    "Chicago, Illinois",
+    "D.C. Metro",
+    "New York",
+    "I am willing and able to relocate to Chicago, D.C. Metro, or New York",
+    "I am not able to relocate to one of these markets"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field6]",
+   "kind": "radio",
+   "label": "Are you legally authorized to work in the United States",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "suggested": "Yes"
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field7]",
+   "kind": "radio",
+   "label": "Do you need sponsorship or visa-related assistance to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "suggested": "No"
+  },
+  {
+   "key": "cards[6f92624e-788b-48dc-9aab-026a286e3d3d][field8]",
+   "kind": "textarea",
+   "label": "If you require sponsorship or visa-related assistance, please specify your current visa type and any future sponsorship needs.",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "Yes"
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": false,
+  "hcaptcha": true,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

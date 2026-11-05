@@ -1,0 +1,394 @@
+{
+ "url": "https://jobs.ashbyhq.com/f7d8749a-72d6-407c-bf98-292ea630c73a/0e7ecf76-b4f6-4159-aa44-4814af263c86/application",
+ "title": "Engineer II, Software - Factory - New Grad - 6217 @ f7d8749a-72d6-407c-bf98-292ea630c73a",
+ "fields": [
+  {
+   "key": "0eab6688-0a9a-459a-9752-48958c82b752",
+   "kind": "button_group",
+   "label": "Relocation",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "Are you local to or willing to relocate?",
+   "suggested": "Yes"
+  },
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "currentCompany",
+   "kind": "text",
+   "label": "Current company",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "currentLocation",
+   "kind": "text",
+   "label": "Current location",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "phone",
+   "kind": "tel",
+   "label": "Phone",
+   "required": false,
+   "description": "",
+   "placeholder": "1-415-555-1234...",
+   "suggested": "+1 555-010-0199"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "additionalInformation",
+   "kind": "textarea",
+   "label": "Additional information",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "preferredPostingLocation",
+   "kind": "text",
+   "label": "Which location are you applying for?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "LinkedIn",
+   "kind": "text",
+   "label": "LinkedIn",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "Twitter",
+   "kind": "text",
+   "label": "Twitter",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "GitHub",
+   "kind": "text",
+   "label": "GitHub",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "Portfolio",
+   "kind": "text",
+   "label": "Portfolio",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "Other",
+   "kind": "text",
+   "label": "Other",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_c98d628d-ed79-4c56-9d04-6bf6c5b5e507",
+   "kind": "radio",
+   "label": "Are you authorized to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "suggested": "Yes"
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_cfd19f1c-6dc5-4df9-8d96-444ff5d80894",
+   "kind": "radio",
+   "label": "Will you require sponsorship for employment now or in the future?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "suggested": "Yes"
+  },
+  {
+   "key": "96755c47-6150-491e-9ed0-352d4a01fd2d",
+   "kind": "textarea",
+   "label": "If yes, what type of sponsorship?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_b6f06901-f5ed-4b1d-8245-2f4dacdc51b9",
+   "kind": "radio",
+   "label": "This position may require access to information and technology that is subject to export controls, such as EAR. Are you any of the following?",
+   "required": true,
+   "options": [
+    "A United States Citizen",
+    "A lawful permanent resident of the United States (i.e. Greencard holder)",
+    "A protected individual",
+    "Other"
+   ],
+   "description": ""
+  },
+  {
+   "key": "9d762aed-351e-4771-81e3-7bf60d671a0f",
+   "kind": "textarea",
+   "label": "If you selected \"A protected Individual\" OR \"Other\" to the above question, please explain further.",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_4ccd84bf-3894-4d7b-9940-64b643e2f183",
+   "kind": "radio",
+   "label": "Shield AI provides technology, services, and support to the United States military and allied forces with their various missions. If selected for employment with Shield AI, your contributions will directly relate to and/or support these missions. Are there any reasons why you would not be able to fully contribute in support of the U.S. military and allied forces?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No",
+    "Other"
+   ],
+   "description": ""
+  },
+  {
+   "key": "a117c891-c961-4fdd-bad2-d563206de595",
+   "kind": "textarea",
+   "label": "(Optional) If you selected other or would like to expand on the above, feel free to do so below:",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "label:how_did_you_hear_about_us",
+   "kind": "combobox",
+   "label": "How did you hear about us?",
+   "required": true,
+   "description": "",
+   "placeholder": "Start typing...",
+   "multiple": false,
+   "options": [
+    "Campus visit",
+    "LinkedIn Post",
+    "LinkedIn Sponsored Job/Ad",
+    "Industry Conference",
+    "Twitter/X",
+    "Instagram",
+    "Referral",
+    "Handshake",
+    "Other"
+   ],
+   "suggested": "Online job board"
+  },
+  {
+   "key": "019714df-d885-40ca-b248-f5ac38ebe48d",
+   "kind": "textarea",
+   "label": "If \"Industry Conference\" or \"Other,\" please provide more details:",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "ff57e21f-98d3-49fb-adf6-d24139ff5383",
+   "kind": "text",
+   "label": "Please state your full legal name:",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_07896a12-bb92-4c06-8041-2929a8477c83",
+   "kind": "radio",
+   "label": "Are you a transitioning service member?",
+   "required": true,
+   "options": [
+    "No",
+    "Yes"
+   ],
+   "description": ""
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_e046427f-6624-4f4b-b113-065d4b93dd78",
+   "kind": "radio",
+   "label": "If yes, what partnership program are you working with?",
+   "required": false,
+   "options": [
+    "Hiring our Heroes",
+    "NextOp",
+    "Skillbridge general (no program)"
+   ],
+   "description": ""
+  },
+  {
+   "key": "bb94ddc4-f2af-445b-9f47-87cc88aaab5f",
+   "kind": "textarea",
+   "label": "If other, please provide further details",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "21331f5b-7c60-44da-9505-c1720081a21f",
+   "kind": "textarea",
+   "label": "When are you available to start your fellowship?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "suggested": "May 2027"
+  },
+  {
+   "key": "2a060f0e-e6c0-45e9-9733-8a49b4b72328",
+   "kind": "textarea",
+   "label": "When are you available for full time work?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "e15fc62c-d7ab-4cc5-b9fc-b9d0203f6e81",
+   "kind": "textarea",
+   "label": "What full time job(s) are you applying for?",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_b73b64d8-b9f8-46e1-a543-c2e7682f6cc3",
+   "kind": "radio",
+   "label": "Are you local to or willing to relocate?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "suggested": "Yes"
+  },
+  {
+   "key": "label:what_office_s_would_you_be_willing_to_relocate_to_select_all",
+   "kind": "checkbox_group",
+   "label": "What office(s) would you be willing to relocate to? (Select all that apply)",
+   "required": false,
+   "options": [
+    "San Diego, California",
+    "Dallas, Texas",
+    "Washington, DC",
+    "Boston, MA",
+    "International",
+    "San Francisco, California",
+    "Seattle, Washington"
+   ],
+   "description": ""
+  },
+  {
+   "key": "a19510f2-49ca-41f8-a3d5-2891eb6b7354",
+   "kind": "textarea",
+   "label": "If you selected international, what location(s)?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here..."
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_b72bf6dd-b52f-4837-b060-4052a421e59f",
+   "kind": "radio",
+   "label": "This position requires an Active or the eligibility to obtain a U.S. DoD Secret Security Clearance (U.S. Citizenship Required).",
+   "required": false,
+   "options": [
+    "Actively hold a clearance",
+    "Previously held a clearance",
+    "Eligible to obtain"
+   ],
+   "description": ""
+  },
+  {
+   "key": "913b6847-66e5-4f18-b4f8-4c5460972245_ddc9b858-7da4-4b27-81e9-73244d8dc19a",
+   "kind": "radio",
+   "label": "What languages are you fluent in?",
+   "required": false,
+   "options": [
+    "English",
+    "Thai",
+    "Mandarin",
+    "Korean",
+    "German",
+    "Ukranian",
+    "French",
+    "Spanish"
+   ],
+   "description": "Please select all languages that you are at minimum business conversational or fluent in"
+  },
+  {
+   "key": "label:office_s_to_relocate_to",
+   "kind": "checkbox_group",
+   "label": "Office(s) to Relocate To",
+   "required": false,
+   "options": [
+    "Boston, Massachusetts",
+    "Dallas, Texas",
+    "International",
+    "San Diego, California",
+    "San Francisco, California",
+    "Seattle, Washington",
+    "Washington, DC"
+   ],
+   "description": "What office(s) would you be willing to relocate to? (Select all that apply)"
+  },
+  {
+   "key": "74bd74b8-5fd5-478c-918c-8a3f3380d1cd",
+   "kind": "textarea",
+   "label": "What location to relocate to (If International)",
+   "required": false,
+   "description": "If you selected international, what location(s)?",
+   "placeholder": "Type here..."
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}

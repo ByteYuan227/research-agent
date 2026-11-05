@@ -1,0 +1,246 @@
+{
+ "url": "https://jobs.lever.co/tri/e7cc38d2-2b08-4349-b322-4d56cac9fb1b/apply",
+ "title": "Toyota Research Institute - Automated Driving Advanced Development Intern, Machine Learning Research",
+ "fields": [
+  {
+   "key": "resume",
+   "kind": "file",
+   "label": "Resume/CV ATTACH RESUME/CVCouldn't auto-read resume.Analyzing resume...Success!",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "",
+   "suggested": "probe-out/_resume/Alex_Chen_Resume.pdf"
+  },
+  {
+   "key": "name",
+   "kind": "text",
+   "label": "Full name",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "Alex Chen"
+  },
+  {
+   "key": "email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "alex.chen.example@gmail.com"
+  },
+  {
+   "key": "phone",
+   "kind": "text",
+   "label": "Phone",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "suggested": "+1 555-010-0199"
+  },
+  {
+   "key": "location",
+   "kind": "text",
+   "label": "Current location No location found. Try entering a different locationLoading",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "suggested": "Pittsburgh, PA"
+  },
+  {
+   "key": "org",
+   "kind": "text",
+   "label": "Current company",
+   "required": false,
+   "description": "",
+   "placeholder": ""
+  },
+  {
+   "key": "urls[LinkedIn]",
+   "kind": "text",
+   "label": "LinkedIn URL",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "suggested": "https://www.linkedin.com/in/alex-chen-example"
+  },
+  {
+   "key": "urls[Twitter]",
+   "kind": "text",
+   "label": "Twitter URL",
+   "required": false,
+   "description": "",
+   "placeholder": ""
+  },
+  {
+   "key": "urls[GitHub]",
+   "kind": "text",
+   "label": "GitHub URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "urls[Portfolio]",
+   "kind": "text",
+   "label": "Portfolio URL",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "suggested": "https://github.com/alex-chen-example"
+  },
+  {
+   "key": "urls[Other]",
+   "kind": "text",
+   "label": "Other website",
+   "required": false,
+   "description": "",
+   "placeholder": ""
+  },
+  {
+   "key": "cards[56b03091-d382-4024-a452-8bee6fdd6227][field0]",
+   "kind": "radio",
+   "label": "How did you hear about this internship?",
+   "required": true,
+   "options": [
+    "Conference, Workshop, or Seminar",
+    "Professor, Advisor, or Committee Member",
+    "University Collaboration",
+    "LinkedIn",
+    "Referral",
+    "Company Website",
+    "Other"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[56b03091-d382-4024-a452-8bee6fdd6227][field1]",
+   "kind": "text",
+   "label": "If you selected \u201cOther\u201d please share more details.",
+   "required": false,
+   "description": "",
+   "placeholder": "Type your response"
+  },
+  {
+   "key": "cards[b647a3db-8350-41a4-8b0a-cda3347c8269][field0]",
+   "kind": "textarea",
+   "label": "In 1-3 sentences, tell us about one thing TRI is working on that you find exciting?",
+   "required": true,
+   "description": "",
+   "placeholder": ""
+  },
+  {
+   "key": "cards[e2c59e7e-0a3e-498e-8ab0-f2bbe18522f0][field0]",
+   "kind": "radio",
+   "label": "What degree are you currently enrolled in?",
+   "required": true,
+   "options": [
+    "PhD",
+    "Master's",
+    "Bachelor's",
+    "Other"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field0]",
+   "kind": "radio",
+   "label": "Are you eligible to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "suggested": "Yes"
+  },
+  {
+   "key": "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field1]",
+   "kind": "radio",
+   "label": "Are you a U.S. citizen, a lawful permanent resident of the United States (\u201cgreen card holder\u201d), an asylee, a refugee, or temporary resident under the 1986 legalization program?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field2]",
+   "kind": "radio",
+   "label": "Are you a national, citizen, or permanent resident of Cuba, Iran, North Korea, Sudan, Syria, or Crimea (region of Ukraine)?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": ""
+  },
+  {
+   "key": "cards[225cae12-81e6-4b63-ae86-bfa4cc81cf6a][field3]",
+   "kind": "radio",
+   "label": "I have read and understand the selection criteria.",
+   "required": true,
+   "options": [
+    "I have read and understand the selection criteria."
+   ],
+   "description": ""
+  },
+  {
+   "key": "eeo[gender]",
+   "kind": "select",
+   "label": "Gender",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "options": [
+    "Male",
+    "Female",
+    "Decline to self-identify"
+   ],
+   "multiple": false,
+   "suggested": "Decline to self-identify"
+  },
+  {
+   "key": "eeo[race]",
+   "kind": "select",
+   "label": "RaceHispanic or LatinoA person of Cuban, Mexican, Puerto Rican, South or Central American, or other Spanish culture or origin regardless of race.White (Not Hispanic or Latino)A person having origins in any of the original peoples of Europe, the Middle East, or North Africa.Black or African American (Not Hispanic or Latino)A person having origins in any of the black racial groups of Africa.Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino)A person having origins in any of the peoples of Hawaii, Guam, Samoa, or other Pacific Islands.Asian (Not Hispanic or Latino)A person having origins in any of the original peoples of the Far East, Southeast Asia, or the Indian Subcontinent, including, for example, Cambodia, China, India, Japan, Korea, Malaysia, Pakistan, the Philippine Islands, Thailand, and Vietnam.American Indian or Alaska Native (Not Hispanic or Latino)A person having origins in any of the original peoples of North and South America (including Central America), and who maintain tribal affiliation or community attachment.Two or More Races (Not Hispanic or Latino)All persons who identify with more than one of the above five races.",
+   "required": false,
+   "description": "Hispanic or LatinoA person of Cuban, Mexican, Puerto Rican, South or Central American, or other Spanish culture or origin regardless of race.White (Not Hispanic or Latino)A person having origins in any of the original peoples of Europe, the Middle East, or North Africa.Black or African American (Not Hispanic or Latino)A person having origins in any of the black racial groups of Africa.Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino)A person having origins in any of the peoples of Hawaii, Guam, Samoa, or other Pacific Islands.Asian (Not Hispanic or Latino)A person having origins in any of the original peoples of the Far East, Southeast Asia, or the Indian Subcontinent, inclu",
+   "placeholder": "",
+   "options": [
+    "Hispanic or Latino",
+    "White (Not Hispanic or Latino)",
+    "Black or African American (Not Hispanic or Latino)",
+    "Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino)",
+    "Asian (Not Hispanic or Latino)",
+    "American Indian or Alaska Native (Not Hispanic or Latino)",
+    "Two or More Races (Not Hispanic or Latino)",
+    "Decline to self-identify"
+   ],
+   "multiple": false,
+   "suggested": "Decline to self-identify"
+  },
+  {
+   "key": "surveysResponses[a8d8c4a3-2936-4bc6-ac18-e2e3ed2de236][responses][field0]",
+   "kind": "radio",
+   "label": "Do you consider yourself a member of the Lesbian, Gay, Bisexual and/or Transgender, Queer and Questioning (LGBTQ) community?",
+   "required": false,
+   "options": [
+    "Yes",
+    "No",
+    "Prefer not to say"
+   ],
+   "description": ""
+  }
+ ],
+ "has_submit": true,
+ "captcha": {
+  "recaptcha": false,
+  "hcaptcha": true,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false
+}
