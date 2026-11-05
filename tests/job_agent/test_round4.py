@@ -193,6 +193,24 @@ def test_settle_never_retries_after_a_submit_click(home):
     assert not apply_mod.submit_clicked(load_state().jobs[a.id])
 
 
+def test_rehearsed_jobs_stay_queued_for_the_first_real_run(home, monkeypatch, capsys):
+    monkeypatch.setenv("JOBAGENT_DRY_RUN", "1")
+    state = State()
+    a, b = _job(id="greenhouse:acme:1", status="applying"), _job(id="greenhouse:acme:2", status="manual")
+    a.application = {"dry_run": True, "outcome": {"status": "dry_run_ok"}}
+    state.jobs[a.id], state.jobs[b.id] = a, b
+    save_state(state)
+    cli.main(["settle", a.id, "--exit", "0"])
+    cli.main(["settle", b.id, "--exit", "0"])
+    s = load_state()
+    assert s.jobs[a.id].status == "scored"  # applied for real tomorrow
+    assert s.jobs[b.id].status == "manual"  # a real blocker (e.g. CAPTCHA) found while rehearsing stays
+    monkeypatch.delenv("JOBAGENT_DRY_RUN")
+    capsys.readouterr()
+    cli.main(["queue"])
+    assert capsys.readouterr().out.split() == [a.id]
+
+
 # ---------------------------------------------------------------------------
 # Queue: company cap, fresh postings first
 # ---------------------------------------------------------------------------

@@ -517,9 +517,10 @@ MAX_RETRIES = 1
 
 def cmd_settle(args) -> int:
     """After an apply session: make sure the job got an outcome."""
-    from .web import _save_session
+    import os
 
     from .apply import submit_clicked
+    from .web import _save_session
 
     state = load_state()
     job = state.jobs.get(args.job_id)
@@ -527,7 +528,10 @@ def cmd_settle(args) -> int:
         return 0
     _save_session({})
     if job.status in ("scored", "applying"):
-        if submit_clicked(job):
+        if os.environ.get("JOBAGENT_DRY_RUN") == "1" and not submit_clicked(job):
+            # A rehearsal never submits: the job stays in the queue for the first real run.
+            state.set_status(job, "scored", "rehearsed (dry run); will apply for real in the next run")
+        elif submit_clicked(job):
             # It may have gone through: never apply twice. You check your e-mail and tick it off.
             state.set_status(job, "manual", "a submit button was pressed but the session ended before the result was "
                                             "recorded: check your e-mail for a confirmation before applying again")
