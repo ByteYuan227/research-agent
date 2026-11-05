@@ -1,13 +1,17 @@
 // Generic application-form extractor.
 //
 // Runs inside the page (page.evaluate). Finds every fillable control, works
-// out a human-readable label for it, and tags the element (or the container
-// for grouped controls) with data-ja-key so the filler can find it again.
-// Keys are derived from stable attributes (name, id, label text), so running
-// the extractor again after a reload yields the same keys.
+// out the question it belongs to (label, description, required flag, options)
+// and tags the element - or, for grouped controls, the question container -
+// with data-ja-key so the filler can find it again. Keys come from stable
+// attributes (name, id, label text), so a reload yields the same keys.
+//
+// Tested against Greenhouse (job-boards), Lever and Ashby application forms.
 () => {
   const clean = (s) => (s || "").replace(/\s+/g, " ").trim();
   const textOf = (el) => (el ? clean(el.innerText || el.textContent || "") : "");
+  const REQ_MARK = /[*✱]/;
+  const stripMarks = (s) => clean((s || "").replace(/[*✱]+/g, " ").replace(/\(required\)/gi, " "));
   const isVisible = (el) => {
     if (!el) return false;
     const s = getComputedStyle(el);
@@ -15,58 +19,104 @@
     const r = el.getBoundingClientRect();
     return r.width > 0 || r.height > 0;
   };
-  // Unstable, framework-generated ids (React useId, react-select, etc.).
   const unstableId = (id) =>
     !id || /^:r[0-9a-z]+:$/i.test(id) || /^react-select-\d+/.test(id) || /^\d+$/.test(id) || /^(mui|headlessui)-/i.test(id);
   const slug = (s) => clean(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60);
-  const stripRequired = (s) => clean((s || "").replace(/\*+/g, " ").replace(/\(required\)/gi, " "));
 
-  function labelFor(el) {
+  // Text of a label element without the text of any control inside it
+  // (Lever wraps whole <select>s in <label>s).
+  function labelText(label) {
+    if (!label) return "";
+    const copy = label.cloneNode(true);
+    copy.querySelectorAll("select, option, textarea, input, button, svg").forEach((n) => n.remove());
+    return textOf(copy);
+  }
+
+  const CONTAINER_SEL = [
+    "fieldset",
+    "[data-field-path]",
+    ".ashby-application-form-field-entry",
+    ".application-question",
+    ".field-wrapper",
+    "[class*='fieldEntry' i]",
+    "[class*='question' i]:not(label):not(span)",
+    ".form-group",
+  ].join(", ");
+  const questionContainer = (el) => el.closest(CONTAINER_SEL);
+
+  const TITLE_SEL =
+    "legend, .ashby-application-form-question-title, .application-label, [class*='question-title' i], " +
+    "[class*='questionTitle' i], label, [class*='label' i]";
+
+  // The question text for a container: its title element that is not the
+  // label of one particular option.
+  function containerTitle(container, el) {
+    if (!container) return "";
+    for (const c of container.querySelectorAll(TITLE_SEL)) {
+      if (el && c.contains(el)) continue;
+      const forId = c.getAttribute("for");
+      if (forId) {
+        const target = document.getElementById(forId);
+        if (target && target.type && /radio|checkbox/.test(target.type) && target.closest(CONTAINER_SEL) === container) {
+          // Label of a single option inside a group - skip unless it is the only control.
+          const n = container.querySelectorAll("input[type=radio], input[type=checkbox]").length;
+          if (n > 1) continue;
+        }
+      }
+      if (c.querySelector("input[type=radio], input[type=checkbox]")) continue;
+      const t = labelText(c);
+      if (t && t.length < 600) return t;
+    }
+    return "";
+  }
+
+  function description(container, el) {
+    const parts = [];
+    const ids = (el && el.getAttribute("aria-describedby")) || "";
+    for (const id of ids.split(/\s+/)) {
+      if (!id || /error|placeholder/i.test(id)) continue;
+      const t = textOf(document.getElementById(id));
+      if (t) parts.push(t);
+    }
+    if (!parts.length && container) {
+      for (const d of container.querySelectorAll("[class*='description' i], [class*='help' i], [class*='hint' i]")) {
+        const t = textOf(d);
+        if (t && !parts.includes(t)) parts.push(t);
+      }
+    }
+    return parts.join(" ").slice(0, 700);
+  }
+
+  function labelFor(el, container) {
     const lb = el.getAttribute("aria-labelledby");
     if (lb) {
       const t = lb
         .split(/\s+/)
-        .map((id) => textOf(document.getElementById(id)))
+        .map((id) => labelText(document.getElementById(id)))
         .filter(Boolean)
         .join(" ");
       if (t) return t;
     }
     if (el.id) {
       const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
-      if (l && textOf(l)) return textOf(l);
+      const t = labelText(l);
+      if (t) return t;
     }
-    const wrap = el.closest("label");
-    if (wrap && textOf(wrap)) return textOf(wrap);
-    const al = el.getAttribute("aria-label");
-    if (al && clean(al)) return clean(al);
-    return containerLabel(el) || clean(el.getAttribute("placeholder")) || "";
+    const wrap = labelText(el.closest("label"));
+    if (wrap) return wrap;
+    const al = clean(el.getAttribute("aria-label"));
+    if (al) return al;
+    return containerTitle(container, el) || clean(el.getAttribute("placeholder")) || "";
   }
 
-  // Label of the question that contains `el` (for groups and odd markup).
-  function containerLabel(el) {
-    const fs = el.closest("fieldset");
-    if (fs) {
-      const lg = fs.querySelector("legend");
-      if (lg && textOf(lg)) return textOf(lg);
+  function requiredFlag(el, label, container) {
+    if (el && (el.required || el.getAttribute("aria-required") === "true")) return true;
+    if (REQ_MARK.test(label || "") || /\(required\)/i.test(label || "")) return true;
+    if (container) {
+      const title = container.querySelector(TITLE_SEL);
+      if (title && (/required/i.test(title.className || "") || REQ_MARK.test(title.textContent || ""))) return true;
     }
-    let p = el.parentElement;
-    for (let i = 0; i < 6 && p && p !== document.body; i++, p = p.parentElement) {
-      const cands = p.querySelectorAll(
-        "label, legend, [class*='label' i], [class*='question' i] > div:first-child, .application-label, h3, h4"
-      );
-      for (const c of cands) {
-        if (c.contains(el)) continue;
-        if (c.querySelector("input, select, textarea")) continue;
-        const t = textOf(c);
-        if (t && t.length < 500) return t;
-      }
-    }
-    return "";
-  }
-
-  function isRequired(el, label) {
-    if (el.required || el.getAttribute("aria-required") === "true") return true;
-    return /\*\s*$|\*\s|\(required\)/i.test(label || "");
+    return false;
   }
 
   const fields = [];
@@ -80,128 +130,159 @@
     tagEl.setAttribute("data-ja-key", key);
     fields.push(f);
   }
-  function baseKey(el, label) {
-    if (el.name && !/^\d+$/.test(el.name)) return el.name;
+  function stableKey(el, label) {
+    if (el.name && !/^\d+$/.test(el.name) && !/\s/.test(el.name)) return el.name;
     if (!unstableId(el.id)) return el.id;
     return "label:" + slug(label || el.getAttribute("placeholder") || el.type || "field");
   }
 
-  const root = document;
-  const controls = Array.from(root.querySelectorAll("input, select, textarea"));
-  const seenGroups = new Set();
+  // --- Yes/No button groups (Ashby) -------------------------------------
+  const buttonGroups = new Set();
+  const groupCandidates = new Set();
+  document
+    .querySelectorAll(".ashby-application-form-input-yesno, [class*='yesno' i]")
+    .forEach((c) => groupCandidates.add(c));
+  document.querySelectorAll("button[aria-pressed], button[data-option]").forEach((b) => groupCandidates.add(b.parentElement));
+  for (const g of groupCandidates) {
+    if (!g || buttonGroups.has(g)) continue;
+    const buttons = Array.from(g.querySelectorAll("button"));
+    if (buttons.length < 2 || buttons.length > 8) continue;
+    const opts = buttons.map(textOf);
+    if (!opts.every((t) => t && t.length <= 60)) continue;
+    buttonGroups.add(g);
+    const container = questionContainer(g) || g.parentElement;
+    const hidden = g.querySelector("input");
+    const label = containerTitle(container, g);
+    const key = (container && container.getAttribute("data-field-path")) || (hidden && stableKey(hidden, label)) || "label:" + slug(label);
+    addField(
+      {
+        key,
+        kind: "button_group",
+        label: stripMarks(label),
+        required: requiredFlag(hidden, label, container),
+        options: opts,
+        description: description(container, hidden),
+      },
+      g
+    );
+  }
+  const inButtonGroup = (el) => Array.from(buttonGroups).some((g) => g.contains(el));
 
-  for (const el of controls) {
+  // --- Inputs, selects, textareas ----------------------------------------
+  const seenGroups = new Set();
+  for (const el of document.querySelectorAll("input, select, textarea")) {
     const type = (el.getAttribute("type") || el.tagName).toLowerCase();
     if (["hidden", "submit", "button", "reset", "image", "search"].includes(type)) continue;
-    if (el.closest("[aria-hidden='true']") && type !== "file") continue;
-    if (el.disabled) continue;
-    // Skip captcha internals and honeypots.
+    if (el.disabled || inButtonGroup(el)) continue;
     if (el.closest("[class*='captcha' i], [id*='captcha' i]")) continue;
     if (type !== "file" && type !== "checkbox" && type !== "radio" && !isVisible(el)) continue;
+    const container = questionContainer(el);
+    // react-select keeps a hidden, unfocusable <input required> next to the combobox for validation.
+    if (
+      el.getAttribute("tabindex") === "-1" &&
+      el.getAttribute("role") !== "combobox" &&
+      container &&
+      container.querySelector("[role=combobox]")
+    )
+      continue;
 
     if (type === "radio" || type === "checkbox") {
-      const groupName = el.name || "";
-      const groupKey = `${type}:${groupName}`;
-      if (groupName && seenGroups.has(groupKey)) continue;
-      const members = groupName
-        ? Array.from(root.querySelectorAll(`input[type="${type}"][name="${CSS.escape(groupName)}"]`))
-        : [el];
-      seenGroups.add(groupKey);
+      // Group options by question container (Ashby gives each checkbox its own name), else by name.
+      let members;
+      let groupId;
+      const sameContainer = container
+        ? Array.from(container.querySelectorAll(`input[type="${type}"]`)).filter((m) => questionContainer(m) === container)
+        : [];
+      if (sameContainer.length > 1) {
+        members = sameContainer;
+        groupId = sameContainer[0];
+      } else if (el.name) {
+        members = Array.from(document.querySelectorAll(`input[type="${type}"][name="${CSS.escape(el.name)}"]`));
+        groupId = members[0];
+      } else {
+        members = [el];
+        groupId = el;
+      }
+      if (seenGroups.has(groupId)) continue;
+      seenGroups.add(groupId);
       const options = members.map((m) => {
         let t = "";
-        if (m.id) t = textOf(document.querySelector(`label[for="${CSS.escape(m.id)}"]`));
-        if (!t) t = textOf(m.closest("label"));
+        if (m.id) t = labelText(document.querySelector(`label[for="${CSS.escape(m.id)}"]`));
+        if (!t) t = labelText(m.closest("label"));
         if (!t) t = clean(m.getAttribute("aria-label")) || clean(m.value);
         return t;
       });
-      const container =
-        members.length > 1
-          ? (function common(a, b) {
-              let p = a.parentElement;
-              while (p && !p.contains(b)) p = p.parentElement;
-              return p || a.parentElement;
-            })(members[0], members[members.length - 1])
-          : el.parentElement;
-      let label = containerLabel(members[0]);
-      if (members.length === 1 && type === "checkbox") label = label || options[0];
-      const kind = type === "radio" ? "radio" : members.length > 1 ? "checkbox_group" : "checkbox";
-      const key = groupName && !/^\d+$/.test(groupName) ? groupName : "label:" + slug(label || options.join("_"));
+      const single = members.length === 1;
+      let label = single ? labelFor(el, container) : containerTitle(container, el);
+      if (!label && single) label = options[0];
+      const kind = type === "radio" ? "radio" : single ? "checkbox" : "checkbox_group";
+      const tag = single ? el : container && members.every((m) => container.contains(m)) ? container : el.parentElement;
+      let key;
+      if (container && container.getAttribute("data-field-path")) key = container.getAttribute("data-field-path");
+      else if (members.length > 1 && el.name && members.every((m) => m.name === el.name)) key = el.name;
+      else if (single) key = stableKey(el, label);
+      else key = "label:" + slug(label || options.join("_"));
       addField(
         {
           key,
           kind,
-          label: stripRequired(label),
-          required: members.some((m) => isRequired(m, label)) || /\*/.test(label),
-          options,
-          name: groupName,
+          label: stripMarks(label),
+          required: members.some((m) => m.required) || requiredFlag(null, label, container),
+          options: single && kind === "checkbox" ? [] : options,
+          description: description(container, el),
         },
-        container
+        tag
       );
       continue;
     }
 
-    const label = labelFor(el);
+    const label = labelFor(el, container);
+    if (type === "file") {
+      // Ashby's "autofill from resume" helper re-parses the resume and overwrites answers.
+      const around = textOf(el.closest("div") && el.closest("div").parentElement);
+      if (/autofill/i.test(label) || (!label && /autofill/i.test(around))) continue;
+      if (!label && !requiredFlag(el, label, container)) continue;
+    }
     let kind;
     if (el.tagName === "SELECT") kind = "select";
     else if (el.tagName === "TEXTAREA") kind = "textarea";
-    else if (el.getAttribute("role") === "combobox" || el.closest("[class*='select__' i], [class*='combobox' i]"))
-      kind = "combobox";
+    else if (el.getAttribute("role") === "combobox" || el.getAttribute("aria-autocomplete") === "list") kind = "combobox";
     else if (type === "file") kind = "file";
     else kind = ["email", "tel", "url", "number", "date"].includes(type) ? type : "text";
 
     const f = {
-      key: baseKey(el, label),
+      key: stableKey(el, label),
       kind,
-      label: stripRequired(label),
-      required: isRequired(el, label),
-      name: el.name || "",
-      id: el.id || "",
+      label: stripMarks(label),
+      required: requiredFlag(el, label, container),
+      description: description(container, el),
       placeholder: clean(el.getAttribute("placeholder")),
     };
     if (kind === "select") {
       f.options = Array.from(el.options)
         .map((o) => clean(o.textContent))
-        .filter((t) => t && !/^(select|choose|--)/i.test(t));
+        .filter((t) => t && !/^(select|choose|--|please select)/i.test(t));
       f.multiple = el.multiple;
     }
+    if (kind === "combobox") f.multiple = /\[\]$/.test(el.name || el.id || "");
     if (kind === "file") f.accept = el.getAttribute("accept") || "";
     addField(f, el);
   }
 
-  // Button groups (e.g. Ashby's Yes/No questions rendered as <button>s).
-  const groupContainers = new Set();
-  for (const btn of root.querySelectorAll("button[type='button']")) {
-    const parent = btn.parentElement;
-    if (!parent || groupContainers.has(parent)) continue;
-    const buttons = Array.from(parent.children).filter((c) => c.tagName === "BUTTON");
-    if (buttons.length < 2 || buttons.length > 6) continue;
-    const opts = buttons.map(textOf);
-    if (!opts.every((t) => t && t.length <= 40)) continue;
-    if (!opts.some((t) => /^(yes|no)$/i.test(t))) continue;
-    groupContainers.add(parent);
-    const label = containerLabel(parent);
-    addField(
-      {
-        key: "label:" + slug(label || opts.join("_")),
-        kind: "button_group",
-        label: stripRequired(label),
-        required: /\*/.test(label),
-        options: opts,
-      },
-      parent
-    );
-  }
-
   const submit =
-    root.querySelector("button[type='submit'], input[type='submit']") ||
-    Array.from(root.querySelectorAll("button")).find((b) => /submit/i.test(textOf(b)));
+    document.querySelector("button[type='submit'], input[type='submit']") ||
+    Array.from(document.querySelectorAll("button")).find((b) => /submit/i.test(textOf(b)));
   if (submit) submit.setAttribute("data-ja-submit", "1");
 
+  const pageText = textOf(document.body).slice(0, 200000);
   const captcha = {
-    recaptcha: !!root.querySelector("iframe[src*='recaptcha'], .g-recaptcha, script[src*='recaptcha']"),
-    hcaptcha: !!root.querySelector("iframe[src*='hcaptcha'], .h-captcha, script[src*='hcaptcha']"),
-    turnstile: !!root.querySelector("iframe[src*='turnstile'], .cf-turnstile, script[src*='turnstile']"),
+    recaptcha: !!document.querySelector("iframe[src*='recaptcha'], .g-recaptcha, script[src*='recaptcha']"),
+    hcaptcha: !!document.querySelector("iframe[src*='hcaptcha'], .h-captcha, script[src*='hcaptcha']"),
+    turnstile: !!document.querySelector("iframe[src*='turnstile'], .cf-turnstile, script[src*='turnstile']"),
   };
+  const aiPolicy = /\b(ai|artificial intelligence|chatgpt|llm|generative)\b[^.]{0,120}\b(policy|guideline|guidance|not (be )?(used|permitted|allowed)|prohibit)/i.test(
+    pageText
+  );
 
-  return { url: location.href, title: document.title, fields, has_submit: !!submit, captcha };
+  return { url: location.href, title: document.title, fields, has_submit: !!submit, captcha, ai_policy_mentioned: aiPolicy };
 };

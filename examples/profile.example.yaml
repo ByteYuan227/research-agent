@@ -1,0 +1,156 @@
+# Job Agent 个人资料模板（示例人物，全部是虚构的）
+#
+# 用法：复制成 ~/.jobagent/profile.yaml（本地运行），或者把整个文件内容存进 GitHub 仓库的
+# Secret「JOBAGENT_PROFILE_YAML」（云端每日运行）。不要把填好的真实资料提交进仓库。
+#
+# 规则：Agent 写简历、填申请表时只会使用这里的内容，绝不编造。
+# - 每条经历、每个 bullet 都要有唯一的 id，定制简历时 Agent 只能「挑选和排序」这些 bullet。
+# - 想让某段经历有不同侧重，就多写几条 bullet，让 Agent 按岗位挑。
+# - 申请表里遇到这里没有答案的必答题，Agent 会把这个岗位放进「需要你手动处理」的清单，而不是瞎填。
+
+personal:
+  first_name: Alex
+  last_name: Chen
+  preferred_name: ""
+  email: alex.chen.example@gmail.com
+  phone: "+1 555-010-0199"
+  location: {city: Pittsburgh, state: PA, country: United States, zip: "15213"}
+  linkedin: https://www.linkedin.com/in/alex-chen-example
+  github: https://github.com/alex-chen-example
+  website: ""
+
+work_authorization:
+  authorized_to_work_in_us: true        # 持 F-1 在读，可通过 CPT/OPT 工作，一般答 true
+  requires_sponsorship_now: false       # 实习期间用 CPT/OPT，通常不需要立即 sponsor
+  requires_sponsorship_future: true     # 将来需要 H-1B 就填 true
+  status: "F-1 student, eligible for CPT/OPT"
+  us_citizen: false
+
+education:
+  - id: edu_cmu
+    school: Carnegie Mellon University
+    degree: M.S.
+    field: Computer Science
+    start: Aug 2025
+    end: Expected May 2027
+    gpa: "3.9/4.0"
+    location: Pittsburgh, PA
+    coursework: [Deep Learning Systems, Distributed Systems, Machine Learning]
+  - id: edu_zju
+    school: Zhejiang University
+    degree: B.Eng.
+    field: Computer Science
+    start: Sep 2021
+    end: Jun 2025
+    gpa: "3.8/4.0"
+    location: Hangzhou, China
+
+experience:
+  - id: exp_infra
+    company: Example AI Labs
+    title: Machine Learning Engineer Intern
+    location: Beijing, China
+    start: Jun 2024
+    end: Sep 2024
+    bullets:
+      - id: infra_1
+        text: Cut LLM inference latency by 35% by adding continuous batching and paged KV-cache to an internal serving stack (PyTorch, CUDA).
+        tags: [llm, inference, cuda, systems]
+      - id: infra_2
+        text: Built an evaluation harness that ran 12 benchmark suites nightly and caught 3 regressions before release.
+        tags: [evaluation, python, mlops]
+      - id: infra_3
+        text: Wrote a Triton kernel for fused RMSNorm, giving a 1.8x speedup over the PyTorch baseline.
+        tags: [triton, gpu, performance]
+  - id: exp_ta
+    company: Zhejiang University
+    title: Teaching Assistant, Data Structures
+    location: Hangzhou, China
+    start: Sep 2023
+    end: Jan 2024
+    bullets:
+      - id: ta_1
+        text: Led weekly labs for 60 students and wrote autograded C++ assignments.
+        tags: [teaching, c++]
+
+projects:
+  - id: proj_agent
+    name: Research Agent
+    link: https://github.com/alex-chen-example/research-agent
+    tech: [Python, Claude API, Playwright]
+    bullets:
+      - id: agent_1
+        text: Built a tool-using research agent that plans sub-questions, searches the web and writes cited reports.
+        tags: [agents, llm, python]
+      - id: agent_2
+        text: Designed an offline test harness with a scripted fake client covering every branch of the agent loop.
+        tags: [testing, agents]
+  - id: proj_vllm
+    name: Speculative Decoding Study
+    tech: [PyTorch, vLLM]
+    bullets:
+      - id: spec_1
+        text: Benchmarked speculative decoding on 3 model pairs and reached 2.1x throughput at matched quality.
+        tags: [llm, inference, research]
+
+skills:
+  Languages: [Python, C++, CUDA, SQL, Go]
+  ML & Systems: [PyTorch, Triton, vLLM, Ray, Docker, Kubernetes]
+  Tools: [Git, Linux, Playwright, FastAPI]
+
+summaries:
+  - id: sum_infra
+    text: M.S. CS student at CMU focused on LLM inference and ML systems; shipped latency and kernel optimizations in production serving.
+  - id: sum_agents
+    text: M.S. CS student at CMU who builds tool-using LLM agents and the evaluation harnesses that keep them reliable.
+
+answers:
+  how_did_you_hear: Online job board
+  earliest_start_date: May 2027
+  graduation_date: May 2027
+  willing_to_relocate: true
+  open_to_remote: true
+  open_to_onsite: true
+  salary_expectation: ""            # 留空 = 回答 "Open / negotiable"
+  over_18: true
+  previously_employed_at: []        # 曾经任职过的公司（遇到「是否在本公司工作过」时使用）
+  previously_interviewed_at: []     # 曾经面试过的公司
+  acknowledge_privacy_notices: true # 「我已阅读隐私声明」这类确认框自动勾选
+  accept_arbitration_agreements: false  # 仲裁协议会放弃部分法律权利：false = 遇到必须同意的岗位转人工
+  write_short_answers: true         # 允许 Agent 根据你的资料写简短的「为什么想加入」等回答；
+                                    # 雇主明确限制 AI 撰写申请内容时一律转人工
+  eeo:                              # 自愿披露的人口信息；decline = 选「不愿透露」
+    gender: decline
+    race: decline
+    hispanic_latino: decline
+    veteran: decline
+    disability: decline
+  # 你还可以添加任何常见问题的标准答案，Agent 会优先使用：
+  # why_interested_template: "..."
+  # notice_period: "Available from May 2027"
+
+preferences:
+  job_types: [internship]           # internship / new_grad / full_time
+  terms: [Summer 2027]              # 实习季；留空 = 不限
+  categories: [AI/ML/Data, Software]
+  title_include: []                 # 正则；留空 = 不限标题
+  title_exclude: ['\bsenior\b', '\bstaff\b', '\bprincipal\b', '\bmanager\b', '\bdirector\b', '\bsales\b']
+  keywords: [machine learning, ml, ai, llm, inference, infrastructure, systems, software engineer, research]
+  locations: []                     # 例如 ["CA", "New York", "Remote"]；留空 = 美国任意地点
+  exclude_companies: []
+  posted_within_days: 14
+  min_score: 75                     # Claude 打分 >= 这个分数才投
+  max_applications_per_day: 10
+  max_candidates_per_run: 40        # 每天最多让 Claude 细读多少个岗位
+  auto_apply: true                  # false = 只准备材料、不自动提交
+  sources:
+    simplify_internships: true
+    simplify_new_grad: false
+    companies:                      # 额外关注的公司（Greenhouse / Lever / Ashby 招聘页）
+      - {name: Anthropic, ats: greenhouse, token: anthropic}
+      - {name: OpenAI, ats: ashby, token: openai}
+
+notify:
+  github_username: ByteYuan227       # 每日报告 issue 里 @ 你，GitHub 会推送通知
+  email_to: ""                      # 可选：同时发邮件（需要配置 SMTP）
+  language: zh

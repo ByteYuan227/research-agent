@@ -1,10 +1,15 @@
-# Developer tool: open real application forms and record their structure.
-# Read-only: it never submits an application. Results go to the probe-data branch.
+# Developer tool for building the form filler against real application pages.
+# It never submits an application: probe_forms.py only reads forms, and
+# dry_run_fill.py fills them with the fictional example profile and stops
+# before the submit button. Results go to the probe-data branch.
 name: dev-probe
 
 on:
   workflow_dispatch:
     inputs:
+      script:
+        description: probe_forms or dry_run_fill
+        default: probe_forms
       urls_file:
         description: JSON file with a list of job/application URLs
         default: scripts/probe_urls.json
@@ -15,21 +20,22 @@ permissions:
 jobs:
   probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install httpx beautifulsoup4 playwright
+      - run: pip install -e .
       - run: python -m playwright install --with-deps chromium
-      - run: python scripts/probe_forms.py "${{ inputs.urls_file }}" probe-out
+      - run: python "scripts/${{ inputs.script }}.py" "${{ inputs.urls_file }}" probe-out
       - name: Push results to the probe-data branch
+        if: always()
         run: |
           cd probe-out
           git init -q -b probe-data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -qm "probe run ${{ github.run_id }}"
+          git commit -qm "${{ inputs.script }} run ${{ github.run_id }}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" probe-data
