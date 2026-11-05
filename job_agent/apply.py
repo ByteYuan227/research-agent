@@ -179,7 +179,8 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
     if not dry_run:
         if not prefs.auto_apply:
             raise ApplyError("auto_apply is false in the profile; use --dry-run or mark the job manual")
-        if applied_today(state, profile) >= prefs.max_applications_per_day:
+        cap = prefs.max_applications_per_day
+        if cap is not None and applied_today(state, profile) >= cap:
             raise ApplyError("daily application limit reached")
 
     fill_values = dict(merged)

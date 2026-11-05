@@ -24,7 +24,12 @@ work_authorization:
   requires_sponsorship_now: false       # 实习期间用 CPT/OPT，通常不需要立即 sponsor
   requires_sponsorship_future: true     # 将来需要 H-1B 就填 true
   status: "F-1 student, eligible for CPT/OPT"
-  us_citizen: false
+  us_citizen: false                     # 美国公民？
+  permanent_resident: false             # 绿卡？
+  citizenships: [China]                 # 国籍（「Country of citizenship」这类问题会用到）
+  visa_type: F-1
+  # export_control_us_person: true      # 出口管制（ITAR/EAR）的 "U.S. person"；不填则按公民/绿卡自动判断，难民/庇护身份请填 true
+  security_clearance: ""
 
 education:
   - id: edu_cmu
@@ -116,9 +121,9 @@ answers:
   previously_employed_at: []        # 曾经任职过的公司（遇到「是否在本公司工作过」时使用）
   previously_interviewed_at: []     # 曾经面试过的公司
   acknowledge_privacy_notices: true # 「我已阅读隐私声明」这类确认框自动勾选
-  accept_arbitration_agreements: false  # 仲裁协议会放弃部分法律权利：false = 遇到必须同意的岗位转人工
-  write_short_answers: true         # 允许 Agent 根据你的资料写简短的「为什么想加入」等回答；
-                                    # 雇主明确限制 AI 撰写申请内容时一律转人工
+  accept_agreements: true           # 服务条款、仲裁协议、同意书等自动同意（「我是美国公民」这类事实陈述不会自动勾选）
+  write_answers: true               # Claude 根据你的资料写「为什么想加入」、求职信等回答；
+                                    # 只有雇主明确禁止 AI 撰写的题目会留给你手动写
   eeo:                              # 自愿披露的人口信息；decline = 选「不愿透露」
     gender: decline
     race: decline
@@ -128,6 +133,30 @@ answers:
   # 你还可以添加任何常见问题的标准答案，Agent 会优先使用：
   # why_interested_template: "..."
   # notice_period: "Available from May 2027"
+
+# 事先声明：申请表里常见的背景类问题，提前写好，Agent 遇到时直接作答、自动投递。
+declarations:
+  criminal_record: false            # 是否有犯罪记录（felony / misdemeanor / convicted）
+  pending_charges: false            # 是否有待决的刑事指控
+  consent_background_check: true    # 是否同意背景调查
+  consent_drug_test: true           # 是否同意药检
+  non_compete: false                # 是否受竞业 / 禁止招揽协议约束
+  relatives_at_company: false       # 是否有亲属在该公司工作
+  government_official: false        # 是否现任 / 前任政府官员
+
+# 自定义问答：上面都没覆盖、又反复出现的问题，写下你的标准答案。
+# match 是正则表达式（不区分大小写），匹配问题文字；命中时优先使用你的答案，覆盖所有内置规则。
+custom_answers:
+  - {match: "pronoun", answer: "He/him"}
+  - {match: "languages? (do you|you) speak|fluent in", answer: ["English", "Mandarin"]}
+  - {match: "notice period", answer: "Available from May 2027"}
+  - {match: "(hours|days) per week|part[- ]time during", answer: "Full-time during the internship"}
+
+# 关于我：几条自由文本。遇到上面都没覆盖的问题时，Claude 会依据这些事实作答（只用这里写的事实）。
+about_me:
+  - "Native Mandarin speaker, fluent in English."
+  - "Can intern May-August 2027 and start full-time in June 2027 after graduating."
+  - "Open to relocating anywhere in the US; prefer the Bay Area or Seattle."
 
 preferences:
   job_types: [internship]           # internship / new_grad / full_time
@@ -140,9 +169,9 @@ preferences:
   exclude_companies: []
   posted_within_days: 14
   min_score: 75                     # Claude 打分 >= 这个分数才投
-  max_applications_per_day: 10
-  max_candidates_per_run: 40        # 每天最多让 Claude 细读多少个岗位
-  auto_apply: true                  # false = 只准备材料、不自动提交
+  max_applications_per_day: null    # null = 不设上限；也可以填数字
+  max_candidates_per_run: 150       # 每天最多让 Claude 细读多少个岗位
+  auto_apply: true                  # false = 只准备材料、不自动提交（所有招聘网站都会自动投）
   sources:
     simplify_internships: true
     simplify_new_grad: false

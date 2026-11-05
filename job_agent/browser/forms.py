@@ -209,6 +209,25 @@ def _degree(p: Profile, f: dict) -> Suggestion | None:
     return None
 
 
+EMBARGOED = re.compile(r"cuba|iran|north korea|syria|crimea|donetsk|luhansk|russia|belarus", re.I)
+
+
+def _citizenship(p: Profile, f: dict) -> Suggestion | None:
+    """'Are you a U.S. citizen?', '... citizen or permanent resident?', export-control 'U.S. person' questions."""
+    wa = p.work_authorization
+    text = f"{f.get('label', '')} {f.get('description', '')}"
+    if EMBARGOED.search(text):  # "Are you a national of Cuba, Iran, North Korea, Syria ...?"
+        listed = [c for c in wa.citizenships if EMBARGOED.search(c)]
+        return _yes_no(bool(listed), "work_authorization.citizenships")
+    if re.search(r"export|\bitar\b|\bear\b|u\.?s\.? person|refugee|asyl", text, re.I):
+        return _yes_no(wa.us_person, "work_authorization.us_person")
+    if re.search(r"permanent resident|green card", text, re.I):
+        return _yes_no(wa.us_citizen or wa.permanent_resident, "work_authorization.us_citizen/permanent_resident")
+    if re.search(r"\b(u\.?s\.?|united states|american) citizen|citizen of the (u\.?s|united states)", text, re.I):
+        return _yes_no(wa.us_citizen, "work_authorization.us_citizen")
+    return None
+
+
 def _sponsorship(p: Profile, f: dict) -> Suggestion:
     """Sponsorship questions: 'now' only when the question clearly asks about now; otherwise now-or-future."""
     wa = p.work_authorization
@@ -219,6 +238,7 @@ def _sponsorship(p: Profile, f: dict) -> Suggestion:
 
 
 TEXTY = ("text", "email", "tel", "url", "textarea")
+AGREEMENT_KINDS = ("checkbox", "radio", "button_group", "select", "combobox", "listbox")
 CHOICE = ("select", "combobox", "radio", "button_group")
 
 RULES: list[Rule] = [
@@ -256,6 +276,32 @@ RULES: list[Rule] = [
          lambda p, f, c: Suggestion(p.answers.graduation_date or _latest_school(p).end, "answers.graduation_date")),
     Rule(r"how did you (hear|find|learn)|where did you (hear|find)|referral source|source of application", TEXTY + CHOICE,
          lambda p, f, c: Suggestion(p.answers.how_did_you_hear, "answers.how_did_you_hear")),
+    Rule(r"country of citizenship|citizenship country|what is your citizenship|countr(y|ies) of (citizenship|nationality)|nationality",
+         TEXTY + CHOICE,
+         lambda p, f, c: Suggestion(", ".join(p.work_authorization.citizenships) if f["kind"] in TEXTY
+                                    else p.work_authorization.citizenships[0], "work_authorization.citizenships")
+         if p.work_authorization.citizenships else None),
+    Rule(r"visa (type|status)|immigration status|current (work )?(authorization|visa) status|type of (work )?(visa|authorization)",
+         TEXTY + CHOICE,
+         lambda p, f, c: Suggestion(p.work_authorization.visa_type or p.work_authorization.status, "work_authorization.visa_type")
+         if (p.work_authorization.visa_type or p.work_authorization.status) else None),
+    Rule(r"citizen|national of|permanent resident|green card|u\.?s\.? person|export control|\bitar\b|\bear\b", CHOICE + ("checkbox",),
+         lambda p, f, c: _citizenship(p, f)),
+    # Declarations made in advance in the profile.
+    Rule(r"pending (criminal )?charges", CHOICE + ("checkbox",) + TEXTY,
+         lambda p, f, c: _yes_no(p.declarations.pending_charges, "declarations.pending_charges")),
+    Rule(r"convicted|felony|misdemeanor|criminal (record|offen[cs]e|history|conviction)", CHOICE + ("checkbox",) + TEXTY,
+         lambda p, f, c: _yes_no(p.declarations.criminal_record, "declarations.criminal_record")),
+    Rule(r"background (check|screening|investigation)", CHOICE + ("checkbox",),
+         lambda p, f, c: _yes_no(p.declarations.consent_background_check, "declarations.consent_background_check")),
+    Rule(r"drug (test|screen)", CHOICE + ("checkbox",),
+         lambda p, f, c: _yes_no(p.declarations.consent_drug_test, "declarations.consent_drug_test")),
+    Rule(r"non-?compete|non-?solicit|restrictive covenant", CHOICE + ("checkbox",),
+         lambda p, f, c: _yes_no(p.declarations.non_compete, "declarations.non_compete")),
+    Rule(r"(relative|family member|related to).{0,60}(employ|work|current)", CHOICE + ("checkbox",),
+         lambda p, f, c: _yes_no(p.declarations.relatives_at_company, "declarations.relatives_at_company")),
+    Rule(r"government (official|employee)|public official|politically exposed", CHOICE + ("checkbox",),
+         lambda p, f, c: _yes_no(p.declarations.government_official, "declarations.government_official")),
     Rule(r"(legally )?(authorized|eligible|permitted) to work|work authorization|right to work", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(p.work_authorization.authorized_to_work_in_us, "work_authorization.authorized_to_work_in_us")),
     Rule(r"(require|need|requir).{0,60}(sponsor|visa)|sponsorship", CHOICE + ("checkbox",), lambda p, f, c: _sponsorship(p, f)),
@@ -283,14 +329,26 @@ RULES: list[Rule] = [
          lambda p, f, c: _eeo(p.answers.eeo.veteran, f, "answers.eeo.veteran")),
     Rule(r"^disability|disability status", CHOICE,
          lambda p, f, c: _eeo(p.answers.eeo.disability, f, "answers.eeo.disability")),
-    Rule(r"arbitrat", ("checkbox", "radio", "button_group", "select", "combobox"),
-         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else ACK, "answers.accept_arbitration_agreements")
-         if p.answers.accept_arbitration_agreements else None),
-    Rule(r"privacy (notice|policy|statement)|i have read|i acknowledge|acknowledg", ("checkbox", "radio", "button_group", "select", "combobox"),
-         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else ACK, "answers.acknowledge_privacy_notices")
-         if p.answers.acknowledge_privacy_notices and not re.search(r"arbitrat", f["label"] + " " + f.get("description", ""), re.I)
-         else None),
+    Rule(r"privacy (notice|policy|statement)|i have read|i acknowledge|acknowledg", AGREEMENT_KINDS,
+         lambda p, f, c: _agree(p.answers.acknowledge_privacy_notices, f, "answers.acknowledge_privacy_notices")),
+    Rule(r"arbitrat|terms (of|and) (use|service|conditions)|terms & conditions|i agree|agree to|consent|"
+         r"i understand|by (checking|selecting|submitting)", AGREEMENT_KINDS,
+         lambda p, f, c: _agree(p.answers.accept_agreements, f, "answers.accept_agreements")),
 ]
+
+# Statements of fact are answered from the profile, never auto-accepted as "agreements".
+FACTUAL_RE = re.compile(
+    r"citizen|permanent resident|authori[sz]ed to work|eligib|sponsor|clearance|convict|criminal|felony|"
+    r"veteran|disabilit|over (the age of )?18|years of age|degree|graduat|license|drug|background check|"
+    r"\bai\b|artificial intelligence|generative|chatgpt|large language|own words|my own work|without (the )?(use|help|assistance)",
+    re.I,
+)
+
+
+def _agree(enabled: bool, f: dict, src: str) -> Suggestion | None:
+    if not enabled or FACTUAL_RE.search(f"{f.get('label', '')} {f.get('description', '')}"):
+        return None
+    return Suggestion(True if f["kind"] == "checkbox" else ACK, src)
 
 
 def _eeo(choice: str, f: dict, src: str) -> Suggestion | None:
@@ -317,6 +375,12 @@ def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[s
             return Suggestion(str(files["resume"]), "resume")
         return None
     text = label if label else field["key"]
+    # 1. The candidate's own answers win over every built-in rule.
+    question = f"{label} {field.get('description', '')}"
+    for i, ca in enumerate(profile.custom_answers):
+        if re.search(ca.match, question, re.I):
+            return _finalize(Suggestion(ca.answer, f"custom_answers[{i}]"), field)
+    # 2. Built-in rules.
     for rule in RULES:
         if rule.kinds is not None and kind not in rule.kinds:
             continue
@@ -324,19 +388,37 @@ def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[s
             s = rule.fn(profile, field, company)
             if s is None or s.value in ("", None):
                 return None
-            options = field.get("options") or []
-            if kind in ("select", "radio", "button_group", "checkbox_group", "combobox") and options:
-                picked = match_option(s.value, options)
-                if picked is not None:
-                    s = Suggestion(picked, s.source)
-                elif kind == "combobox" and len(options) >= 80 and s.value not in (DECLINE, ACK):
-                    pass  # long searchable list (schools, cities): type the value and pick the match
-                else:
-                    return None  # no fitting option: leave it for Claude
-            if kind == "checkbox" and not isinstance(s.value, bool):
-                s = Suggestion(str(s.value).lower().startswith("y") or s.value == ACK, s.source)
-            return s
+            return _finalize(s, field)
     return None
+
+
+def _finalize(s: Suggestion, field: dict[str, Any]) -> Suggestion | None:
+    """Fit a suggested value to the field: pick the matching option, coerce checkboxes."""
+    kind = field["kind"]
+    value = s.value
+    options = field.get("options") or []
+    if kind in TEXTY and isinstance(value, list):
+        return Suggestion(", ".join(value), s.source)
+    if kind in TEXTY and isinstance(value, bool):
+        return Suggestion("Yes" if value else "No", s.source)
+    if kind in ("select", "radio", "button_group", "combobox", "listbox") and options:
+        wanted = value[0] if isinstance(value, list) and value and kind != "combobox" else value
+        if isinstance(wanted, list):  # multi-select combobox
+            picked = [match_option(v, options) for v in wanted]
+            return Suggestion([p for p in picked if p], s.source) if any(picked) else None
+        picked = match_option(wanted, options)
+        if picked is not None:
+            return Suggestion(picked, s.source)
+        if kind == "combobox" and len(options) >= 80 and wanted not in (DECLINE, ACK):
+            return s  # long searchable list (schools, cities): type the value and pick the match
+        return None  # no fitting option: leave it for Claude
+    if kind == "checkbox_group" and options:
+        wanted = value if isinstance(value, list) else [value]
+        picked = [match_option(v, options) for v in wanted]
+        return Suggestion([p for p in picked if p], s.source) if any(picked) else None
+    if kind == "checkbox" and not isinstance(value, bool):
+        return Suggestion(str(value).lower().startswith("y") or value == ACK, s.source)
+    return s
 
 
 # ---------------------------------------------------------------------------

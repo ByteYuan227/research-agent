@@ -270,7 +270,8 @@ def cmd_budget(args) -> int:
     done = applied_today(state, p)
     out({
         "applied_today": done,
-        "remaining_today": max(0, p.preferences.max_applications_per_day - done),
+        "remaining_today": "unlimited" if p.preferences.max_applications_per_day is None
+        else max(0, p.preferences.max_applications_per_day - done),
         "auto_apply": p.preferences.auto_apply,
         "min_score": p.preferences.min_score,
     })

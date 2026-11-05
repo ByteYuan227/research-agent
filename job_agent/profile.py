@@ -56,7 +56,18 @@ class WorkAuthorization(_Model):
     requires_sponsorship_future: bool
     status: str = ""  # e.g. "F-1 student (eligible for CPT/OPT)", "U.S. citizen"
     us_citizen: bool = False
+    permanent_resident: bool = False  # green card holder
+    citizenships: list[str] = Field(default_factory=list)  # e.g. ["China"]
+    visa_type: str = ""  # e.g. "F-1", "H-1B", "" for citizens / permanent residents
+    # Export-control "U.S. person" (ITAR/EAR): citizen, permanent resident, refugee or asylee.
+    export_control_us_person: bool | None = None  # None = derive from citizen/permanent resident
     security_clearance: str = ""  # leave empty if none
+
+    @property
+    def us_person(self) -> bool:
+        if self.export_control_us_person is not None:
+            return self.export_control_us_person
+        return self.us_citizen or self.permanent_resident
 
 
 class Bullet(_Model):
@@ -112,6 +123,18 @@ class Eeo(_Model):
     disability: str = "decline"
 
 
+class Declarations(_Model):
+    """Background questions answered in advance, so applications can go out unattended."""
+
+    criminal_record: bool = False  # ever convicted of a felony / crime
+    pending_charges: bool = False
+    consent_background_check: bool = True
+    consent_drug_test: bool = True
+    non_compete: bool = False  # bound by a non-compete / non-solicit agreement
+    relatives_at_company: bool = False  # family member working at the company
+    government_official: bool = False  # current/former government official (conflict-of-interest questions)
+
+
 class Answers(_Model):
     """Standard answers for application questions. Extra keys are allowed."""
 
@@ -127,14 +150,31 @@ class Answers(_Model):
     over_18: bool = True
     previously_employed_at: list[str] = Field(default_factory=list)  # company names
     previously_interviewed_at: list[str] = Field(default_factory=list)  # company names
-    # Consent questions. Privacy-notice acknowledgements are routine; arbitration
-    # agreements waive legal rights, so the agent only accepts them if you opt in.
+    # Consent questions: privacy notices, terms, arbitration and other agreements are
+    # accepted automatically. Factual statements ("I am a U.S. citizen") are never
+    # auto-accepted; they are answered from the profile.
     acknowledge_privacy_notices: bool = True
-    accept_arbitration_agreements: bool = False
-    # Short free-text answers ("Why us?") written from your profile and the job
-    # description. Never used where the employer restricts AI-written answers.
-    write_short_answers: bool = True
+    accept_agreements: bool = True
+    # Free-text answers ("Why us?", cover letters) written by Claude from the profile and
+    # the job description. Skipped only where the employer explicitly forbids AI-written answers.
+    write_answers: bool = True
     eeo: Eeo = Field(default_factory=Eeo)
+
+
+class CustomAnswer(_Model):
+    """Your own answer to a recurring question, e.g. {match: "felony|convicted", answer: "No"}."""
+
+    match: str  # regular expression (case-insensitive) matched against the question text
+    answer: str | bool | list[str]
+    note: str = ""
+
+    @field_validator("match")
+    @classmethod
+    def _valid(cls, v: str) -> str:
+        import re
+
+        re.compile(v)
+        return v
 
 
 class CompanyBoard(_Model):
@@ -164,8 +204,8 @@ class Preferences(_Model):
     exclude_companies: list[str] = Field(default_factory=list)
     posted_within_days: int = 14
     min_score: int = Field(75, ge=0, le=100)
-    max_applications_per_day: int = Field(10, ge=0, le=50)
-    max_candidates_per_run: int = Field(40, ge=1, le=200)
+    max_applications_per_day: int | None = Field(None, ge=0)  # None = no limit
+    max_candidates_per_run: int = Field(150, ge=1, le=2000)
     auto_apply: bool = True
     sources: Sources = Field(default_factory=Sources)
 
@@ -195,6 +235,11 @@ class Profile(_Model):
     skills: dict[str, list[str]] = Field(default_factory=dict)
     summaries: list[Summary] = Field(default_factory=list)
     answers: Answers = Field(default_factory=Answers)
+    declarations: Declarations = Field(default_factory=Declarations)
+    # Your answers to recurring questions; they take priority over every built-in rule.
+    custom_answers: list[CustomAnswer] = Field(default_factory=list)
+    # Free-form facts about you that Claude may use when a question is not covered above.
+    about_me: list[str] = Field(default_factory=list)
     preferences: Preferences = Field(default_factory=Preferences)
     notify: Notify = Field(default_factory=Notify)
 

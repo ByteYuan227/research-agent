@@ -219,3 +219,56 @@ def test_report_public_hides_reasons(profile):
     assert "Strong CUDA match" not in public
     assert "@ByteYuan227" in public and "Gamma: interview invite" in public
     assert "Strong CUDA match" in build_report(state, profile, detail="full")
+
+
+# ---------------------------------------------------------------- answer rules
+
+
+def _ask(profile, label, kind="radio", options=("Yes", "No"), desc=""):
+    from job_agent.browser.forms import suggest
+
+    s = suggest({"key": "k", "kind": kind, "label": label, "options": list(options), "description": desc}, profile, "Acme", {})
+    return s.value if s else None
+
+
+@pytest.mark.parametrize(
+    "label, expected",
+    [
+        ("Are you a U.S. citizen?", "No"),
+        ("Are you a U.S. citizen, a lawful permanent resident, a refugee or asylee?", "No"),
+        ("Are you a national of Cuba, Iran, North Korea or Syria?", "No"),
+        ("Are you a U.S. person under export control regulations (ITAR/EAR)?", "No"),
+        ("Have you ever been convicted of a felony?", "No"),
+        ("Do you consent to a background check?", "Yes"),
+        ("Will you now or in the future require visa sponsorship?", "Yes"),
+        ("Are you legally authorized to work in the United States?", "Yes"),
+    ],
+)
+def test_identity_and_declaration_rules(profile, label, expected):
+    assert _ask(profile, label) == expected
+
+
+def test_citizen_profile(profile_data):
+    profile_data["work_authorization"].update(us_citizen=True, requires_sponsorship_future=False, citizenships=["United States"])
+    p = Profile.model_validate(profile_data)
+    assert _ask(p, "Are you a U.S. citizen?") == "Yes"
+    assert _ask(p, "Are you a U.S. person under export control regulations?") == "Yes"
+    assert _ask(p, "Will you now or in the future require sponsorship?") == "No"
+
+
+def test_custom_answers_override_rules(profile_data):
+    profile_data["custom_answers"] = [{"match": "convicted", "answer": "Yes"}, {"match": "languages", "answer": ["English", "Mandarin"]}]
+    p = Profile.model_validate(profile_data)
+    assert _ask(p, "Have you ever been convicted of a crime?") == "Yes"  # beats declarations
+    assert _ask(p, "Which languages do you speak?", kind="checkbox_group", options=("English", "French", "Mandarin")) == ["English", "Mandarin"]
+    assert _ask(p, "Which languages do you speak?", kind="text", options=()) == "English, Mandarin"
+
+
+def test_agreements_accepted_but_not_factual_attestations(profile):
+    assert _ask(profile, "I agree to the Terms of Service and the arbitration agreement", kind="checkbox", options=()) is True
+    assert _ask(profile, "I certify my answers were written without the use of AI tools", kind="checkbox", options=()) is None
+    assert _ask(profile, "I certify that I am a U.S. citizen", kind="checkbox", options=()) is False
+
+
+def test_no_daily_cap_by_default(profile):
+    assert profile.preferences.max_applications_per_day is None
