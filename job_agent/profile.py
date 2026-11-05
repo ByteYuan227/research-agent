@@ -207,8 +207,8 @@ class Preferences(_Model):
     posted_within_days: int = 14
     min_score: int = Field(75, ge=0, le=100)
     max_applications_per_day: int | None = Field(None, ge=0)  # None = no limit
-    # Applications to one company within 30 days (recruiters see them all; Google allows 3). None = no limit.
-    max_per_company: int | None = Field(3, ge=1)
+    # Optional: applications to one company within 30 days (best matches first). None = no limit.
+    max_per_company: int | None = Field(None, ge=1)
     max_candidates_per_run: int = Field(150, ge=1, le=2000)
     auto_apply: bool = True
     sources: Sources = Field(default_factory=Sources)

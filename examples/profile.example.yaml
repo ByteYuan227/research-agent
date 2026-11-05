@@ -176,7 +176,7 @@ preferences:
   posted_within_days: 14
   min_score: 75                     # Claude 打分 >= 这个分数才投
   max_applications_per_day: null    # null = 不设上限；也可以填数字
-  max_per_company: 3                # 同一家公司 30 天内最多投几个（挑分最高的）；null = 不限
+  max_per_company: null             # 同一家公司 30 天内最多投几个（挑分最高的）；null = 不限
   max_candidates_per_run: 150       # 每天最多让 Claude 细读多少个岗位
   auto_apply: true                  # false = 只准备材料、不自动提交（所有招聘网站都会自动投）
   sources:

@@ -22,7 +22,7 @@ A Claude-powered agent that finds US internship / new-grad jobs every day, tailo
 | 随后 | 对每个达到分数线的岗位：按 JD 定制一页简历 → 打开申请页 → 需要注册就注册（密码自动生成并加密保存）→ 读邮箱验证码 → 逐页填表、上传简历、回答问题 → 提交 |
 | 约 20:00 起 | 在 GitHub 发日报 issue 并 @ 你（可同时发邮件）：投了哪些、哪些需要你手动投、邮箱里的面试邀请 |
 
-**不设每日投递上限**，能投的都投；只是同一家公司 30 天内最多投 3 个岗位（挑匹配度最高的；招聘方能看到你投的全部岗位，Google 等公司也有类似限制），可以用 `max_per_company` 调整或设为 `null` 取消。新发布的岗位优先投。投不成的（验证码、需要你本人提供的材料等）会把定制好的简历和准备好的回答保存下来，进入日报里的「待你手动投递」清单。已经关闭的岗位、网站提示你投过的岗位会自动识别，不会占用你的时间。
+**不设投递上限**，能投的都投，同一家公司也不限（想限制的话可以设 `max_per_company`，比如 3 = 同一家公司 30 天内最多投 3 个，挑匹配度最高的）。新发布的岗位优先投。投不成的（验证码、需要你本人提供的材料等）会把定制好的简历和准备好的回答保存下来，进入日报里的「待你手动投递」清单。已经关闭的岗位、网站提示你投过的岗位会自动识别，不会占用你的时间。
 
 ### 快速开始（3 步）
 
@@ -99,7 +99,7 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 | `custom_answers` | 自定义问答：`{match: "正则", answer: "答案"}`，匹配到的问题优先用你的答案，覆盖所有内置规则 |
 | `about_me` | 几条自由文本事实，Claude 回答其他问题时可以引用 |
 | `answers` | 常用回答（开始日期、是否愿意搬迁、薪资期望、EEO 等），以及：服务条款 / 仲裁 / 隐私协议自动同意（`accept_agreements`），AI 写回答（`write_answers`） |
-| `preferences` | 岗位类型、实习季、关键词、地点、排除公司、最低分（`min_score`）、每天上限（`max_applications_per_day: null` 表示不限）、同一公司 30 天内上限（`max_per_company`，默认 3，`null` 表示不限） |
+| `preferences` | 岗位类型、实习季、关键词、地点、排除公司、最低分（`min_score`）、每天上限（`max_applications_per_day: null` 表示不限）、同一公司 30 天内上限（`max_per_company`，默认 `null` 不限） |
 
 **提交前核对**：点「提交」之前，程序会把页面上显示的答案和你的资料对一遍（工作许可、是否需要 sponsor、公民身份、犯罪记录等声明、你的 `custom_answers`、姓名和邮箱）。有矛盾就不提交，先改正。标题里写明只招本科生 / 研究生 / 其他学期、只面向某个学校或某个招聘会、或者是 Mercor 这类外包平台的岗位，会在打分前直接过滤掉。
 
@@ -187,7 +187,7 @@ jobagent report
 | then | For every job above your threshold: tailors a one-page resume to the JD → opens the application → signs up if needed (generated password, stored encrypted) → reads the email verification code → fills every step, uploads the resume, answers the questions → submits |
 | ~8 pm onward | Posts a daily report issue that @-mentions you (and optionally emails it): what was submitted, what needs you, interview invitations in your inbox |
 
-There is **no daily cap**. The one limit: at most 3 applications to the same company within 30 days (the best matches; recruiters see every application you send, and some companies such as Google enforce a similar limit). Change it with `max_per_company`, or set it to `null`. Fresh postings go first. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**. Postings that have closed, and ones the site says you already applied to, are recognised and kept off your list.
+There is **no cap**, per day or per company (optional: `max_per_company: 3` limits applications to one company within 30 days to the 3 best matches). Fresh postings go first. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**. Postings that have closed, and ones the site says you already applied to, are recognised and kept off your list.
 
 ### Quick start (3 steps)
 
@@ -262,7 +262,7 @@ To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5
 | `custom_answers` | Your own answers: `{match: "<regex>", answer: "..."}`; they override every built-in rule |
 | `about_me` | Free-form facts Claude may use for other questions |
 | `answers` | Common answers (start date, relocation, salary, EEO…), plus automatic acceptance of terms / arbitration / privacy notices (`accept_agreements`) and AI-written answers (`write_answers`) |
-| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited), per-company cap over 30 days (`max_per_company`, default 3, `null` = unlimited) |
+| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited), optional per-company cap over 30 days (`max_per_company`, default `null` = unlimited) |
 
 **Checked before submitting**: before pressing Submit, the program compares what the page shows with your profile (work authorization, sponsorship, citizenship, declarations such as criminal record, your `custom_answers`, name and email). On any contradiction it does not submit until the answer is fixed. Titles that limit a role to undergraduates / graduate students / another term, to one school or one career fair, and contract marketplaces such as Mercor are filtered out before scoring.
 

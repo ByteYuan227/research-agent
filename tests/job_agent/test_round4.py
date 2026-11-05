@@ -198,7 +198,17 @@ def test_settle_never_retries_after_a_submit_click(home):
 # ---------------------------------------------------------------------------
 
 
-def test_queue_caps_applications_per_company(home, capsys):
+def _profile_with(tmp_path, monkeypatch, profile_data, **prefs):
+    import yaml
+
+    profile_data["preferences"].update(prefs)
+    path = tmp_path / "p.yaml"
+    path.write_text(yaml.safe_dump(profile_data))
+    monkeypatch.setenv("JOBAGENT_PROFILE", str(path))
+
+
+def test_queue_caps_applications_per_company_when_asked(home, capsys, tmp_path, profile_data, monkeypatch):
+    _profile_with(tmp_path, monkeypatch, profile_data, max_per_company=3)
     now = time.time()
     state = State()
     jobs = [
@@ -220,13 +230,10 @@ def test_queue_caps_applications_per_company(home, capsys):
     assert s.jobs["gh:g:3"].status == "skipped" and "max_per_company" in s.events[-1].detail
 
 
-def test_queue_without_cap(home, capsys, tmp_path, profile_data, monkeypatch):
-    import yaml
+def test_queue_has_no_company_cap_by_default(home, capsys):
+    from job_agent.profile import Preferences
 
-    profile_data["preferences"]["max_per_company"] = None
-    path = tmp_path / "p.yaml"
-    path.write_text(yaml.safe_dump(profile_data))
-    monkeypatch.setenv("JOBAGENT_PROFILE", str(path))
+    assert Preferences().max_per_company is None
     state = State()
     for i in range(5):
         j = _job(id=f"gh:g:{i}", company="Google", score=90 - i)
