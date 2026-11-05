@@ -67,7 +67,7 @@ def _compact(field: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def prepare(job: Job, profile: Profile) -> dict[str, Any]:
+def prepare(job: Job, profile: Profile, memory: dict[str, Any] | None = None) -> dict[str, Any]:
     from playwright.sync_api import sync_playwright
 
     if not job.auto_apply:
@@ -84,7 +84,7 @@ def prepare(job: Job, profile: Profile) -> dict[str, Any]:
             for f in data["fields"]:
                 if f["kind"] == "combobox" and not f.get("options"):
                     f["options"] = forms.combobox_options(page, f["key"])
-                s = forms.suggest(f, profile, job.company, files)
+                s = forms.suggest(f, profile, job.company, files, memory)
                 if s is not None:
                     f["suggested"], f["source"] = s.value, s.source
             page.screenshot(path=str(wd / "form.jpg"), full_page=True, type="jpeg", quality=45)
@@ -201,13 +201,14 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
                 if f["key"] in current and f.get("options") and not current[f["key"]].get("options"):
                     current[f["key"]]["options"] = f["options"]
             gone = [k for k in merged if k not in current]
-            fill = forms.fill_all(page, list(current.values()), fill_values)
+            fill = forms.fill_and_verify(page, list(current.values()), fill_values)
             page.screenshot(path=str(wd / "filled.jpg"), full_page=True, type="jpeg", quality=45)
-            if fill.errors or fill.missing_required or gone:
+            if fill.errors or fill.missing_required or gone or fill.unverified:
                 result = {
                     "status": "fill_failed",
                     "errors": fill.errors,
                     "missing_required": fill.missing_required,
+                    "value_did_not_stick": fill.unverified,
                     "fields_no_longer_on_form": gone,
                 }
             elif dry_run:
@@ -234,6 +235,10 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
         return Path(v).name if isinstance(v, str) and v.startswith("/") else v
 
     given = {labels[k][:120]: shown(v) for k, v in merged.items() if k in labels}
+    if result["status"] in ("submitted", "dry_run_ok"):
+        from .memory import remember
+
+        remember(state, form["fields"], doc["answers"], job.company)
     job.attempts += 1
     job.application = {"answers": given, "outcome": result, "at": time.time(), "dry_run": dry_run}
     if dry_run:

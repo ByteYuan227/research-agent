@@ -159,8 +159,76 @@ def ashby_job(org: str, job_id: str, client: httpx.Client | None = None) -> dict
     return None
 
 
+def workday_parts(url: str) -> tuple[str, str, str, str] | None:
+    """(host, tenant, site, path from /job/...) for a myworkdayjobs.com posting URL."""
+    u = urlparse(url)
+    host = (u.netloc or "").lower()
+    parts = [p for p in u.path.split("/") if p]
+    if parts and re.fullmatch(r"[a-z]{2}-[A-Z]{2}", parts[0]):
+        parts = parts[1:]  # locale prefix, e.g. en-US
+    if not host or not parts or "job" not in parts:
+        return None
+    site = parts[0]
+    rest = "/".join(parts[parts.index("job"):])
+    return host, host.split(".")[0], site, rest
+
+
+def workday_job(url: str, client: httpx.Client | None = None) -> dict[str, Any] | None:
+    """Posting details from Workday's public candidate API (the page itself is rendered by JavaScript)."""
+    parts = workday_parts(url)
+    if parts is None:
+        return None
+    host, tenant, site, rest = parts
+    c = client or _client()
+    r = c.get(f"https://{host}/wday/cxs/{tenant}/{site}/{rest}", headers={"Accept": "application/json"})
+    r.raise_for_status()
+    return r.json().get("jobPostingInfo")
+
+
+def jsonld_description(raw_html: str) -> str:
+    """The description from a schema.org JobPosting block, which most career sites embed for search engines."""
+    import json
+
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(raw_html, "html.parser")
+    for tag in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(tag.string or "")
+        except (ValueError, TypeError):
+            continue
+        items = data if isinstance(data, list) else data.get("@graph", [data]) if isinstance(data, dict) else []
+        for item in items:
+            if isinstance(item, dict) and item.get("@type") in ("JobPosting", ["JobPosting"]) and item.get("description"):
+                title = item.get("title", "")
+                return f"{title}\n{html_to_text(html.unescape(item['description']))}".strip()
+    return ""
+
+
+def render_page_text(url: str) -> str:
+    """Last resort for career sites that build the page with JavaScript: render it and read the text."""
+    from playwright.sync_api import sync_playwright
+
+    from .browser.launch import launch, new_context
+
+    with sync_playwright() as pw:
+        browser = launch(pw)
+        try:
+            page = new_context(browser).new_page()
+            page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            try:
+                page.wait_for_load_state("networkidle", timeout=15000)
+            except Exception:  # noqa: BLE001
+                pass
+            page.wait_for_timeout(1500)
+            text = page.evaluate("() => (document.querySelector('main, [role=main], article') || document.body).innerText")
+        finally:
+            browser.close()
+    return re.sub(r"\n{3,}", "\n\n", text or "").strip()
+
+
 def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None) -> str:
-    """Plain-text job description, from the ATS API when possible, else the page HTML."""
+    """Plain-text job description: ATS API, then embedded JSON-LD, then page HTML, then a rendered page."""
     c = client or _client()
     try:
         if ref.ats == "greenhouse" and ref.company and ref.job_id:
@@ -186,8 +254,28 @@ def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None)
                     parts.append(f"Compensation: {comp}")
                 parts.append(data.get("descriptionPlain") or html_to_text(data.get("descriptionHtml", "")))
                 return "\n".join(p for p in parts if p)
+        if ref.ats == "workday":
+            data = workday_job(url, c)
+            if data and data.get("jobDescription"):
+                parts = [data.get("title", ""), data.get("location", ""), data.get("timeType", "")]
+                parts.append(html_to_text(data["jobDescription"]))
+                return "\n".join(p for p in parts if p)
+    except (httpx.HTTPError, ValueError, KeyError):
+        pass
+    text = ""
+    try:
+        r = c.get(url)
+        r.raise_for_status()
+        text = jsonld_description(r.text) or html_to_text(r.text)
     except httpx.HTTPError:
         pass
-    r = c.get(url)
-    r.raise_for_status()
-    return html_to_text(r.text)
+    if len(text) < 600:  # probably a JavaScript app: render it
+        try:
+            rendered = render_page_text(url)
+            if len(rendered) > len(text):
+                text = rendered
+        except Exception:  # noqa: BLE001
+            pass
+    if not text:
+        raise httpx.HTTPError(f"could not read the job description at {url}")
+    return text

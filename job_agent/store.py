@@ -18,8 +18,9 @@ from pydantic import BaseModel, Field
 from .profile import jobagent_home
 
 # Job lifecycle:
-#   new -> candidate -> scored -> (skipped | applying -> applied | manual | failed)
-DECIDED = {"skipped", "applied", "manual", "failed"}
+#   new -> candidate -> scored -> (skipped | applying -> applied | manual)
+#   manual -> applied_manual   (you applied yourself and ticked it in the report)
+DECIDED = {"skipped", "applied", "manual", "failed", "applied_manual"}
 SEEN_TTL_DAYS = 60
 EVENT_TTL_DAYS = 120
 
@@ -85,6 +86,9 @@ class State(BaseModel):
     seen: dict[str, float] = Field(default_factory=dict)  # job id -> first seen (for "new today")
     events: list[Event] = Field(default_factory=list)
     accounts: dict[str, Account] = Field(default_factory=dict)
+    # Answers Claude gave to questions the profile does not cover, reused next time
+    # the same question appears. Your custom_answers always take priority.
+    memory: dict[str, dict[str, Any]] = Field(default_factory=dict)
     last_run: dict[str, Any] = Field(default_factory=dict)
 
     # -- helpers -------------------------------------------------------------

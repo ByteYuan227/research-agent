@@ -369,7 +369,8 @@ def _eeo(choice: str, f: dict, src: str) -> Suggestion | None:
 SITE_PASSWORD = "__site_password__"  # replaced by the vault at fill time; Claude never sees passwords
 
 
-def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[str, Path]) -> Suggestion | None:
+def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[str, Path],
+            memory: dict[str, dict[str, Any]] | None = None) -> Suggestion | None:
     kind = field["kind"]
     label = field.get("label") or ""
     if kind == "password":  # account creation / login: generated and stored by the vault
@@ -398,6 +399,12 @@ def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[s
             if s is None or s.value in ("", None):
                 return None
             return _finalize(s, field)
+    # 3. What Claude answered last time this question came up.
+    from ..memory import recall
+
+    learned = recall(memory, field, company)
+    if learned is not None:
+        return _finalize(Suggestion(learned, "memory"), field)
     return None
 
 
@@ -651,6 +658,13 @@ class FillReport:
     filled: list[str] = field(default_factory=list)
     errors: dict[str, str] = field(default_factory=dict)
     missing_required: list[str] = field(default_factory=list)
+    unverified: list[str] = field(default_factory=list)  # filled, but the page does not show the value
+
+
+# Kinds whose "has a value" check is reliable enough to fail an application on.
+VERIFIABLE = {"text", "email", "tel", "url", "number", "date", "textarea", "password", "select", "file", "checkbox", "radio"}
+# Kinds where filling again is harmless (a second click on a Yes/No button could undo the first).
+RETRYABLE = VERIFIABLE | {"combobox", "listbox"}
 
 
 def fill_all(page, fields: list[dict[str, Any]], answers: dict[str, Any]) -> FillReport:
@@ -668,6 +682,27 @@ def fill_all(page, fields: list[dict[str, Any]], answers: dict[str, Any]) -> Fil
             report.errors[f["key"]] = err
         else:
             report.filled.append(f["key"])
+    return report
+
+
+def fill_and_verify(page, fields: list[dict[str, Any]], answers: dict[str, Any]) -> FillReport:
+    """Fill, then re-read the page: retry fields whose value did not stick, once."""
+    report = fill_all(page, fields, answers)
+    by_key = {f["key"]: f for f in fields}
+
+    def unfilled() -> list[str]:
+        data = page.evaluate(EXTRACT_JS)
+        now = {f["key"]: f for f in data["fields"]}
+        return [k for k in report.filled if k in now and not now[k].get("filled") and by_key[k]["kind"] in RETRYABLE]
+
+    retry = unfilled()
+    if retry:
+        page.wait_for_timeout(500)
+        for k in retry:
+            err = fill_field(page, by_key[k], answers[k])
+            if err:
+                report.errors[k] = err
+        report.unverified = [k for k in unfilled() if by_key[k]["kind"] in VERIFIABLE]
     return report
 
 

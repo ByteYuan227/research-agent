@@ -1,26 +1,23 @@
-# Daily job hunt: discover roles, let Claude score/tailor/apply, post a report.
+# Daily job hunt: discover roles, let Claude score, tailor and apply, post a report.
 #
 # Claude runs through Claude Code with your Claude subscription
 # (secret CLAUDE_CODE_OAUTH_TOKEN, created with `claude setup-token`), or an
-# API key (secret ANTHROPIC_API_KEY). Setup: docs/job-agent.md.
+# API key (secret ANTHROPIC_API_KEY). Setup: README.md.
 name: job-hunt
 
 on:
   schedule:
     # Cron is UTC. One of these is 19:17 in New York depending on daylight
     # saving; the gate below lets only that one through, so the report lands
-    # around 8pm Eastern all year.
+    # in the evening Eastern time all year.
     - cron: "17 23 * * *"
     - cron: "17 0 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: Fill application forms but never submit
+        description: Rehearsal - prepare everything but never submit
         type: boolean
         default: false
-      max_turns:
-        description: Max Claude turns
-        default: "300"
 
 permissions:
   contents: write # encrypted state on the jobagent-data branch
@@ -33,13 +30,15 @@ concurrency:
 jobs:
   hunt:
     runs-on: ubuntu-latest
-    timeout-minutes: 170
+    timeout-minutes: 350
     env:
       JOBAGENT_HOME: ${{ github.workspace }}/.jobagent
       JOBAGENT_PROFILE_YAML: ${{ secrets.JOBAGENT_PROFILE_YAML }}
       JOBAGENT_STATE_KEY: ${{ secrets.JOBAGENT_STATE_KEY }}
       JOBAGENT_IMAP_USER: ${{ secrets.JOBAGENT_IMAP_USER }}
       JOBAGENT_IMAP_PASSWORD: ${{ secrets.JOBAGENT_IMAP_PASSWORD }}
+      JOBAGENT_CLAUDE_MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
+      JOBAGENT_MAX_MINUTES: "300"
       HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
@@ -62,7 +61,7 @@ jobs:
           private=$(curl -fsS -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY" \
             | python -c "import json,sys; print(str(json.load(sys.stdin).get('private', False)).lower())")
           echo "private=$private" >> "$GITHUB_OUTPUT"
-          # Public repositories get a report without score reasons or answers.
+          # Public repositories get a report without score reasons.
           if [ "$private" = "true" ]; then echo "JOBAGENT_REPORT_DETAIL=full" >> "$GITHUB_ENV"; else echo "JOBAGENT_REPORT_DETAIL=public" >> "$GITHUB_ENV"; fi
 
       - uses: actions/setup-python@v5
@@ -75,6 +74,7 @@ jobs:
         run: |
           pip install -q -e .
           python -m playwright install --with-deps chromium > /dev/null
+          if [ "$HAS_CLAUDE" = "true" ]; then npm install -g @anthropic-ai/claude-code > /dev/null; fi
 
       - name: Restore state
         if: steps.gate.outputs.go == 'true'
@@ -88,64 +88,32 @@ jobs:
             jobagent state import "$RUNNER_TEMP/state.enc"
           fi
 
-      - name: Discover jobs
+      - name: Job hunt
         if: steps.gate.outputs.go == 'true'
-        run: jobagent discover > "$RUNNER_TEMP/discover.json"
-
-      - name: Claude runs the job hunt
-        if: steps.gate.outputs.go == 'true' && env.HAS_CLAUDE == 'true' && env.JOBAGENT_PROFILE_YAML != ''
         env:
           SUBSCRIPTION_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
-          DRY_RUN: ${{ inputs.dry_run }}
-          MAX_TURNS: ${{ inputs.max_turns || '300' }}
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
         run: |
           # Prefer the subscription token; an API key would take precedence if both were set.
-          if [ -n "$SUBSCRIPTION_TOKEN" ]; then
-            export CLAUDE_CODE_OAUTH_TOKEN="$SUBSCRIPTION_TOKEN"
-          else
-            export ANTHROPIC_API_KEY="$API_KEY"
-          fi
+          if [ -n "$SUBSCRIPTION_TOKEN" ]; then export CLAUDE_CODE_OAUTH_TOKEN="$SUBSCRIPTION_TOKEN";
+          elif [ -n "$API_KEY" ]; then export ANTHROPIC_API_KEY="$API_KEY"; fi
           unset SUBSCRIPTION_TOKEN API_KEY
+          if [ "$DRY_RUN_INPUT" = "true" ]; then export JOBAGENT_DRY_RUN=1; fi
           # The very first scheduled run is a rehearsal, so you can check the answers and
           # resumes in the report before anything is submitted.
           if [ "${{ github.event_name }}" = "schedule" ] && jobagent first-run | grep -q '"first_run": true'; then
-            DRY_RUN=true
-            jobagent note "🧪 这是第一次运行，按规则只做演练：申请表都填好了但没有提交。请检查这份日报，确认无误后明天开始正式投递。"
+            export JOBAGENT_DRY_RUN=1
+            jobagent note "🧪 第一次运行按规则只做演练：所有申请都准备好了但没有提交。请检查这份日报，明天开始正式投递。"
           fi
-          npm install -g @anthropic-ai/claude-code > /dev/null
-          PROMPT="Run today's job hunt. Follow .claude/skills/job-hunt/SKILL.md exactly (read it first). Discovery has already run; start at step 1 with 'jobagent check'."
-          if [ "$DRY_RUN" = "true" ]; then
-            PROMPT="$PROMPT This is a DRY RUN: always call 'jobagent submit' with --dry-run and never submit for real."
-            export JOBAGENT_DRY_RUN=1  # enforced by the CLI as well
-          fi
-          # Claude gets file tools and the jobagent CLI only: no web access, no other shell commands,
-          # so text planted in a job posting cannot make it send data anywhere.
-          ARGS=(--max-turns "$MAX_TURNS" --permission-mode dontAsk
-                --tools "Bash,Read,Write,Edit,Glob,Grep"
-                --allowedTools "Bash(jobagent *)" Read Write Edit Glob Grep)
-          if [ -n "$MODEL" ]; then ARGS+=(--model "$MODEL"); fi
-          # The transcript can contain personal data, so nothing from it is printed in public
-          # repositories; private ones show Claude's final summary line.
-          set +e
-          claude -p "$PROMPT" "${ARGS[@]}" > "$RUNNER_TEMP/claude.txt" 2> "$RUNNER_TEMP/claude.err"
-          status=$?
-          set -e
-          if [ "${{ steps.repo.outputs.private }}" = "true" ]; then tail -c 600 "$RUNNER_TEMP/claude.txt"; fi
-          echo "Claude finished with status $status"
-          if [ $status -ne 0 ]; then
-            echo "::warning::Claude exited with status $status"
-            jobagent note "Claude 运行异常退出（状态码 $status），部分岗位可能没处理完，明天会继续。"
-            tail -c 600 "$RUNNER_TEMP/claude.err" | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/[email]/g'
-          fi
-
-      - name: Explain missing setup
-        if: steps.gate.outputs.go == 'true' && (env.HAS_CLAUDE != 'true' || env.JOBAGENT_PROFILE_YAML == '')
-        run: |
           if [ "$HAS_CLAUDE" != "true" ]; then
-            jobagent note "还没有配置 CLAUDE_CODE_OAUTH_TOKEN（或 ANTHROPIC_API_KEY），今天只做了岗位发现。配置方法见 docs/job-agent.md。"
+            jobagent sync-checklist > /dev/null || true
+            jobagent discover > /dev/null
+            jobagent note "还没有配置 CLAUDE_CODE_OAUTH_TOKEN（或 ANTHROPIC_API_KEY），今天只做了岗位发现。配置方法见 README。"
+            exit 0
           fi
+          # The logs of each Claude session stay on the runner: they can contain personal data.
+          bash scripts/daily_run.sh
 
       - name: Post the daily report
         if: always() && steps.gate.outputs.go == 'true'
@@ -154,20 +122,21 @@ jobs:
           jobagent report --out "$RUNNER_TEMP/report.md"
           jobagent notify --report "$RUNNER_TEMP/report.md"
 
-      - name: Save state
+      - name: Save state and manual-apply materials (encrypted)
         if: always() && steps.gate.outputs.go == 'true' && env.JOBAGENT_STATE_KEY != ''
         run: |
           mkdir -p "$RUNNER_TEMP/data"
           jobagent state export "$RUNNER_TEMP/data/state.enc"
+          jobagent materials export "$RUNNER_TEMP/data/materials.enc"
           cd "$RUNNER_TEMP/data"
           git init -q -b jobagent-data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state.enc
+          git add state.enc materials.enc
           git commit -qm "job agent state $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" jobagent-data
 
-      # Resumes and screenshots contain personal data: only kept for private repositories.
+      # Resumes and screenshots contain personal data: only uploaded for private repositories.
       - uses: actions/upload-artifact@v4
         if: always() && steps.gate.outputs.go == 'true' && steps.repo.outputs.private == 'true'
         with:

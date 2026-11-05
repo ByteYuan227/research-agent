@@ -228,7 +228,7 @@ def cmd_prepare(args) -> int:
     state = load_state()
     job = _job(state, args.job_id)
     try:
-        result = prepare(job, load_profile())
+        result = prepare(job, load_profile(), state.memory)
     except ApplyError as exc:
         return fail(str(exc))
     except Exception as exc:  # noqa: BLE001
@@ -326,8 +326,13 @@ def cmd_notify(args) -> int:
     except ProfileError:
         to = ""
     if to:
+        from . import materials
+
         try:
-            result["email"] = notify.email_report(title, body, to)
+            since = load_state().last_run.get("started", time.time() - 86400)
+            files = materials.resumes_for_email(load_state(), since)
+            result["email"] = notify.email_report(title, body, to, files)
+            result["email_attachments"] = len(files)
         except Exception as exc:  # noqa: BLE001
             result["email_error"] = str(exc)[:300]
     out(result)
@@ -389,7 +394,7 @@ def cmd_web(args) -> int:
             result = web.open_job(state, _job(state, args.arg), profile)
         elif args.action == "look":
             with web.page() as pg:
-                result = web.look(pg, web._current_job(state), profile)
+                result = web.look(pg, web._current_job(state), profile, memory=state.memory)
         elif args.action == "click":
             result = web.click(state, profile, args.arg or "")
         elif args.action == "goto":
@@ -421,6 +426,95 @@ def cmd_web(args) -> int:
         return fail(f"{type(exc).__name__}: {str(exc).splitlines()[0][:300]}")
     save_state(state)
     out(result)
+    return 0
+
+
+def cmd_queue(args) -> int:
+    """Job ids waiting to be applied to, best score first (one per line, for scripts)."""
+    state = load_state()
+    jobs = sorted((j for j in state.jobs.values() if j.status == "scored"), key=lambda j: -(j.score or 0))
+    for j in jobs:
+        print(j.id)
+    return 0
+
+
+def cmd_settle(args) -> int:
+    """After an apply session: make sure the job got an outcome."""
+    from .web import _save_session
+
+    state = load_state()
+    job = state.jobs.get(args.job_id)
+    if job is None:
+        return 0
+    _save_session({})
+    if job.status in ("scored", "applying"):
+        if args.stopped in ("quota", "auth"):
+            state.set_status(job, "scored", f"interrupted ({args.stopped}); will retry next run")
+        else:
+            state.set_status(job, "manual", f"the automatic application did not finish (exit {args.exit})")
+        save_state(state)
+    out({"id": job.id, "status": job.status})
+    return 0
+
+
+def cmd_sync_checklist(args) -> int:
+    """Mark jobs you ticked in earlier daily-report issues as applied by you."""
+    try:
+        checked = notify.checked_jobs_in_reports()
+    except Exception as exc:  # noqa: BLE001 - not on GitHub, or no token
+        out({"synced": 0, "note": str(exc)[:200]})
+        return 0
+    state = load_state()
+    n = 0
+    for jid in checked:
+        job = state.jobs.get(jid)
+        if job and job.status == "manual":
+            job.applied_at = job.applied_at or time.time()
+            state.set_status(job, "applied_manual", "ticked in the daily report")
+            n += 1
+    save_state(state)
+    out({"synced": n})
+    return 0
+
+
+def cmd_materials(args) -> int:
+    """Tailored resumes and prepared answers for jobs you apply to yourself."""
+    from . import materials
+
+    if args.action == "export":
+        out(materials.export(load_state(), Path(args.file)))
+    else:
+        out(materials.unpack(Path(args.file), Path(args.out)))
+    return 0
+
+
+def cmd_memory(args) -> int:
+    """Answers learned from earlier applications (forget one if it is wrong)."""
+    state = load_state()
+    if args.forget:
+        removed = state.memory.pop(args.forget, None)
+        save_state(state)
+        out({"forgotten": bool(removed)})
+        return 0
+    out([{"key": k, **v} for k, v in sorted(state.memory.items(), key=lambda kv: -kv[1].get("uses", 0))])
+    return 0
+
+
+def cmd_export(args) -> int:
+    """All tracked applications as CSV (open it in Excel / Google Sheets)."""
+    import csv
+
+    state = load_state()
+    rows = sorted((j for j in state.jobs.values() if j.status in ("applied", "applied_manual", "manual", "skipped")),
+                  key=lambda j: -(j.applied_at or j.updated_at or 0))
+    with open(args.file, "w", newline="", encoding="utf-8-sig") as fh:
+        w = csv.writer(fh)
+        w.writerow(["date", "status", "company", "title", "score", "locations", "url", "reason"])
+        for j in rows:
+            when = _when(j.applied_at or j.updated_at)
+            w.writerow([when, j.status, j.company, j.title, j.score if j.score is not None else "",
+                        "; ".join(j.locations), j.url, j.reason])
+    out({"file": args.file, "rows": len(rows)})
     return 0
 
 
@@ -489,7 +583,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("mark", help="record a decision without applying")
     s.add_argument("job_id")
-    s.add_argument("--status", choices=["manual", "skipped", "failed"], required=True)
+    s.add_argument("--status", choices=["manual", "skipped", "failed", "scored", "applied_manual"], required=True,
+                   help="scored = try again next run; applied_manual = you applied yourself")
     s.add_argument("--reason", required=True)
     s.set_defaults(fn=cmd_mark)
 
@@ -539,6 +634,31 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--match", help="link: text the verification URL must contain")
     s.add_argument("--reason", help="finish: what happened")
     s.set_defaults(fn=cmd_web)
+
+    sub.add_parser("queue", help="job ids to apply to, best first").set_defaults(fn=cmd_queue)
+
+    s = sub.add_parser("settle", help=argparse.SUPPRESS)
+    s.add_argument("job_id")
+    s.add_argument("--stopped", default="")
+    s.add_argument("--exit", default="0")
+    s.set_defaults(fn=cmd_settle)
+
+    sub.add_parser("sync-checklist", help="mark jobs ticked in daily reports as applied by you").set_defaults(
+        fn=cmd_sync_checklist)
+
+    s = sub.add_parser("materials", help="resumes + answers for manual applications (encrypted bundle)")
+    s.add_argument("action", choices=["export", "open"])
+    s.add_argument("file", help="bundle path (materials.enc)")
+    s.add_argument("--out", default="jobagent-materials", help="open: folder to unpack into")
+    s.set_defaults(fn=cmd_materials)
+
+    s = sub.add_parser("memory", help="answers learned from earlier applications")
+    s.add_argument("--forget", help="question key to forget")
+    s.set_defaults(fn=cmd_memory)
+
+    s = sub.add_parser("export", help="all tracked applications as a CSV file")
+    s.add_argument("file", nargs="?", default="applications.csv")
+    s.set_defaults(fn=cmd_export)
 
     sub.add_parser("first-run", help="has the agent never filled a form yet?").set_defaults(fn=cmd_first_run)
 

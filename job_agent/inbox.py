@@ -117,6 +117,8 @@ CODE_SUBJECT = re.compile(r"code|verif|security|confirm|one[- ]time", re.I)
 
 def wait_for_code(since_ts: float, timeout_s: int = 150, hint: str = "") -> str | None:
     """Poll the inbox for a verification code that arrived after ``since_ts``."""
+    if os.environ.get("JOBAGENT_TEST_CODE"):  # end-to-end tests against mock sites
+        return os.environ["JOBAGENT_TEST_CODE"]
     if not configured():
         return None
     deadline = time.time() + timeout_s

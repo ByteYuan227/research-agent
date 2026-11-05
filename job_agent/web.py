@@ -223,7 +223,7 @@ def _files(job: Job, profile: Profile) -> dict[str, Path]:
     return files
 
 
-def look(pg, job: Job, profile: Profile, gather_options: bool = True) -> dict[str, Any]:
+def look(pg, job: Job, profile: Profile, gather_options: bool = True, memory: dict[str, Any] | None = None) -> dict[str, Any]:
     from .apply import _compact
 
     data = pg.evaluate(forms.EXTRACT_JS)
@@ -231,7 +231,7 @@ def look(pg, job: Job, profile: Profile, gather_options: bool = True) -> dict[st
     for f in data["fields"]:
         if gather_options and f["kind"] in ("combobox", "listbox") and not f.get("options") and not f.get("filled"):
             f["options"] = forms.combobox_options(pg, f["key"], limit=60)
-        s = forms.suggest(f, profile, job.company, files)
+        s = forms.suggest(f, profile, job.company, files, memory)
         if s is not None:
             f["suggested"], f["source"] = s.value, s.source
     summary = pg.evaluate(PAGE_SUMMARY_JS)
@@ -263,7 +263,7 @@ def open_job(state: State, job: Job, profile: Profile) -> dict[str, Any]:
     with page() as pg:
         pg.goto(job.apply_url or job.url, wait_until="domcontentloaded", timeout=60000)
         _settle(pg)
-        return look(pg, job, profile)
+        return look(pg, job, profile, memory=state.memory)
 
 
 def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
@@ -285,7 +285,7 @@ def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
         target.click(timeout=10000)
         _settle(pg)
     with page() as pg:  # a new tab may have opened
-        result = look(pg, job, profile)
+        result = look(pg, job, profile, memory=state.memory)
         result["opened_new_tab"] = len(pg.context.pages) > before
         return result
 
@@ -297,7 +297,7 @@ def goto(state: State, profile: Profile, url: str) -> dict[str, Any]:
     with page() as pg:
         pg.goto(url, wait_until="domcontentloaded", timeout=60000)
         _settle(pg)
-        return look(pg, job, profile)
+        return look(pg, job, profile, memory=state.memory)
 
 
 def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwrite: bool = False) -> dict[str, Any]:
@@ -318,7 +318,7 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
             if f["key"] in answers:
                 values[f["key"]] = answers[f["key"]]
             elif overwrite or not f.get("filled"):
-                s = forms.suggest(f, profile, job.company, files)
+                s = forms.suggest(f, profile, job.company, files, state.memory)
                 if s is not None:
                     values[f["key"]] = s.value
         for k, v in list(values.items()):
@@ -335,14 +335,20 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
                     unknown.append(f"{k}: files can only be 'resume' or 'cover_letter' (build them first)")
                 else:
                     values[k] = str(path)
-        report = forms.fill_all(pg, [f for f in data["fields"] if f["key"] in values], values)
+        report = forms.fill_and_verify(pg, [f for f in data["fields"] if f["key"] in values], values)
+        if answers:
+            from .memory import remember
+
+            ok = {k: v for k, v in answers.items() if k in report.filled and k not in report.errors}
+            remember(state, data["fields"], ok, job.company)
         s = _session()
         s["last_action"] = time.time()
         _save_session(s)
-        after = look(pg, job, profile, gather_options=False)
+        after = look(pg, job, profile, gather_options=False, memory=state.memory)
     return {
         "filled": report.filled,
         "errors": report.errors,
+        "value_did_not_stick": report.unverified,
         "problems": unknown,
         "required_empty": after["required_empty"],
         "alerts": after["alerts"],
@@ -360,7 +366,7 @@ def email_code(state: State, profile: Profile, hint: str = "") -> dict[str, Any]
         if not forms.enter_code(pg, code):
             raise WebError("found a code but no field to type it into")
         _settle(pg)
-        return look(pg, job, profile)
+        return look(pg, job, profile, memory=state.memory)
 
 
 URL_RE = re.compile(r"https?://[^\s<>\"')\]]+")

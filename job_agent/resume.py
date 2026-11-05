@@ -13,8 +13,13 @@ Plan format (all keys optional; omitted sections use everything in the profile):
       "education": [{"id": "edu_msu", "bullets": []}],
       "experience": [{"id": "exp_acme", "bullets": ["acme_1", "acme_3"]}],
       "projects": [{"id": "proj_agent", "bullets": ["agent_1"]}],
-      "skills": {"Languages": ["Python", "C++"], "ML": ["PyTorch"]}
+      "skills": {"Languages": ["Python", "C++"], "ML": ["PyTorch"]},
+      "rewrites": {"acme_1": "the same fact, worded the way the job description words it"},
+      "summary_text": "optional one-line summary, built only from facts in the profile"
     }
+
+Rewrites and summary_text are checked: no numbers that the original does not
+have, and no technology/organisation names that appear nowhere in the profile.
 """
 
 from __future__ import annotations
@@ -34,10 +39,63 @@ class PlanError(ValueError):
     pass
 
 
+# ---------------------------------------------------------------------------
+# Fact checks for reworded text (rewrites, summary_text)
+# ---------------------------------------------------------------------------
+
+_NUM = re.compile(r"\d+(?:[.,]\d+)?")
+_WORD = re.compile(r"[A-Za-z][A-Za-z0-9+#.-]*[A-Za-z0-9+#]|[A-Za-z]")
+
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", "") for n in _NUM.findall(text)}
+
+
+def profile_corpus(profile: Profile) -> str:
+    parts: list[str] = []
+    for group in (profile.education, profile.experience, profile.projects):
+        for item in group:
+            parts.append(" ".join(str(v) for v in item.model_dump(exclude={"bullets", "id"}).values()))
+            parts.extend(b.text for b in item.bullets)
+    parts.extend(s for group in profile.skills.values() for s in group)
+    parts.extend(s.text for s in profile.summaries)
+    parts.extend(profile.about_me)
+    parts.append(profile.work_authorization.status)
+    return "\n".join(parts)
+
+
+def _terms(text: str) -> list[str]:
+    """Words that look like names of technologies, products or organisations."""
+    out = []
+    for m in _WORD.finditer(text):
+        w = m.group(0).rstrip(".")
+        sentence_start = m.start() == 0 or text[: m.start()].rstrip().endswith((".", ";", ":"))
+        techy = any(c.isdigit() or c in "+#" for c in w) or any(c.isupper() for c in w[1:])
+        proper = w[:1].isupper() and not sentence_start
+        if (techy or proper) and len(w) > 1:
+            out.append(w)
+    return out
+
+
+def check_rewrite(new: str, source: str, corpus: str, max_len: int) -> list[str]:
+    """Problems with reworded text: anything not supported by `source` (numbers) or the profile (terms)."""
+    problems = []
+    extra = _numbers(new) - _numbers(source)
+    if extra:
+        problems.append(f"numbers not in the original: {sorted(extra)}")
+    vocab = {w.lower().rstrip(".") for w in _WORD.findall(corpus)}
+    unknown = sorted({t for t in _terms(new) if t.lower() not in vocab})
+    if unknown:
+        problems.append(f"terms not in the profile: {unknown}")
+    if len(new) > max_len:
+        problems.append(f"too long ({len(new)} > {max_len} characters)")
+    return problems
+
+
 def validate_plan(plan: dict[str, Any] | None, profile: Profile) -> dict[str, Any]:
     """Return a normalised plan, or raise PlanError explaining what is not in the profile."""
     plan = dict(plan or {})
-    unknown = set(plan) - {"summary", "sections", *SECTIONS, "notes"}
+    unknown = set(plan) - {"summary", "summary_text", "rewrites", "sections", *SECTIONS, "notes"}
     if unknown:
         raise PlanError(f"unknown plan keys: {sorted(unknown)}")
     errors: list[str] = []
@@ -96,6 +154,27 @@ def validate_plan(plan: dict[str, Any] | None, profile: Profile) -> dict[str, An
                 norm_skills[group] = kept
         out["skills"] = norm_skills
 
+    # Reworded text must keep the same facts.
+    corpus = profile_corpus(profile)
+    bullets = profile.bullet_index()
+    rewrites = plan.get("rewrites") or {}
+    if not isinstance(rewrites, dict):
+        errors.append("rewrites must map bullet id -> text")
+        rewrites = {}
+    for bid, text in rewrites.items():
+        if bid not in bullets:
+            errors.append(f"rewrite for unknown bullet {bid!r}")
+            continue
+        original = bullets[bid].text
+        for problem in check_rewrite(str(text), original, corpus, int(len(original) * 1.5) + 40):
+            errors.append(f"rewrite {bid}: {problem}")
+    out["rewrites"] = {k: str(v).strip() for k, v in rewrites.items()}
+    summary_text = (plan.get("summary_text") or "").strip()
+    if summary_text:
+        for problem in check_rewrite(summary_text, corpus, corpus, 420):
+            errors.append(f"summary_text: {problem}")
+    out["summary_text"] = summary_text
+
     if errors:
         raise PlanError("; ".join(errors))
     return out
@@ -110,11 +189,11 @@ def resume_context(profile: Profile, plan: dict[str, Any]) -> dict[str, Any]:
         rows = []
         for entry in plan[section]:
             item = items[entry["id"]].model_dump()
-            item["bullets"] = [bullets[b].text for b in entry["bullets"]]
+            item["bullets"] = [plan["rewrites"].get(b) or bullets[b].text for b in entry["bullets"]]
             rows.append(item)
         return rows
 
-    summary = next((s.text for s in profile.summaries if s.id == plan["summary"]), "")
+    summary = plan["summary_text"] or next((s.text for s in profile.summaries if s.id == plan["summary"]), "")
     return {
         "p": profile.personal,
         "summary": summary,
