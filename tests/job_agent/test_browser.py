@@ -151,3 +151,21 @@ def test_account_creation_uses_vault_password(site, profile, home, monkeypatch):
 
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     assert not vault.can_reveal()
+
+
+def test_dry_run_env_cannot_be_bypassed(site, profile, home, monkeypatch):
+    from job_agent.cli import main
+    from job_agent.store import load_state, save_state
+
+    job = _job(f"{site}/form.html")
+    state = State()
+    state.jobs[job.id] = job
+    save_state(state)
+    build_resume(profile, None, apply_mod.work_dir(job))
+    assert main(["prepare", job.id]) == 0
+    answers = apply_mod.work_dir(job) / "answers.json"
+    answers.write_text(json.dumps({"answers": {"why": "Grounded answer."}}))
+    monkeypatch.setenv("JOBAGENT_DRY_RUN", "1")
+    assert main(["submit", job.id, "--answers", str(answers)]) == 0  # no --dry-run flag
+    after = load_state().jobs[job.id]
+    assert after.status != "applied" and after.application["dry_run"] is True

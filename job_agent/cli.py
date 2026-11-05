@@ -240,10 +240,14 @@ def cmd_prepare(args) -> int:
 
 
 def cmd_submit(args) -> int:
+    import os
+
     state = load_state()
     job = _job(state, args.job_id)
+    # JOBAGENT_DRY_RUN=1 makes rehearsals safe even if the --dry-run flag is forgotten.
+    dry_run = args.dry_run or os.environ.get("JOBAGENT_DRY_RUN") == "1"
     try:
-        result = submit(job, load_profile(), state, Path(args.answers), dry_run=args.dry_run)
+        result = submit(job, load_profile(), state, Path(args.answers), dry_run=dry_run)
     except ApplyError as exc:
         return fail(str(exc))
     save_state(state)
@@ -368,6 +372,14 @@ def cmd_account(args) -> int:
     return 0
 
 
+def cmd_first_run(args) -> int:
+    """Has the agent ever filled a form (dry run or real)? Used to make the first scheduled run a rehearsal."""
+    state = load_state()
+    done = any(e.type in ("dry_run", "applied") for e in state.events)
+    out({"first_run": not done})
+    return 0
+
+
 def cmd_set_run(args) -> int:
     state = load_state()
     state.last_run[args.key] = args.value
@@ -461,6 +473,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=["list", "password"])
     s.add_argument("--site")
     s.set_defaults(fn=cmd_account)
+
+    sub.add_parser("first-run", help="has the agent never filled a form yet?").set_defaults(fn=cmd_first_run)
 
     s = sub.add_parser("set-run", help=argparse.SUPPRESS)
     s.add_argument("key")

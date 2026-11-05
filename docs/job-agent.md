@@ -85,9 +85,17 @@ python -m job_agent keygen
 gh secret set JOBAGENT_PROFILE_YAML < ~/.jobagent/profile.yaml
 ```
 
+第 2 到 6 步也可以用一个脚本完成（需要已登录的 GitHub CLI）。它会检查资料格式、生成密钥，并提示你粘贴令牌：
+
+```bash
+bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
+```
+
 ### 7. 先演练一次
 
-仓库 → Actions → **job-hunt** → Run workflow，勾选 **dry_run**。演练模式会完整走一遍流程，但**不会真正提交**任何申请。跑完后去 Issues 页面看日报，确认打分和简历都合理。
+仓库 → Actions → **job-hunt** → Run workflow，勾选 **dry_run**。演练模式会完整走一遍流程，但**不会真正提交**任何申请。这一点由程序强制保证，不依赖 Claude 是否遵守指令。跑完后去 Issues 页面看日报，确认打分和简历都合理。
+
+就算你跳过这一步，**第一次定时运行也会自动按演练处理**：先给你一份「已填好、未提交」的日报，第二天才开始正式投递。
 
 之后每天美东时间 **19:17** 自动运行，**20:00 左右**收到日报。想暂停的话：Actions → job-hunt → 右上角 `···` → Disable workflow。
 
@@ -133,7 +141,7 @@ gh secret set JOBAGENT_PROFILE_YAML < ~/.jobagent/profile.yaml
 | 用示例资料填写这 20 个表单，不提交 | 17/20 填完且页面没有报错；剩下 3 个要求上传成绩单或作品集，会按设计转人工 |
 | 全流程演练：当天最新岗位 → 筛选 → 简历 → 读表 → 填表 | 8/8 填写成功 |
 | Claude 按技能手册独立跑完整流程（模拟岗位） | 打分正确（安全许可岗位被排除），识别并忽略了岗位描述里植入的提示注入，只依据资料写出申请回答 |
-| 本地模拟页面：提交、邮箱验证码、注册账号 | 单元测试和浏览器测试共 66 个，全部通过 |
+| 本地模拟页面：提交、邮箱验证码、注册账号、强制演练 | 单元测试和浏览器测试共 67 个，全部通过 |
 
 真实提交时，Greenhouse 和 Ashby 用的是隐形 reCAPTCHA，Lever 用的是 hCaptcha，它们对 GitHub 服务器 IP 的反应只有真正提交时才知道。如果被拦截，岗位会进入「需要你手动处理」，日报里会写明原因。
 

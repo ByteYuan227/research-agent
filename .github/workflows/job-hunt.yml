@@ -108,10 +108,17 @@ jobs:
             export ANTHROPIC_API_KEY="$API_KEY"
           fi
           unset SUBSCRIPTION_TOKEN API_KEY
+          # The very first scheduled run is a rehearsal, so you can check the answers and
+          # resumes in the report before anything is submitted.
+          if [ "${{ github.event_name }}" = "schedule" ] && jobagent first-run | grep -q '"first_run": true'; then
+            DRY_RUN=true
+            jobagent note "🧪 这是第一次运行，按规则只做演练：申请表都填好了但没有提交。请检查这份日报，确认无误后明天开始正式投递。"
+          fi
           npm install -g @anthropic-ai/claude-code > /dev/null
           PROMPT="Run today's job hunt. Follow .claude/skills/job-hunt/SKILL.md exactly (read it first). Discovery has already run; start at step 1 with 'jobagent check'."
           if [ "$DRY_RUN" = "true" ]; then
             PROMPT="$PROMPT This is a DRY RUN: always call 'jobagent submit' with --dry-run and never submit for real."
+            export JOBAGENT_DRY_RUN=1  # enforced by the CLI as well
           fi
           # Claude gets file tools and the jobagent CLI only: no web access, no other shell commands,
           # so text planted in a job posting cannot make it send data anywhere.
