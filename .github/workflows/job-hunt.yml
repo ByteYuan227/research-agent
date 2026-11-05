@@ -95,25 +95,38 @@ jobs:
       - name: Claude runs the job hunt
         if: steps.gate.outputs.go == 'true' && env.HAS_CLAUDE == 'true' && env.JOBAGENT_PROFILE_YAML != ''
         env:
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUBSCRIPTION_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
           DRY_RUN: ${{ inputs.dry_run }}
           MAX_TURNS: ${{ inputs.max_turns || '300' }}
         run: |
+          # Prefer the subscription token; an API key would take precedence if both were set.
+          if [ -n "$SUBSCRIPTION_TOKEN" ]; then
+            export CLAUDE_CODE_OAUTH_TOKEN="$SUBSCRIPTION_TOKEN"
+          else
+            export ANTHROPIC_API_KEY="$API_KEY"
+          fi
+          unset SUBSCRIPTION_TOKEN API_KEY
           npm install -g @anthropic-ai/claude-code > /dev/null
           PROMPT="Run today's job hunt. Follow .claude/skills/job-hunt/SKILL.md exactly (read it first). Discovery has already run; start at step 1 with 'jobagent check'."
           if [ "$DRY_RUN" = "true" ]; then
             PROMPT="$PROMPT This is a DRY RUN: always call 'jobagent submit' with --dry-run and never submit for real."
           fi
-          ARGS=(--max-turns "$MAX_TURNS" --permission-mode acceptEdits --allowedTools "Bash(jobagent:*)" Read Write Edit Glob)
+          # Claude gets file tools and the jobagent CLI only: no web access, no other shell commands,
+          # so text planted in a job posting cannot make it send data anywhere.
+          ARGS=(--max-turns "$MAX_TURNS" --permission-mode dontAsk
+                --tools "Bash,Read,Write,Edit,Glob,Grep"
+                --allowedTools "Bash(jobagent *)" Read Write Edit Glob Grep)
           if [ -n "$MODEL" ]; then ARGS+=(--model "$MODEL"); fi
-          # Only Claude's final one-line summary is printed: the transcript can contain personal data.
+          # The transcript can contain personal data, so nothing from it is printed in public
+          # repositories; private ones show Claude's final summary line.
           set +e
           claude -p "$PROMPT" "${ARGS[@]}" > "$RUNNER_TEMP/claude.txt" 2> "$RUNNER_TEMP/claude.err"
           status=$?
           set -e
-          tail -c 1500 "$RUNNER_TEMP/claude.txt"
+          if [ "${{ steps.repo.outputs.private }}" = "true" ]; then tail -c 600 "$RUNNER_TEMP/claude.txt"; fi
+          echo "Claude finished with status $status"
           if [ $status -ne 0 ]; then
             echo "::warning::Claude exited with status $status"
             jobagent note "Claude 运行异常退出（状态码 $status），部分岗位可能没处理完，明天会继续。"

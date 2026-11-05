@@ -19,8 +19,19 @@
     const r = el.getBoundingClientRect();
     return r.width > 0 || r.height > 0;
   };
+  const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
   const unstableId = (id) =>
-    !id || /^:r[0-9a-z]+:$/i.test(id) || /^react-select-\d+/.test(id) || /^\d+$/.test(id) || /^(mui|headlessui)-/i.test(id);
+    !id ||
+    /^:r[0-9a-z]+:$/i.test(id) ||
+    /^react-select-\d+/.test(id) ||
+    /^\d+$/.test(id) ||
+    /^(mui|headlessui)-/i.test(id) ||
+    new RegExp(`^${UUID}_`, "i").test(id); // Ashby: <random per render>_<field id>
+  // Ashby wraps every question in an element whose data-field-path is stable.
+  const fieldPath = (el) => {
+    const holder = el.closest("[data-field-path]");
+    return holder ? holder.getAttribute("data-field-path") : null;
+  };
   const slug = (s) => clean(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60);
 
   // Text of a label element without the text of any control inside it
@@ -131,8 +142,10 @@
     fields.push(f);
   }
   function stableKey(el, label) {
-    if (el.name && !/^\d+$/.test(el.name) && !/\s/.test(el.name)) return el.name;
+    if (el.name && !/^\d+$/.test(el.name) && !/\s/.test(el.name) && !unstableId(el.name)) return el.name;
     if (!unstableId(el.id)) return el.id;
+    const fp = fieldPath(el);
+    if (fp) return fp;
     return "label:" + slug(label || el.getAttribute("placeholder") || el.type || "field");
   }
 
@@ -218,8 +231,8 @@
       const kind = type === "radio" ? "radio" : single ? "checkbox" : "checkbox_group";
       const tag = single ? el : container && members.every((m) => container.contains(m)) ? container : el.parentElement;
       let key;
-      if (container && container.getAttribute("data-field-path")) key = container.getAttribute("data-field-path");
-      else if (members.length > 1 && el.name && members.every((m) => m.name === el.name)) key = el.name;
+      if (fieldPath(el)) key = fieldPath(el);
+      else if (members.length > 1 && el.name && members.every((m) => m.name === el.name) && !unstableId(el.name)) key = el.name;
       else if (single) key = stableKey(el, label);
       else key = "label:" + slug(label || options.join("_"));
       addField(

@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import json
+import os
 import re
 import time
+from pathlib import Path
 from typing import Any, Iterable
 
 import httpx
@@ -223,6 +226,15 @@ def discover(prefs: Preferences, client: httpx.Client | None = None) -> tuple[li
         except (httpx.HTTPError, KeyError, ValueError) as exc:
             errors.append(f"{board.name} ({board.ats}:{board.token}): {exc}")
         time.sleep(0.2)
+    extra = os.environ.get("JOBAGENT_EXTRA_JOBS")
+    if extra:  # a JSON list of Job objects: for tests, or jobs found elsewhere
+        try:
+            batches.append([Job.model_validate(j) for j in json.loads(Path(extra).read_text(encoding="utf-8"))])
+        except (OSError, ValueError) as exc:
+            errors.append(f"JOBAGENT_EXTRA_JOBS: {exc}")
+    for url in src.extra_urls:
+        batches.append([_from_url(url, source="manual", company=ats.parse_ats(url).company or "", title=url,
+                                  job_type=prefs.job_types[0] if prefs.job_types else "")])
     seen: dict[str, Job] = {}
     for batch in batches:
         for job in batch:

@@ -27,13 +27,15 @@ in order and keep going until every candidate is decided or the daily budget is 
 5. Keep personal data out of notes and your final message. Notes go into a report that
    may be public.
 6. Only use `jobagent` commands and read/write files under the work directory it gives you.
+   Run one `jobagent` command per shell call: loops, pipes and other programs are blocked.
 
 ## Steps
 
 ### 1. Setup and discovery
 - `jobagent check` - if the profile is missing, stop: discovery already ran without it.
 - `jobagent discover` - fetches open roles and prints `candidates` (already filtered by
-  job type, term, location, recency and duplicates). Note the count.
+  job type, term, location, recency and duplicates). If discovery already ran today (the
+  scheduled workflow does it before starting you), use `jobagent candidates` instead.
 - `jobagent profile` - read it once; it is your only source of facts about the candidate.
 - `jobagent budget` - `remaining_today` applications may be submitted.
 
@@ -99,5 +101,6 @@ interview invitations, online assessments, rejections, offers. For each, add
 
 ### 5. Wrap up
 Add 1-3 `jobagent note` lines with useful observations (for example a skill many good
-postings asked for that the profile lacks). Finish with a one-line plain summary of the
-counts (scored / applied / manual / skipped). The report itself is generated afterwards.
+postings asked for that the profile lacks). Finish with a single line of counts only,
+e.g. `scored 31, applied 8, manual 5, skipped 18` - no names or details, since the run
+log may be public. The report itself is generated afterwards.

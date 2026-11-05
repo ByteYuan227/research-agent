@@ -58,6 +58,10 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
     ]
     if failed:
         lines.append(f"- ⚠️ 出错：{len(failed)}")
+    rehearsed = {e.job_id: e.detail for e in events if e.type == "dry_run"}
+    if rehearsed:
+        ok = sum(1 for d in rehearsed.values() if d == "dry_run_ok")
+        lines.append(f"- 🧪 演练模式：{len(rehearsed)} 个申请表已填好但没有提交（成功 {ok} 个）")
     lines.append("")
 
     if applied:

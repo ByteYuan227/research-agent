@@ -148,6 +148,7 @@ class Sources(_Model):
     simplify_internships: bool = True
     simplify_new_grad: bool = True
     companies: list[CompanyBoard] = Field(default_factory=list)
+    extra_urls: list[str] = Field(default_factory=list)  # specific postings you want considered
 
 
 class Preferences(_Model):
