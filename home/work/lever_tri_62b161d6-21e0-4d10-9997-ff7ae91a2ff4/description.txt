@@ -1,0 +1,77 @@
+Automated Driving Advanced Development Intern, Machine Learning Research
+Los Altos, CA
+At Toyota Research Institute (TRI), we’re on a mission to improve the quality of human life. We’re developing new tools and capabilities to amplify the human experience. To lead this transformative shift in mobility, we’ve built a world-class team advancing the state of the art in AI, robotics, driving, and material sciences.
+This is a paid 12-week internship opportunity and is a hybrid, in-office role.
+Here’s a glimpse into the Internship experience from some of our TRI interns!
+
+
+At Toyota Research Institute (TRI), we’re on a mission to improve the quality of human life. We’re developing new tools and capabilities to amplify the human experience. To lead this transformative shift in mobility, we’ve built a world-class team advancing the state of the art in AI, robotics, driving, and material sciences.
+ 
+This is a Summer 2027 paid 12-week internship opportunity. Please note that this internship will be a hybrid in-office role.
+ 
+The Team
+ 
+The Automated Driving Advanced Development division at TRI will focus on enabling innovation and transformation at Toyota by building a bridge between TRI research and Toyota products, services, and needs. We achieve this through partnership, collaboration, and shared commitment. This new division is leading a new cross-organizational project between TRI and Woven by Toyota to conduct research and develop a fully end-to-end learned driving stack. This cross-org collaborative project is harmonious with TRI’s robotics divisions' efforts in Diffusion Policy and Large Behavior Models.
+ 
+The Internship
+ 
+We are looking for Machine Learning Research Interns to join our autonomy team and help bring end-to-end ML models ( pixels to trajectories ) into robust, testable, and deployable systems. This role is ideal for those who thrive at the intersection of machine learning, systems engineering, and real-world deployment. This internship opportunity is a paid 12-week internship for Summer 2026. Please note that this internship will be a hybrid in-office role.
+ 
+You’ll contribute to the implementation, evaluation, and integration of ML-based components for perception, planning, and control; with simulation-based testing. You’ll work closely with researchers, data engineers, and autonomy engineers to ensure models scale from prototype to production. This work is part of Toyota’s global AI efforts to build a more coordinated global approach across Toyota entities.
+ 
+
+Responsibilities
+- Conduct ambitious research to advance the state-of-the-art in using new capabilities in generative modelling for end-to-end planning from vision in automated driving.
+
+- Implement scalable end-to-end architectures that process raw sensor data to generate vehicle trajectories, addressing the challenges of long-tail driving scenarios with low data coverage.
+
+- Prototype, validate, and iterate on model architectures using imitation learning, and large-scale data, ensuring robust performance across diverse scenarios.
+
+- Perform closed-loop evaluations in sensor simulations and real-world testing environments.
+
+- Explore multi-modal and language-conditioned models to broaden the applicability of end-to-end policies, leveraging external data sources and transfer learning to enhance generalization.
+Qualifications
+- Currently pursuing a Ph.D. or equivalent experience in Computer Science, Robotics, Engineering, or a related field.
+
+- Proficiency in Python for implementing and evaluating research ideas.
+
+- Experience with ML frameworks such as PyTorch.
+
+- Understanding of version control, testing, and software engineering fundamentals.
+
+- Passion for collaborative engineering and building reliable ML systems that support real-world autonomy.
+Bonus Qualifications
+- Experience in ML engineering workflows: data sampling and curation, pre-processing, model training, ablation studies, evaluation, deployment, inference optimization.
+
+- Understanding of debugging and profiling on NVIDIA CUDA stack.
+
+- Hands-on experience with metrics dashboards, experiment tracking, and ML ops tooling (e.g., Weights & Biases, MLflow, Metaflow).
+
+- Hands-on experience working with robotics or real-world sensor data (e.g., video, lidar, IMU, or radar).
+
+- Experience in state-of-the-art architectures for object detection and 3D perception.
+
+- Familiarity with foundation models, pre-training and efficient fine-tuning, multimodal Transformer architectures, large-scale distributed training.
+
+- Experience working with ROS, simulation frameworks (e.g., CARLA, Nvidia DriveSim), or vehicle interfaces.
+
+- Experience with robot motion planning techniques like trajectory optimization, sampling-based planning, or model predictive control, or experience with automated driving domains (e.g., perception, prediction, mapping, localization, planning, simulation).
+Please include links to any relevant open-source contributions or technical project write-ups with your application.
+ 
+The pay range for this position at commencement of employment is expected to be between $45 and $65/hour for California-based roles, and between $40 and $58/hour for Massachusetts-based roles. Base pay offered will depend on multiple individualized factors, including, but not limited to, business or organizational needs, market location, job-related knowledge, skills, and experience. TRI offers a generous benefits package including medical, dental, and vision insurance, and paid time off benefits (including holiday pay and sick time). Additional details regarding these benefit plans will be provided if an employee receives an offer of employment.
+ 
+ 
+Please reference this Candidate Privacy Notice to inform you of the categories of personal information that we collect from individuals who inquire about and/or apply to work for Toyota Research Institute, Inc. or its subsidiaries, including Toyota A.I. Ventures GP, L.P., and the purposes for which we use such personal information.
+ 
+TRI is fueled by a diverse and inclusive community of people with unique backgrounds, education and life experiences. We are dedicated to fostering an innovative and collaborative environment by living the values that are an essential part of our culture. We believe diversity makes us stronger and are proud to provide Equal Employment Opportunity for all, without regard to an applicant’s race, color, creed, gender, gender identity or expression, sexual orientation, national origin, age, physical or mental disability, medical condition, religion, marital status, genetic information, veteran status, or any other status protected under federal, state or local laws.
+ 
+It is unlawful in Massachusetts to require or administer a lie detector test as a condition of employment or continued employment. An employer who violates this law shall be subject to criminal penalties and civil liability. Pursuant to the San Francisco Fair Chance Ordinance, we will consider qualified applicants with arrest and conviction records for employment. 
+
+
+The pay range for this position at commencement of employment is expected to be between $45 and $65/hour for California-based roles. Base pay offered will depend on multiple individualized factors, including, but not limited to, a candidate's experience, skills, job-related knowledge, and market location. TRI offers a generous benefits package including medical, dental, and vision insurance, and paid time off benefits (including holiday pay and sick time). Additional details regarding these benefit plans will be provided if an employee receives an offer of employment.
+ 
+Please reference this Candidate Privacy Notice to inform you of the categories of personal information that we collect from individuals who inquire about and/or apply to work for Toyota Research Institute, Inc. or its subsidiaries, including Toyota A.I. Ventures GP, L.P., and the purposes for which we use such personal information.
+ 
+TRI is fueled by a diverse and inclusive community of people with unique backgrounds, education and life experiences. We are dedicated to fostering an innovative and collaborative environment by living the values that are an essential part of our culture. We believe diversity makes us stronger and are proud to provide Equal Employment Opportunity for all, without regard to an applicant’s race, color, creed, gender, gender identity or expression, sexual orientation, national origin, age, physical or mental disability, medical condition, religion, marital status, genetic information, veteran status, or any other status protected under federal, state or local laws.
+ 
+It is unlawful in Massachusetts to require or administer a lie detector test as a condition of employment or continued employment. An employer who violates this law shall be subject to criminal penalties and civil liability. Pursuant to the San Francisco Fair Chance Ordinance, we will consider qualified applicants with arrest and conviction records for employment.

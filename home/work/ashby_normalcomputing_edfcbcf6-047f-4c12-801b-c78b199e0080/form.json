@@ -1,0 +1,159 @@
+{
+ "job_id": "ashby:normalcomputing:edfcbcf6-047f-4c12-801b-c78b199e0080",
+ "url": "https://jobs.ashbyhq.com/normalcomputing/edfcbcf6-047f-4c12-801b-c78b199e0080/application",
+ "prepared_at": 1793858597.097982,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false,
+ "has_submit": true,
+ "fields": [
+  {
+   "key": "48c15571-d3f4-4914-99de-c4ae21274a7f",
+   "kind": "button_group",
+   "label": "Will you now or in the future require sponsorship for employment visa status to work in this location?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "Sponsorship means Normal would need to file or support a visa or work permit application for you to work in that country, now or in the future.",
+   "filled": false
+  },
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Full Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex Chen",
+   "source": "personal.full_name"
+  },
+  {
+   "key": "a52a2a18-1251-4fa4-a32d-57d416a2df53",
+   "kind": "text",
+   "label": "Preferred Name (if different)",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex",
+   "source": "personal.preferred_name"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com",
+   "source": "personal.email"
+  },
+  {
+   "key": "de88fed6-1920-4d2c-a1c0-18cd807627be",
+   "kind": "tel",
+   "label": "Phone Number",
+   "required": true,
+   "description": "",
+   "placeholder": "1-415-555-1234...",
+   "filled": false,
+   "suggested": "+1 555-010-0199",
+   "source": "personal.phone"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/home/work/ashby_normalcomputing_edfcbcf6-047f-4c12-801b-c78b199e0080/Alex_Chen_Resume.pdf",
+   "source": "resume"
+  },
+  {
+   "key": "0ba55e06-dc74-4335-b697-7beafe3b4326",
+   "kind": "text",
+   "label": "LinkedIn URL",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example",
+   "source": "personal.linkedin"
+  },
+  {
+   "key": "38c23985-b095-4fae-ad5f-9b302fabf2a6",
+   "kind": "combobox",
+   "label": "How did you hear about this job?",
+   "required": true,
+   "description": "",
+   "placeholder": "Start typing...",
+   "multiple": false,
+   "filled": false,
+   "options": [
+    "LinkedIn",
+    "Employee referral",
+    "Our recruiting team reached out",
+    "Event or conference",
+    "Podcast",
+    "Normal's research, blog, or GitHub",
+    "A Normal customer or partner",
+    "Glassdoor",
+    "Other"
+   ]
+  },
+  {
+   "key": "41b8edb3-e03c-424b-8024-df6f7eccfb19",
+   "kind": "textarea",
+   "label": "What excited you about the opportunity to join Normal at this stage of your career?",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "036382d6-a347-4c0d-b748-60eaf022fe27",
+   "kind": "text",
+   "label": "Desired Salary",
+   "required": false,
+   "description": "Please include the currency (for example, USD, GBP, or DKK).",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Open / negotiable",
+   "source": "default"
+  },
+  {
+   "key": "_systemfield_location",
+   "kind": "combobox",
+   "label": "Which country do you intend to work from?",
+   "required": true,
+   "description": "Please list your city and country.",
+   "placeholder": "Start typing...",
+   "multiple": false,
+   "filled": false,
+   "options": [],
+   "suggested": "United States",
+   "source": "personal.location.country"
+  },
+  {
+   "key": "6b699cb7-d473-422b-90b6-9499e31aee74",
+   "kind": "checkbox",
+   "label": "I've read the Applicant Privacy Notice",
+   "required": true,
+   "options": [],
+   "description": "Read it here: https://normalcomputing.com/applicant-privacy-notice",
+   "filled": false,
+   "shown": false,
+   "suggested": true,
+   "source": "answers.acknowledge_privacy_notices"
+  }
+ ]
+}

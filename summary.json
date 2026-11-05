@@ -1,0 +1,233 @@
+{
+ "discover": {
+  "open_jobs": 6686,
+  "new_today": 6686,
+  "errors": [],
+  "filtered_out": {
+   "too old": 2790,
+   "job type full_time": 1492,
+   "category Hardware": 1107,
+   "category Product": 274,
+   "category Quant": 239,
+   "outside the US": 96,
+   "duplicate": 69,
+   "term ['Winter 2027']": 48,
+   "term ['Summer 2026']": 22,
+   "term ['Spring 2027']": 20,
+   "PhD only": 20,
+   "title excluded": 9,
+   "undergraduates only": 8,
+   "term ['Fall 2027']": 7,
+   "term ['Fall 2026']": 3,
+   "term ['Summer 2025']": 2,
+   "category Product Management": 1,
+   "term ['Spring 2027', 'Winter 2026']": 1,
+   "term ['Summer 2026', 'Fall 2026']": 1,
+   "term ['Winter 2026']": 1,
+   "term ['Fall 2026', 'Spring 2027']": 1,
+   "term ['Winter 2027', 'Spring 2027']": 1,
+   "event/conference posting": 1
+  }
+ },
+ "n_candidates": 150,
+ "results": [
+  {
+   "id": "lever:tri:d4184c04-b963-489a-9a0b-91bc57d6267e",
+   "company": "Toyota Research Institute",
+   "title": "Human-Centered AI Research Intern - Human Language Models",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/lever_tri_d4184c04-b963-489a-9a0b-91bc57d6267e/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 22,
+   "ai_policy": false,
+   "captcha": [
+    "hcaptcha"
+   ],
+   "placeholders": 3,
+   "submit": {
+    "id": "lever:tri:d4184c04-b963-489a-9a0b-91bc57d6267e",
+    "status": "dry_run_ok",
+    "filled": 16
+   }
+  },
+  {
+   "id": "lever:tri:62b161d6-21e0-4d10-9997-ff7ae91a2ff4",
+   "company": "Toyota Research Institute",
+   "title": "Automated Driving Advanced Development Intern - Machine Learning Research",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/lever_tri_62b161d6-21e0-4d10-9997-ff7ae91a2ff4/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 22,
+   "ai_policy": false,
+   "captcha": [
+    "hcaptcha"
+   ],
+   "placeholders": 2,
+   "submit": {
+    "id": "lever:tri:62b161d6-21e0-4d10-9997-ff7ae91a2ff4",
+    "status": "dry_run_ok",
+    "filled": 16
+   }
+  },
+  {
+   "id": "greenhouse:vaticlabs:7205954",
+   "company": "Vatic Investments",
+   "title": "AI Research Intern",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/greenhouse_vaticlabs_7205954/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 12,
+   "ai_policy": false,
+   "captcha": [
+    "recaptcha"
+   ],
+   "placeholders": 0,
+   "submit": {
+    "id": "greenhouse:vaticlabs:7205954",
+    "status": "dry_run_ok",
+    "filled": 11
+   }
+  },
+  {
+   "id": "ashby:onepot:5116ee20-adfa-4177-b120-e3f48354e7e8",
+   "company": "onepot",
+   "title": "Machine Learning Researcher Intern - Machine Learning",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/ashby_onepot_5116ee20-adfa-4177-b120-e3f48354e7e8/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 4,
+   "ai_policy": false,
+   "captcha": [
+    "recaptcha"
+   ],
+   "placeholders": 0,
+   "submit": {
+    "id": "ashby:onepot:5116ee20-adfa-4177-b120-e3f48354e7e8",
+    "status": "dry_run_ok",
+    "filled": 3
+   }
+  },
+  {
+   "id": "greenhouse:-:8258241",
+   "company": "Roku",
+   "title": "Software Engineer Intern - AI Engineering",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/greenhouse_-_8258241/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 14,
+   "ai_policy": false,
+   "captcha": [
+    "recaptcha"
+   ],
+   "placeholders": 1,
+   "submit": {
+    "id": "greenhouse:-:8258241",
+    "status": "dry_run_ok",
+    "filled": 13
+   }
+  },
+  {
+   "id": "lever:tri:f8c9ed26-4574-4ad2-954b-b7f5ec365495",
+   "company": "Toyota Research Institute",
+   "title": "Machine Learning/Agentic AI Intern",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/lever_tri_f8c9ed26-4574-4ad2-954b-b7f5ec365495/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 22,
+   "ai_policy": false,
+   "captcha": [
+    "hcaptcha"
+   ],
+   "placeholders": 2,
+   "submit": {
+    "id": "lever:tri:f8c9ed26-4574-4ad2-954b-b7f5ec365495",
+    "status": "dry_run_ok",
+    "filled": 16
+   }
+  },
+  {
+   "id": "greenhouse:samsungsemiconductor:8046887003",
+   "company": "Samsung",
+   "title": "Systems Software Engineer Intern",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/greenhouse_samsungsemiconductor_8046887003/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 31,
+   "ai_policy": true,
+   "captcha": [
+    "recaptcha"
+   ],
+   "placeholders": 4,
+   "submit": {
+    "id": "greenhouse:samsungsemiconductor:8046887003",
+    "status": "dry_run_ok",
+    "filled": 29
+   }
+  },
+  {
+   "id": "ashby:normalcomputing:edfcbcf6-047f-4c12-801b-c78b199e0080",
+   "company": "Normal Computing",
+   "title": "AI Research Resident - Algorithms Codesign",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/ashby_normalcomputing_edfcbcf6-047f-4c12-801b-c78b199e0080/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 12,
+   "ai_policy": false,
+   "captcha": [
+    "recaptcha"
+   ],
+   "placeholders": 3,
+   "submit": {
+    "id": "ashby:normalcomputing:edfcbcf6-047f-4c12-801b-c78b199e0080",
+    "status": "dry_run_ok",
+    "filled": 12
+   }
+  },
+  {
+   "id": "ashby:sierra:ef896ee9-e903-4a1f-84c2-537373cb9081",
+   "company": "Sierra",
+   "title": "Applied Research Intern",
+   "jd_ok": true,
+   "resume": {
+    "pdf": "probe-out/home/work/ashby_sierra_ef896ee9-e903-4a1f-84c2-537373cb9081/Alex_Chen_Resume.pdf",
+    "pages": 1,
+    "warning": null
+   },
+   "n_fields": 24,
+   "ai_policy": false,
+   "captcha": [
+    "recaptcha"
+   ],
+   "placeholders": 7,
+   "submit": {
+    "id": "ashby:sierra:ef896ee9-e903-4a1f-84c2-537373cb9081",
+    "status": "dry_run_ok",
+    "filled": 20
+   }
+  }
+ ]
+}

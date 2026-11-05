@@ -1,0 +1,73 @@
+Research Intern, Machine Learning
+South San Francisco, CA
+onepot is automating chemistry. Our goal is to enable a self-improvement loop for chemistry by combining AI and advanced robotics. In this loop, AI systems design experiments, robotic systems execute them, and the resulting data improves the next generation of models.
+
+This goal can only be achieved by bringing together people from different backgrounds: ML engineers, chemists, computer scientists, and hardware engineers. We are building a small, unusually ambitious team and are looking for a machine learning researcher to join us to help train the next generation of chemistry models.
+
+We train models for a wide range of tasks, including reaction planning and outcome, input material costs, and mass spectra prediction. Most of these models are state-of-the-art; many are trained on proprietary datasets that are larger, and higher quality, than what exists in the literature.
+
+Our models are primarily deployed internally for real workflows. As such, we maintain a tight feedback loop between usage, data, and model training.
+
+
+THE ROLE
+
+In this position, you will help train the next generation of chemistry models, and enable synthesis of previously inaccessible molecules.
+
+Your work will span the full modeling stack. You will work with lab staff on data acquisition, train models of many different shapes and sizes, and deploy models directly into experimental workflows. You will build and help maintain infrastructure and abstractions for training a diverse set of models; this includes data pipelines and various system tasks such as parallelism strategies and quantization.
+
+Ultimately, your role will be to train models with superhuman chemistry intuition and experimental capabilities.
+
+
+EDUCATION
+
+ - No formal education is required. Ideal candidates will have some background in a deeply quantitative field, ideally with experience training ML models.
+
+
+EXPERIENCE
+
+ - Strong fundamentals in machine learning with a deep understanding of modern empirical/experimental ML
+
+ - Experience developing novel model training techniques or dealing with novel tasks or datasets
+
+ - Experience in a startup, research group, competition team, or other environment where you had significant ownership and limited resources is particularly relevant
+
+
+SKILLS
+
+ - Familiarity with PyTorch or other machine learning frameworks
+
+ - Knowledge of basic machine learning theory
+
+ - Enthusiasm about working across the entire machine learning stack (data, training, inference, deployment)
+
+ - Comfort working across disciplines and learning unfamiliar technical areas as necessary
+
+ - Strong written and verbal communication skills
+
+ - Curiosity and excitement about chemistry
+
+ - A strong bias toward building, testing, and learning from real systems
+
+
+POTENTIALLY RELEVANT EXPERIENCE
+
+Experience in any of the following areas would be useful, but we do not expect one person to have all of it:
+
+ - Training LLM models (particularly mid- and post-training)
+
+ - Machine learning systems (scaling, kernels, parallelism, etc.)
+
+ - Familiarity with chemistry models (retrosynthesis, mass spec modeling, etc.) or cheminformatics
+
+ - Active learning or other techniques suited for low-data regimes
+
+
+ADDITIONAL REQUIREMENTS
+
+ - Ability to work extended hours and weekends as necessary
+
+ - onepot works fully in person in our South San Francisco lab
+
+ - Ability to work safely in an active chemistry laboratory and around scientific equipment
+   
+   - Note: This position does not involve lab work, but some projects may require an understanding of lab workflows

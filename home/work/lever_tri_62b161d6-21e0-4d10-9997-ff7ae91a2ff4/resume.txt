@@ -1,0 +1,26 @@
+Alex Chen
+Pittsburgh, PA | +1 555-010-0199 | alex.chen.example@gmail.com | https://www.linkedin.com/in/alex-chen-example | https://github.com/alex-chen-example
+
+EDUCATION
+Carnegie Mellon University - M.S. in Computer Science (Aug 2025 - Expected May 2027)
+Zhejiang University - B.Eng. in Computer Science (Sep 2021 - Jun 2025)
+
+EXPERIENCE
+Machine Learning Engineer Intern, Example AI Labs (Jun 2024 - Sep 2024)
+- Cut LLM inference latency by 35% by adding continuous batching and paged KV-cache to an internal serving stack (PyTorch, CUDA).
+- Built an evaluation harness that ran 12 benchmark suites nightly and caught 3 regressions before release.
+- Wrote a Triton kernel for fused RMSNorm, giving a 1.8x speedup over the PyTorch baseline.
+Teaching Assistant, Data Structures, Zhejiang University (Sep 2023 - Jan 2024)
+- Led weekly labs for 60 students and wrote autograded C++ assignments.
+
+PROJECTS
+Research Agent (Python, Claude API, Playwright)
+- Built a tool-using research agent that plans sub-questions, searches the web and writes cited reports.
+- Designed an offline test harness with a scripted fake client covering every branch of the agent loop.
+Speculative Decoding Study (PyTorch, vLLM)
+- Benchmarked speculative decoding on 3 model pairs and reached 2.1x throughput at matched quality.
+
+SKILLS
+Languages: Python, C++, CUDA, SQL, Go
+ML & Systems: PyTorch, Triton, vLLM, Ray, Docker, Kubernetes
+Tools: Git, Linux, Playwright, FastAPI

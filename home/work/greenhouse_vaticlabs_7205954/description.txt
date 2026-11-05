@@ -1,0 +1,41 @@
+AI Research Internship (Summer 2027)
+New York
+Vatic Labs is a quantitative trading firm in New York. Our traders, AI researchers, and technologists collaborate to develop autonomous trading agents and cutting edge technology. 
+
+As an AI Intern at Vatic Labs, you will contribute to the research and development of fully autonomous trading agents with some of the brightest researchers, traders, and technologists in the world. As a part of your internship at Vatic Labs, you will explore vast amounts of market data, research different AI approaches, apply cutting edge machine learning algorithms and statistical approaches to this data to discover and capitalize on trading opportunities.
+
+We are seeking researchers who have demonstrated the ability to generate impactful research in their academic pursuits. We foster an open and academic environment, where collaboration is the key to our success. Drawing from our collective backgrounds in Computer Science, Mathematics, Statistics, and Physics, we apply rigorous analytics to test hypotheses derived from years of successful quantitative trading. We are passionate about hiring the best and the brightest, empowering them with the tools and mentorship needed to be successful.
+
+If you possess the following, we would love to explore what is available for you with our team:
+
+- Earned or will earn a PhD or Master's Degree in Computer Science, Statistics, Mathematics, Electrical Engineering, Physics, or related fields
+
+- Demonstrable experience coding in C++ or Python in a Linux environment
+
+- Have experience analyzing large datasets with rigorous statistical and machine learning approaches, including classification, clustering, and regression.
+
+- In depth technical knowledge of AI, deep learning, and machine learning algorithms including strong knowledge of the mathematical underpinnings behind these various methods
+
+- Have innate curiosity for understanding why and how certain techniques work
+
+- Have deep knowledge of time-series analysis
+
+- Advanced knowledge of a high-level language for numerical analysis, Python (numpy/scipy stack) preferred
+
+- Contribution to AI and ML research communities, top tiered peer reviewed publications, publishing/presenting papers at conferences such as NeurIPS, ICML, etc.
+
+- Have an interest and enthusiasm for learning about financial markets (previous experience not required)
+
+While we are serious about our work at Vatic, we also promote a fun environment!
+
+You can expect:
+
+- Ping pong and poker games
+
+- Fun team outings
+
+- Unlimited office snacks
+
+- Free breakfast, lunch, and dinner
+
+The base salary range for this role is between $3000 and $4500 weekly. The base salary range does not include any other form of compensation, such as any bonus amounts, or any benefits. Factors that may impact the agreed upon base salary within the range for a particular candidate include years of experience, level of education obtained, skill set, and other factors.

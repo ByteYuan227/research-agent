@@ -1,0 +1,79 @@
+AI Research Resident (Algorithms Codesign)
+New York
+Compensation: $150K
+NORMAL COMPUTING | BUILD WITH US
+
+Normal is an applied AI company solving the hardest problems in AI and silicon. We build foundational hardware and software for the semiconductor industry, critical AI infrastructure, and the broader systems that power our world, in partnership with the world's most advanced institutions. We work as one team across New York City, Silicon Valley (Mountain View), and London.
+
+
+THE RESIDENCY PROGRAM
+
+The AI Research Residency is Normal Computing's flagship program for exceptional researchers and engineers who want to work at the frontier of AI. Residents join a small, hand-picked cohort with a dedicated research mentor, direct access to the team developing the algorithms for our in-memory inference hardware, and a clear arc from onboarding through publication.
+
+Every residency is built around two milestones that mark you as part of something bigger than a single project: a research paper co-authored with our team, and a company-wide research colloquium where you present your findings to the full Normal Computing organization. You'll leave with a body of published, presented work, and a standing as one of the earliest residents to help define what this program becomes.
+
+
+THIS TRACK: ALGORITHMS CODESIGN
+
+Normal's hardware runs the most memory-bound parts of large-model inference inside memory itself, rather than shuttling weights to a processor. The software that makes this programmable doesn't exist yet in any standard form. This track is about the computational methods that make LLM inference run efficiently on it: rethinking how operations like attention, memory access, and long-context decoding should behave on hardware that computes inside memory, rather than adapting standard GPU kernels to a new chip.
+
+You'll work on this as a co-design problem. The hardware and the algorithms are developed in parallel, so your findings feed architectural decisions rather than implementing against a fixed specification. You'll validate ideas against our simulators and FPGA prototypes first, and against silicon as it arrives.
+
+
+YOUR NORMAL EXPERIENCE
+
+This is a hands-on research residency: you'll take ownership of a real technical problem in inference algorithms for in-memory compute, work alongside the researchers and engineers building our platform, and be expected to contribute ideas, not just execute someone else's. Your job is to help turn research into production-quality research code that a team can build on. Outside-of-the-box thinking is encouraged.
+
+You'll get direct exposure to the pace, ambiguity, and speed of decision-making that comes with working at a fast-moving, well-funded startup, where the distance between an idea on a whiteboard and a result on real hardware is measured in weeks, not years.
+
+
+WHAT YOU'LL DO
+
+Develop inference algorithms for in-memory hardware. Understand which parts of LLM workloads are best suited to in-memory execution and develop algorithms that exploit it natively, demonstrated first in simulation and then on hardware.
+
+Design numerical methods that fit the physics. Design methods that exploit thermal noise and analog dynamics rather than working around them.
+
+Build evaluation suites and benchmarks. Help build the evaluation frameworks and benchmarks that characterize how algorithms behave on real hardware and in simulation, and tell us honestly whether any of it actually works.
+
+Translate workloads into hardware constraints. Turn insights about model workloads into constraints and opportunities for the hardware and architecture teams.
+
+Prototype and iterate rapidly. Move with the hardware as it evolves from simulation to FPGA to silicon.
+
+Drive a research question of your own. Partner with researchers and engineers to scope, run, and iterate on an original technical investigation, with rigorous experimental analysis and documentation along the way.
+
+Co-author a paper. Work with the team to write up your findings for submission to a relevant venue, with mentorship on framing, experiments, and technical writing. One of the two milestones every resident builds toward.
+
+Present at the residency colloquium. Share your work and thinking with the broader Normal Computing research community at the program's capstone event, and get real-time feedback from people building this technology every day.
+
+
+WHAT WOULD MAKE YOU A GREAT FIT
+
+Currently pursuing or recently completed a graduate degree (MS or PhD, or equivalent research experience) in machine learning, applied mathematics, physics, electrical engineering, computer science, or a related field. Publications are a strong plus, but not required at the resident level; a solid research track record is what matters.
+
+A working understanding of large model inference: attention mechanisms, KV cache, long-context decoding, memory bandwidth constraints. Deep production experience isn't expected at the resident level, but the intuition should feel familiar.
+
+Some exposure to inference optimization (quantization, sparsity, kernel fusion, or memory-efficient attention), or to stochastic systems, probabilistic methods, numerical analysis, or analog computation.
+
+Strong Python skills, plus some experience with a systems language (C++, Rust, or similar) or with implementing algorithms close to hardware, beyond high-level frameworks.
+
+Some experience (course projects, research, or otherwise) turning a research idea into working, reasonably reproducible code. You care about whether results replicate, not just whether a demo works once.
+
+Comfort reasoning from first principles about what a novel substrate can do efficiently.
+
+Bonus: exposure to analog or mixed-signal systems, in-memory compute, or non-von-Neumann architectures; publications or open-source work in efficient inference, stochastic algorithms, or novel computing; or experience working on hardware that did not yet exist when you joined.
+
+Strong written and verbal communication skills; prior experience writing up research (papers, theses, technical reports) is a plus, as is any experience presenting technical work to a live audience.
+
+A bias toward ownership and self-direction. You're energized, not overwhelmed, by the ambiguity and speed of a small, fast-moving startup.
+
+Equal Employment Opportunity Statement
+
+Normal Computing is an Equal Opportunity Employer. We celebrate diversity and are committed to creating an inclusive environment for all employees. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, disability, veteran status, or any other legally protected status.
+
+Accessibility Accommodations
+
+Normal Computing is committed to providing reasonable accommodations to individuals with disabilities. If you need assistance or an accommodation due to a disability, please let us know at accommodations@normalcomputing.com.
+
+Privacy Notice
+
+By submitting your application, you agree that Normal Computing may collect, use, and store your personal information for employment-related purposes in accordance with our Applicant Privacy Notice https://normalcomputing.com/applicant-privacy-notice.

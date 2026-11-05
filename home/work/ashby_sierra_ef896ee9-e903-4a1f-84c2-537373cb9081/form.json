@@ -1,0 +1,335 @@
+{
+ "job_id": "ashby:sierra:ef896ee9-e903-4a1f-84c2-537373cb9081",
+ "url": "https://jobs.ashbyhq.com/sierra/ef896ee9-e903-4a1f-84c2-537373cb9081/application",
+ "prepared_at": 1793858615.977323,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false,
+ "has_submit": true,
+ "fields": [
+  {
+   "key": "3d924cc3-5d94-44cb-942d-00561c160536",
+   "kind": "text",
+   "label": "Legal First Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex",
+   "source": "personal.first_name"
+  },
+  {
+   "key": "b597ef01-3281-4c86-a029-2d27b1df9701",
+   "kind": "text",
+   "label": "Legal Last Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Chen",
+   "source": "personal.last_name"
+  },
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Preferred First & Last Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com",
+   "source": "personal.email"
+  },
+  {
+   "key": "224ed93f-d97f-4310-a02b-fd04032dfde8",
+   "kind": "tel",
+   "label": "Phone",
+   "required": true,
+   "description": "",
+   "placeholder": "1-415-555-1234...",
+   "filled": false,
+   "suggested": "+1 555-010-0199",
+   "source": "personal.phone"
+  },
+  {
+   "key": "14d2738c-e433-43d4-bc81-99fca34616d1",
+   "kind": "text",
+   "label": "LinkedIn",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example",
+   "source": "personal.linkedin"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": false,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/home/work/ashby_sierra_ef896ee9-e903-4a1f-84c2-537373cb9081/Alex_Chen_Resume.pdf",
+   "source": "resume"
+  },
+  {
+   "key": "50ba8cd7-8f8c-4ffc-ae03-4a7a30da89cd",
+   "kind": "text",
+   "label": "What's your favorite junk food?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "911f4add-622c-4355-861c-576bae4156df",
+   "kind": "radio",
+   "label": "Are you legally authorized to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes",
+   "source": "work_authorization.authorized_to_work_in_us"
+  },
+  {
+   "key": "eb35699a-15cd-42e0-bb62-e7e491ceed5f",
+   "kind": "radio",
+   "label": "Will you now or in the future require visa sponsorship to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes",
+   "source": "work_authorization.requires_sponsorship_*"
+  },
+  {
+   "key": "91cfb419-6f05-493f-8c2a-e89116ee43ef",
+   "kind": "radio",
+   "label": "Are you able to work from San Francisco, CA?",
+   "required": true,
+   "options": [
+    "Yes, and I currently live in the SF Bay Area.",
+    "Yes, and while I do not currently live in the SF Bay Area, I am open to relocation.",
+    "No or Other. Please add more details in the \"Anything else\" section below."
+   ],
+   "description": "Sierra believes working alongside one another as a team is an important part of building great products and a great culture. We are primarily an in-person company based in San Francisco. Does that work for you?",
+   "filled": false
+  },
+  {
+   "key": "7bdaab62-aa60-45f7-953d-a7a42495eb63",
+   "kind": "radio",
+   "label": "We use Metaview, an AI notetaking tool, to streamline interviews by recoding and summarizing discussions, enabling interviewers to be fully present without manual notetaking. With your approval, it silently records notes during interviews. Can Metaview transcribe all your interviews?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "6e2d7cef-fb11-44c4-8c9a-a4c97ffb636f",
+   "kind": "radio",
+   "label": "How did you hear about this opportunity?",
+   "required": true,
+   "options": [
+    "Blog or news article",
+    "Company website",
+    "Current employee",
+    "Event",
+    "LinkedIn",
+    "Other",
+    "Podcast",
+    "Search engine"
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "f4f2f771-4cf4-4d6c-b7c2-80676907acda",
+   "kind": "textarea",
+   "label": "Anything else? (Optional)",
+   "required": false,
+   "description": "Is there anything else we should know about your candidacy or interest in Sierra?",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "f582c97f-6b30-4ad0-8264-c6d8c137fe60",
+   "kind": "text",
+   "label": "LinkedIn",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "https://www.linkedin.com/in/alex-chen-example",
+   "source": "personal.linkedin"
+  },
+  {
+   "key": "3d33a44a-7eeb-465b-8299-84788e69a3bc",
+   "kind": "radio",
+   "label": "Are you able to work from a Sierra office listed for this role?",
+   "required": true,
+   "options": [
+    "Yes, I am based in one of Sierra's office locations.",
+    "While I am not currently based in one of Sierra's office locations, I am open to relocation.",
+    "No, I am not able to work from a Sierra office."
+   ],
+   "description": "Sierra believes working alongside one another as a team is an important part of building great products and a great culture. We are primarily an in-person company. Does that work for you?",
+   "filled": false
+  },
+  {
+   "key": "0e82aefd-0a18-4cba-8df0-88a8b20a7a71",
+   "kind": "combobox",
+   "label": "Location",
+   "required": true,
+   "description": "",
+   "placeholder": "Start typing...",
+   "multiple": false,
+   "filled": false,
+   "options": [],
+   "suggested": "Pittsburgh, PA",
+   "source": "personal.location"
+  },
+  {
+   "key": "de771a19-ae1f-42ca-885d-dfc8861fa2ad",
+   "kind": "radio",
+   "label": "Are you legally authorized to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes",
+   "source": "work_authorization.authorized_to_work_in_us"
+  },
+  {
+   "key": "762e28cb-685b-462e-af45-3d5d742ef089",
+   "kind": "radio",
+   "label": "Will you now or in the future require visa sponsorship to work in the United States?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false,
+   "suggested": "Yes",
+   "source": "work_authorization.requires_sponsorship_*"
+  },
+  {
+   "key": "b28c6868-2e97-4479-b355-42999728f38a",
+   "kind": "checkbox_group",
+   "label": "Are you fluent in any of these languages?",
+   "required": false,
+   "options": [
+    "American Sign Language (ASL)",
+    "Arabic",
+    "Brazilian Portuguese",
+    "Cantonese",
+    "Danish",
+    "Dutch",
+    "Finnish",
+    "French",
+    "German",
+    "Greek",
+    "Hebrew",
+    "Italian",
+    "Japanese",
+    "Korean",
+    "Malay",
+    "Mandarin",
+    "Polish",
+    "Romanian",
+    "Russian",
+    "Spanish",
+    "Swedish",
+    "Tagalog",
+    "Tamil",
+    "Thai",
+    "Turkish",
+    "Ukrainian",
+    "Vietnamese",
+    "Zulu",
+    "I prefer not to answer"
+   ],
+   "description": "As we continue to grow globally, we\u2019re curious to learn more about the language skills of those interested in joining our team. Please select all that apply.",
+   "filled": false,
+   "suggested": [
+    "Mandarin"
+   ],
+   "source": "custom_answers[1]"
+  },
+  {
+   "key": "e440204a-ce08-4bf1-b0a8-c71a737a38b6",
+   "kind": "radio",
+   "label": "We use Metaview, an AI notetaking tool, to streamline interviews by recording and summarizing discussions, enabling interviewers to be fully present without manual notetaking. With your approval, it silently records notes during interviews. Can Metaview transcribe all your interviews?",
+   "required": true,
+   "options": [
+    "Yes",
+    "No"
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "af7d2a39-580f-4eb5-9ad6-4370b35b85da",
+   "kind": "text",
+   "label": "What's your favorite junk food?",
+   "required": false,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false
+  },
+  {
+   "key": "afdc2ef9-5c9a-44c1-aca1-864c5402e5a2",
+   "kind": "radio",
+   "label": "How did you hear about this opportunity?",
+   "required": true,
+   "options": [
+    "Blog or news article",
+    "Company website",
+    "Current employee",
+    "Event",
+    "LinkedIn",
+    "Other",
+    "Podcast",
+    "Search engine"
+   ],
+   "description": "",
+   "filled": false
+  },
+  {
+   "key": "cf82c24d-51f1-442d-a4fc-b4fb8e120d5f",
+   "kind": "textarea",
+   "label": "Anything else? (Optional)",
+   "required": false,
+   "description": "Is there anything else we should know about your candidacy or interest in Sierra?",
+   "placeholder": "Type here...",
+   "filled": false
+  }
+ ]
+}

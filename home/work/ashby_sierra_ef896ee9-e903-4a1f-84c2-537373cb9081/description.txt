@@ -1,0 +1,110 @@
+Research Intern
+San Francisco, CA
+ABOUT US
+
+Sierra is the leading platform for customer-facing AI agents, working with many of the world's biggest brands — including The GAP, Rocket Mortgage, SoFi, Sutter Health, and SoftBank — to transform how they serve customers and grow their businesses. We are primarily an in-person company based in San Francisco, with growing offices across North America, Europe, and Asia.
+
+We are guided by a set of values that are at the core of our actions and define our culture: Trust, Customer Obsession, Craftsmanship, Intensity, and a commitment to balancing Family along the way. These values are the foundation of our work, and we are committed to upholding them in everything we do.
+
+Our co-founders are Bret Taylor https://www.linkedin.com/in/brettaylor/ and Clay Bavor https://www.linkedin.com/in/claybavor/. Bret currently serves as Board Chair of OpenAI. Previously, he was co-CEO of Salesforce (which had acquired the company he founded, Quip) and CTO of Facebook. Bret was also one of Google's earliest product managers and co-creator of Google Maps. Before founding Sierra, Clay spent 18 years at Google, where he most recently led Google Labs. Earlier, he started and led Google’s AR/VR effort, Project Starline, and Google Lens. Before that, Clay led the product and design teams for Google Workspace.
+
+Sierra’s Applied Research team works to make the models behind our agents better, faster, and cheaper across many kinds of tasks. Our work covers post-training open-weight models for specialized capabilities, new approaches to voice AI, and the benchmarks the field uses to measure agents, including τ-bench.
+
+As an Applied Research Intern, you’ll join the team for a research project, working with a mentor, you’ll pick a problem that matters to how AI agents perform in the real world, run rigorous experiments, and potentially write up what you find for a top venue. If you want your research to reach both the research community and production agents used by millions of people, come do it at Sierra.
+
+
+
+
+WHAT YOU’LL DO
+
+ - Own a research project from start to finish, from framing the question and running experiments to writing and submitting a paper.
+
+ - Push agent evaluation forward, for example by extending τ-bench to new domains, modalities, or long-horizon tasks, or by building new ways to measure reliability and consistency.
+
+ - Study how agents reason, use tools, and follow policies over multi-turn conversations, and find out where and why they fail.
+
+ - Explore post-training methods such as supervised fine-tuning and reinforcement learning to improve agent behavior, and measure the gains rigorously.
+
+ - Work with large-scale, proprietary datasets of text and audio interactions to find research questions grounded in real customer problems.
+
+ - Work with researchers and engineers across Sierra, and where it makes sense, turn your findings into improvements in production.
+
+
+WHAT YOU’LL BRING
+
+ - Currently pursuing a PhD in computer science, machine learning, or a related field.
+
+ - A research track record, such as first-author publications or submissions at venues like NeurIPS, ICML, ICLR, ACL, EMNLP, Interspeech or ICASSP.
+
+ - Strong experimental skills: you design clean experiments, build careful baselines, and are honest about what the results do and do not show.
+
+ - Fluency in Python and modern ML tooling (for example, PyTorch, and LLM inference and training stacks).
+
+ - High agency and a builder’s mindset. You’ll work across the stack to get an experiment running.
+
+ - Clear, direct communication, both in writing and when presenting research.
+
+
+EVEN BETTER
+
+ - Research experience with LLM agents, tool use, or multi-turn dialogue.
+
+ - Experience designing benchmarks or evaluations, especially ones tied to real-world outcomes.
+
+ - Experience with supervised fine-tuning, reinforcement learning, or long-horizon optimization.
+
+ - Experience with speech, voice, or multimodal models.
+
+ - Open-source contributions to ML research code or benchmarks.
+
+
+INTERN QUALIFICATIONS
+
+ - The internship is open to students currently enrolled in a PhD program.
+
+ - Duration and start dates are flexible. Interns are embedded with the Applied Research team and work under the guidance of a mentor.
+
+ - The internship is based in our San Francisco office. We are in person Monday through Thursday.
+
+
+OUR VALUES
+
+ - Trust: We build trust with our customers with our accountability, empathy, quality, and responsiveness. We build trust in AI by making it more accessible, safe, and useful. We build trust with each other by showing up for each other professionally and personally, creating an environment that enables all of us to do our best work.
+
+ - Customer Obsession: We deeply understand our customers’ business goals and relentlessly focus on driving outcomes, not just technical milestones. Everyone at the company knows and spends time with our customers. When our customer is having an issue, we drop everything and fix it.
+
+ - Craftsmanship: We get the details right, from the words on the page to the system architecture. We have good taste. When we notice something isn’t right, we take the time to fix it. We are proud of the products we produce. We continuously self-reflect to continuously self-improve.
+
+ - Intensity: We know we don’t have the luxury of patience. We play to win. We care about our product being the best, and when it isn’t, we fix it. When we fail, we talk about it openly and without blame so we succeed the next time.
+
+ - Family: We know that balance and intensity are compatible, and we model it in our actions and processes. We are the best technology company for parents. We support and respect each other and celebrate each other’s personal and professional achievements.
+
+
+WHAT WE OFFER
+
+We want our benefits to reflect our values and offer the following to full-time employees:
+
+ - Flexible (unlimited) paid time off
+
+ - Medical, dental, and vision benefits for you and your family
+
+ - Life insurance and disability benefits
+
+ - Retirement plan dependent on country of employment
+
+ - Parental leave
+
+ - Fertility and family building benefits through Carrot
+
+ - Lunch, as well as delicious snacks and coffee to keep you energized 
+
+ - Discretionary benefit stipend giving people the ability to spend where it matters most
+
+ - Free alphorn lessons
+
+These benefits are further detailed in Sierra's policies, may vary by region, and are subject to change at any time, consistent with the terms of any applicable compensation or benefits plans. Eligible full-time employees can participate in Sierra's equity plans subject to the terms of the applicable plans and policies.
+
+
+BE YOU, WITH US
+
+We're working to bring the transformative power of AI to every organization in the world. To do so, it is important to us that the diversity of our employees represents the diversity of our customers. We believe that our work and culture are better when we encourage, support, and respect different skills and experiences represented within our team. We encourage you to apply even if your experience doesn't precisely match the job description. We strive to evaluate all applicants consistently without regard to race, color, religion, gender, national origin, age, disability, veteran status, pregnancy, gender expression or identity, sexual orientation, citizenship, or any other legally protected class.

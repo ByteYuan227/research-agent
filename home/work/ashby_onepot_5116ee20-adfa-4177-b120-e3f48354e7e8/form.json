@@ -1,0 +1,57 @@
+{
+ "job_id": "ashby:onepot:5116ee20-adfa-4177-b120-e3f48354e7e8",
+ "url": "https://jobs.ashbyhq.com/onepot/5116ee20-adfa-4177-b120-e3f48354e7e8/application",
+ "prepared_at": 1793858511.1809728,
+ "captcha": {
+  "recaptcha": true,
+  "hcaptcha": false,
+  "turnstile": false
+ },
+ "ai_policy_mentioned": false,
+ "has_submit": true,
+ "fields": [
+  {
+   "key": "_systemfield_name",
+   "kind": "text",
+   "label": "Name",
+   "required": true,
+   "description": "",
+   "placeholder": "Type here...",
+   "filled": false,
+   "suggested": "Alex Chen",
+   "source": "personal.full_name"
+  },
+  {
+   "key": "_systemfield_email",
+   "kind": "email",
+   "label": "Email",
+   "required": true,
+   "description": "",
+   "placeholder": "hello@example.com...",
+   "filled": false,
+   "suggested": "alex.chen.example@gmail.com",
+   "source": "personal.email"
+  },
+  {
+   "key": "_systemfield_resume",
+   "kind": "file",
+   "label": "Resume",
+   "required": true,
+   "description": "",
+   "placeholder": "",
+   "accept": "application/pdf,.pdf,application/msword,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/vnd.oasis.opendocument.text,.odt,application/rtf,.rtf,text/plain,.txt,text/markdown,.md,image/*,video/*,audio/*",
+   "filled": false,
+   "suggested": "probe-out/home/work/ashby_onepot_5116ee20-adfa-4177-b120-e3f48354e7e8/Alex_Chen_Resume.pdf",
+   "source": "resume"
+  },
+  {
+   "key": "5c4ac3f3-d390-4fc3-bdbf-01116d62a190",
+   "kind": "textarea",
+   "label": "Tell us about a project you're proud of",
+   "required": false,
+   "description": "What was it, what made it hard, and what would you do differently now?",
+   "placeholder": "Type here...",
+   "filled": false
+  }
+ ]
+}
