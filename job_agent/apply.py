@@ -41,6 +41,23 @@ def resume_path(job: Job, profile: Profile) -> Path:
     return work_dir(job) / resume_filename(profile)
 
 
+SUBMIT_MARKER = "submit_clicked.txt"
+
+
+def mark_submit_clicked(job: Job, where: str) -> None:
+    """Written just before a submit button is pressed. If the session dies before the outcome is
+    recorded, the application may have gone through, so it must never be retried automatically."""
+    (work_dir(job) / SUBMIT_MARKER).write_text(f"{time.time():.0f} {where[:300]}\n", encoding="utf-8")
+
+
+def submit_clicked(job: Job) -> bool:
+    return (work_dir(job) / SUBMIT_MARKER).exists()
+
+
+def clear_submit_marker(job: Job) -> None:
+    (work_dir(job) / SUBMIT_MARKER).unlink(missing_ok=True)
+
+
 def day_bounds(tz: str, day: dt.date | None = None) -> tuple[float, float]:
     zone = ZoneInfo(tz)
     day = day or dt.datetime.now(zone).date()
@@ -154,7 +171,16 @@ def merge_answers(fields: list[dict[str, Any]], doc: dict[str, Any], files: dict
     return merged, problems
 
 
-def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run: bool = False) -> dict[str, Any]:
+def _conflict_problems(conflicts: list[dict[str, Any]]) -> list[str]:
+    return [
+        f"{c['key']}: answer {c['answer']!r} contradicts the profile ({c['from']} says {c['profile_says']!r}) - "
+        f"question: {c['label'][:100]}"
+        for c in conflicts
+    ]
+
+
+def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run: bool = False,
+           force: bool = False) -> dict[str, Any]:
     from playwright.sync_api import sync_playwright
 
     wd = work_dir(job)
@@ -172,6 +198,13 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
         files["cover_letter"] = html_to_pdf(render_letter_html(profile, letter), wd / "Cover_Letter.pdf")
 
     merged, problems = merge_answers(form["fields"], doc, files)
+    known = {f["key"] for f in form["fields"]}
+    conflicts = forms.audit(form["fields"], profile, job.company, {k: v for k, v in doc["answers"].items() if k in known})
+    if conflicts and not force:
+        problems += _conflict_problems(conflicts) + [
+            "re-read those questions: if the profile's answer is right, use it; only if the question really asks "
+            "something else, run submit again with --force"
+        ]
     if problems:
         return {"status": "incomplete", "problems": problems}
 
@@ -203,18 +236,22 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
             gone = [k for k in merged if k not in current]
             fill = forms.fill_and_verify(page, list(current.values()), fill_values)
             page.screenshot(path=str(wd / "filled.jpg"), full_page=True, type="jpeg", quality=45)
-            if fill.errors or fill.missing_required or gone or fill.unverified:
+            # Read the form back: a dropdown that picked the wrong option must not be submitted.
+            shown_wrong = [] if force else forms.audit(page.evaluate(forms.EXTRACT_JS)["fields"], profile, job.company)
+            if fill.errors or fill.missing_required or gone or fill.unverified or shown_wrong:
                 result = {
                     "status": "fill_failed",
                     "errors": fill.errors,
                     "missing_required": fill.missing_required,
                     "value_did_not_stick": fill.unverified,
                     "fields_no_longer_on_form": gone,
+                    "form_shows_answers_contradicting_profile": _conflict_problems(shown_wrong),
                 }
             elif dry_run:
                 result = {"status": "dry_run_ok", "filled": len(fill.filled)}
             else:
                 before = time.time()
+                mark_submit_clicked(job, form["url"])
                 page.locator("[data-ja-submit]").first.click(timeout=10000)
                 result = forms.outcome(page, form["url"])
                 if result["status"] == "needs_code":

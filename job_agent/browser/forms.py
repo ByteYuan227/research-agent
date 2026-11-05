@@ -258,13 +258,19 @@ def _citizenship(p: Profile, f: dict) -> Suggestion | None:
     return None
 
 
+WITHOUT_SPONSORSHIP = r"without\b.{0,50}\bsponsor"
+
+
 def _sponsorship(p: Profile, f: dict) -> Suggestion:
-    """Sponsorship questions: 'now' only when the question clearly asks about now; otherwise now-or-future."""
+    """Sponsorship questions: 'now' only when the question clearly asks about now; otherwise now-or-future.
+    "Can you work here without sponsorship?" is the same question turned around."""
     wa = p.work_authorization
     text = f"{f['label']} {f.get('description', '')}"
+    flip = bool(re.search(WITHOUT_SPONSORSHIP, text, re.I))
     if re.search(r"currently|at this time|right now|today", text, re.I) and not re.search(r"future", text, re.I):
-        return _yes_no(wa.requires_sponsorship_now, "work_authorization.requires_sponsorship_now")
-    return _yes_no(wa.requires_sponsorship_now or wa.requires_sponsorship_future, "work_authorization.requires_sponsorship_*")
+        return _yes_no(wa.requires_sponsorship_now != flip, "work_authorization.requires_sponsorship_now")
+    needs = wa.requires_sponsorship_now or wa.requires_sponsorship_future
+    return _yes_no(needs != flip, "work_authorization.requires_sponsorship_*")
 
 
 TEXTY = ("text", "email", "tel", "url", "textarea")
@@ -344,6 +350,8 @@ RULES: list[Rule] = [
          lambda p, f, c: _yes_no(p.declarations.relatives_at_company, "declarations.relatives_at_company")),
     Rule(r"government (official|employee)|public official|politically exposed", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(p.declarations.government_official, "declarations.government_official")),
+    # "Are you authorized to work in the U.S. without sponsorship?" is a sponsorship question.
+    Rule(WITHOUT_SPONSORSHIP, CHOICE + ("checkbox",), lambda p, f, c: _sponsorship(p, f)),
     Rule(r"(legally )?(authorized|eligible|permitted) to work|work authorization|right to work", CHOICE + ("checkbox",),
          lambda p, f, c: _yes_no(p.work_authorization.authorized_to_work_in_us, "work_authorization.authorized_to_work_in_us")),
     Rule(r"(require|need|requir).{0,60}(sponsor|visa)|sponsorship", CHOICE + ("checkbox",), lambda p, f, c: _sponsorship(p, f)),
@@ -468,6 +476,79 @@ def _finalize(s: Suggestion, field: dict[str, Any]) -> Suggestion | None:
     if kind == "checkbox" and not isinstance(value, bool):
         return Suggestion(str(value).lower().startswith("y") or value == ACK, s.source)
     return s
+
+
+# ---------------------------------------------------------------------------
+# Checking answers against the profile before anything is submitted
+# ---------------------------------------------------------------------------
+
+# Answers that are statements of fact about the candidate: a wrong one is a false statement.
+PROTECTED_SOURCE = re.compile(
+    r"^(work_authorization\.|declarations\.|answers\.over_18|custom_answers\[|personal\.(email|first_name|last_name)$)"
+)
+_YES = re.compile(r"^(yes|y|true|i am\b(?! not)|i do\b(?! not)|i will\b(?! not)|i have\b(?! not)|i can\b(?!not))", re.I)
+_NO = re.compile(r"^(no|n|false|i am not|i do not|i don'?t|i will not|i won'?t|i have not|i haven'?t|i cannot|i can'?t|"
+                 r"not applicable)\b", re.I)
+
+
+def polarity(value: Any) -> bool | None:
+    """True for yes-like answers, False for no-like ones, None when it is neither."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, list):
+        return polarity(value[0]) if len(value) == 1 else None
+    text = str(value or "").strip()
+    if _NO.match(text):
+        return False
+    if _YES.match(text):
+        return True
+    return None
+
+
+def disagrees(field: dict[str, Any], given: Any, wanted: Any) -> bool:
+    """Whether an answer contradicts the profile's answer for a field. Only clear contradictions
+    count (yes vs no, a different option, another e-mail address); formatting never does."""
+    if given in (None, "", []) or wanted in (None, "", []) or wanted in (DECLINE, ACK):
+        return False
+    a, b = polarity(given), polarity(wanted)
+    if a is not None and b is not None:
+        return a != b
+    if field["kind"] in TEXTY:
+        if re.search(r"e-?mail", f"{field.get('label', '')} {field['key']}", re.I):
+            return str(given).strip().lower() != str(wanted).strip().lower()
+        if isinstance(wanted, str) and polarity(wanted) is None and field.get("source", "").startswith("personal."):
+            return _norm(str(given)) != _norm(str(wanted))
+        return False
+    if isinstance(given, list) or isinstance(wanted, list):
+        return False
+    if field["kind"] in CHOICE or field["kind"] == "checkbox":
+        g, w = str(given), str(wanted)
+        return match_option(g, [w]) is None and match_option(w, [g]) is None
+    return False
+
+
+def audit(fields: list[dict[str, Any]], profile: Profile, company: str, given: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    """Answers that contradict the profile on statements of fact (work authorization, sponsorship,
+    citizenship, declarations, your own custom answers, name and e-mail).
+
+    ``given`` maps field keys to the answers about to be typed; without it the values the page
+    shows (``shown``, from the extractor) are checked."""
+    problems = []
+    for f in fields:
+        if f["kind"] in ("file", "password"):
+            continue
+        value = (given or {}).get(f["key"]) if given is not None else f.get("shown")
+        if value in (None, "", []):
+            continue
+        s = suggest(f, profile, company, {})
+        if s is None or not PROTECTED_SOURCE.match(s.source):
+            continue
+        if disagrees({**f, "source": s.source}, value, s.value):
+            problems.append({
+                "key": f["key"], "label": (f.get("label") or "")[:150], "answer": value,
+                "profile_says": s.value, "from": s.source,
+            })
+    return problems
 
 
 # ---------------------------------------------------------------------------

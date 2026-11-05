@@ -26,7 +26,8 @@ never invent anything. Talk to the user in the language they use.
    - declarations: criminal record, pending charges, background-check and drug-test
      consent, non-compete, relatives at target companies, government official;
    - preferences: internship / new grad / full-time, terms (e.g. Summer 2027), roles and
-     keywords, locations or remote, companies to avoid, minimum match score;
+     keywords, locations or remote, companies to avoid, minimum match score, how many
+     applications per company within 30 days (`max_per_company`, default 3);
    - standard answers: earliest start date, graduation date, willing to relocate, salary
      expectation, how they usually hear about jobs, pronouns, languages;
    - voluntary EEO answers (default: decline to self-identify);

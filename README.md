@@ -22,7 +22,7 @@ A Claude-powered agent that finds US internship / new-grad jobs every day, tailo
 | 随后 | 对每个达到分数线的岗位：按 JD 定制一页简历 → 打开申请页 → 需要注册就注册（密码自动生成并加密保存）→ 读邮箱验证码 → 逐页填表、上传简历、回答问题 → 提交 |
 | 约 20:00 起 | 在 GitHub 发日报 issue 并 @ 你（可同时发邮件）：投了哪些、哪些需要你手动投、邮箱里的面试邀请 |
 
-**不设投递上限**，能投的都投。投不成的（验证码、需要你本人提供的材料等）会把定制好的简历和准备好的回答保存下来，进入日报里的「待你手动投递」清单。
+**不设每日投递上限**，能投的都投；只是同一家公司 30 天内最多投 3 个岗位（挑匹配度最高的；招聘方能看到你投的全部岗位，Google 等公司也有类似限制），可以用 `max_per_company` 调整或设为 `null` 取消。新发布的岗位优先投。投不成的（验证码、需要你本人提供的材料等）会把定制好的简历和准备好的回答保存下来，进入日报里的「待你手动投递」清单。已经关闭的岗位、网站提示你投过的岗位会自动识别，不会占用你的时间。
 
 ### 快速开始（3 步）
 
@@ -99,13 +99,18 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 | `custom_answers` | 自定义问答：`{match: "正则", answer: "答案"}`，匹配到的问题优先用你的答案，覆盖所有内置规则 |
 | `about_me` | 几条自由文本事实，Claude 回答其他问题时可以引用 |
 | `answers` | 常用回答（开始日期、是否愿意搬迁、薪资期望、EEO 等），以及：服务条款 / 仲裁 / 隐私协议自动同意（`accept_agreements`），AI 写回答（`write_answers`） |
-| `preferences` | 岗位类型、实习季、关键词、地点、排除公司、最低分（`min_score`）、每天上限（`max_applications_per_day: null` 表示不限） |
+| `preferences` | 岗位类型、实习季、关键词、地点、排除公司、最低分（`min_score`）、每天上限（`max_applications_per_day: null` 表示不限）、同一公司 30 天内上限（`max_per_company`，默认 3，`null` 表示不限） |
+
+**提交前核对**：点「提交」之前，程序会把页面上显示的答案和你的资料对一遍（工作许可、是否需要 sponsor、公民身份、犯罪记录等声明、你的 `custom_answers`、姓名和邮箱）。有矛盾就不提交，先改正。标题里写明只招本科生 / 研究生 / 其他学期、只面向某个学校或某个招聘会、或者是 Mercor 这类外包平台的岗位，会在打分前直接过滤掉。
 
 Claude 回答过的非标准问题会被记住（「学到的回答」），下次遇到同样的问题自动使用，日报里会列出来。敏感问题（EEO、健康、犯罪记录、薪资、身份信息）和长文回答不会被记住。答错了就在 `custom_answers` 里写正确答案覆盖。
 
 ### 日报和「待你手动投递」清单
 
 - 每天一个 issue，旧的自动关闭。待手动投递的岗位是**累计清单**，每项带申请链接和原因；**投完在 issue 里勾选**，下次运行记为「你已手动投递」。
+- 标着「⚠️ 可能已经提交」的岗位：提交按钮已经按下，但运行在确认之前中断了。程序不会再自动投第二次，请先查邮箱有没有确认信。
+- 投递表格里标着「⚠️ 未看到确认页」的：提交了但页面没有出现明确的确认文字，留意确认邮件。
+- 中途超时或浏览器出错的岗位，下次运行会自动重试一次。
 - 定制简历和准备好的回答：
   - 配了邮箱：当天新增岗位的简历作为附件发到邮箱；
   - 私有仓库：当次运行页面底部的 Artifacts（保留 14 天）；
@@ -128,6 +133,7 @@ Claude 回答过的非标准问题会被记住（「学到的回答」），下�
 | 令牌失效或过期（一年有效） | 停止并在日报提示 | 重新运行 `claude setup-token`，更新 Secret `CLAUDE_CODE_OAUTH_TOKEN` |
 | 运行时间超过 5 小时 | 停止开始新的投递，剩下的明天继续 | 不用管 |
 | 遇到图形验证码 | 不破解，进入手动清单 | 手动投递 |
+| 网站要求开摄像头 / 录视频 / 上传证件照 / 付费 / 下载软件 | 一律不做，进入手动清单 | 自己判断要不要继续 |
 
 订阅额度和你平时用 Claude 是共用的。投递量大的日子，晚上那几个小时你自己用 Claude 可能会更快碰到上限。
 
@@ -149,6 +155,7 @@ jobagent report
 
 - 不编造任何事实，也不替你做虚假声明（比如「我声明没有使用 AI」）。需要这类声明的岗位会准备好全部材料，转给你手动处理。
 - 不破解验证码，不绕过网站的机器人检测。
+- 不授权摄像头、麦克风、定位；不做视频面试、自拍或证件验证；不在外包 / 众包平台注册；不付费；不下载安装任何东西。
 - 不登录你的 LinkedIn / Indeed（容易封号），岗位来源也不包括它们。
 - 个人信息只会填进招聘方自己的网站或已知的招聘系统。岗位页面里的「忽略之前的指令」之类文字会被当作数据，不会执行。
 - 密码由程序生成和填写，Claude 看不到。
@@ -180,7 +187,7 @@ jobagent report
 | then | For every job above your threshold: tailors a one-page resume to the JD → opens the application → signs up if needed (generated password, stored encrypted) → reads the email verification code → fills every step, uploads the resume, answers the questions → submits |
 | ~8 pm onward | Posts a daily report issue that @-mentions you (and optionally emails it): what was submitted, what needs you, interview invitations in your inbox |
 
-There is **no daily cap**. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**.
+There is **no daily cap**. The one limit: at most 3 applications to the same company within 30 days (the best matches; recruiters see every application you send, and some companies such as Google enforce a similar limit). Change it with `max_per_company`, or set it to `null`. Fresh postings go first. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**. Postings that have closed, and ones the site says you already applied to, are recognised and kept off your list.
 
 ### Quick start (3 steps)
 
@@ -255,13 +262,18 @@ To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5
 | `custom_answers` | Your own answers: `{match: "<regex>", answer: "..."}`; they override every built-in rule |
 | `about_me` | Free-form facts Claude may use for other questions |
 | `answers` | Common answers (start date, relocation, salary, EEO…), plus automatic acceptance of terms / arbitration / privacy notices (`accept_agreements`) and AI-written answers (`write_answers`) |
-| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited) |
+| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited), per-company cap over 30 days (`max_per_company`, default 3, `null` = unlimited) |
+
+**Checked before submitting**: before pressing Submit, the program compares what the page shows with your profile (work authorization, sponsorship, citizenship, declarations such as criminal record, your `custom_answers`, name and email). On any contradiction it does not submit until the answer is fixed. Titles that limit a role to undergraduates / graduate students / another term, to one school or one career fair, and contract marketplaces such as Mercor are filtered out before scoring.
 
 Answers Claude gives to non-standard questions are remembered and reused for the same question later (listed in the report as learned answers). Sensitive questions (EEO, health, criminal record, salary, identity details) and essays are never remembered. If a learned answer is wrong, add the correct answer to `custom_answers`.
 
 ### The report and the apply-by-hand checklist
 
 - One issue per day; older ones are closed. Jobs waiting for you form a **cumulative checklist** with links and reasons. **Tick a box once you have applied**: the next run records it as applied by you.
+- "⚠️ may already be submitted": the submit button was pressed but the run ended before the result was seen. The agent never applies twice on its own; check your email for a confirmation first.
+- "⚠️ no confirmation page" in the applied table: submitted, but the page showed no clear confirmation; watch for the confirmation email.
+- Applications cut short by a timeout or a browser error are retried once in the next run.
 - Tailored resumes and prepared answers:
   - with email configured: today's resumes are attached to the email report;
   - private repositories: the run's Artifacts (kept 14 days);
@@ -284,6 +296,7 @@ Answers Claude gives to non-standard questions are remembered and reused for the
 | Token invalid or expired (valid one year) | Stops and says so in the report | Run `claude setup-token` again and update `CLAUDE_CODE_OAUTH_TOKEN` |
 | Run longer than 5 hours | Stops starting new applications; the rest continue tomorrow | Nothing |
 | CAPTCHA | Never solved; the job goes on your checklist | Apply by hand |
+| Site wants camera / video / ID photo / a fee / a download | Never done; the job goes on your checklist | Decide yourself |
 
 The subscription quota is shared with your own use of Claude, so on heavy days you may hit your limit sooner in the evening.
 
@@ -305,6 +318,7 @@ jobagent report
 
 - Invent facts, or make false statements for you (such as certifying that no AI was used). Jobs that require one are prepared and handed to you.
 - Solve CAPTCHAs or evade bot detection.
+- Grant camera, microphone or location access; do video interviews, selfies or ID checks; sign up on contract / crowd-work marketplaces; pay anything; download or install anything.
 - Log in to LinkedIn / Indeed (account bans); they are not job sources either.
 - Type personal data anywhere but the employer's own site or a known applicant system. Text on job pages ("ignore previous instructions"…) is treated as data, never as instructions.
 - Show passwords to Claude: they are generated and typed by the program.

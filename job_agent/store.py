@@ -18,9 +18,10 @@ from pydantic import BaseModel, Field
 from .profile import jobagent_home
 
 # Job lifecycle:
-#   new -> candidate -> scored -> (skipped | applying -> applied | manual)
+#   new -> candidate -> scored -> (skipped | applying -> applied | manual | closed | duplicate)
 #   manual -> applied_manual   (you applied yourself and ticked it in the report)
-DECIDED = {"skipped", "applied", "manual", "failed", "applied_manual"}
+#   closed: the posting no longer takes applications; duplicate: the site says you already applied
+DECIDED = {"skipped", "applied", "manual", "failed", "applied_manual", "closed", "duplicate"}
 SEEN_TTL_DAYS = 60
 EVENT_TTL_DAYS = 120
 
@@ -52,6 +53,7 @@ class Job(BaseModel):
     reason: str = ""
     applied_at: float | None = None
     attempts: int = 0
+    retries: int = 0  # apply sessions that died without an outcome (timeout, crash) and were retried
     result: str = ""
     resume_plan: dict[str, Any] | None = None
     application: dict[str, Any] | None = None  # answers given and the outcome; private

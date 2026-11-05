@@ -227,8 +227,28 @@ def render_page_text(url: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", text or "").strip()
 
 
+class PostingClosed(Exception):
+    """The posting is gone: its ATS says so, or the page says it no longer takes applications."""
+
+
+CLOSED_TEXT = re.compile(
+    r"no longer (accepting (new )?applications|available|open|active|posted)|not accepting (new )?applications|"
+    r"(job|position|posting|requisition|opening) (has been|was|is) (closed|filled|removed|expired|no longer)|"
+    r"(this|the) (job|position|posting|opening) (has )?(expired|closed)|job not found|position not found|"
+    r"\b(job|position|posting|opening|requisition)\b[^.]{0,40}\b(has expired|has been (closed|filled|removed))",
+    re.I,
+)
+
+
+def _gone(exc: Exception) -> bool:
+    return isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code in (404, 410)
+
+
 def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None) -> str:
-    """Plain-text job description: ATS API, then embedded JSON-LD, then page HTML, then a rendered page."""
+    """Plain-text job description: ATS API, then embedded JSON-LD, then page HTML, then a rendered page.
+
+    Raises PostingClosed when the ATS no longer has the posting (HTTP 404/410) or the only text
+    is a "no longer accepting applications" notice."""
     c = client or _client()
     try:
         if ref.ats == "greenhouse" and ref.company and ref.job_id:
@@ -271,15 +291,20 @@ def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None)
                 parts = [data.get("title", ""), data.get("location", ""), data.get("timeType", "")]
                 parts.append(html_to_text(data["jobDescription"]))
                 return "\n".join(p for p in parts if p)
-    except (httpx.HTTPError, ValueError, KeyError):
+    except httpx.HTTPError as exc:
+        if _gone(exc) and ref.ats in ("greenhouse", "lever", "workday"):
+            raise PostingClosed(f"{ref.ats} no longer lists this posting (HTTP {exc.response.status_code})") from exc
+    except (ValueError, KeyError):
         pass
     text = ""
+    page_gone = 0
     try:
         r = c.get(url)
         r.raise_for_status()
         text = jsonld_description(r.text) or html_to_text(r.text)
-    except httpx.HTTPError:
-        pass
+    except httpx.HTTPError as exc:
+        if _gone(exc):  # single-page apps sometimes answer 404 and still render the job: look first
+            page_gone = exc.response.status_code
     if len(text) < 600:  # probably a JavaScript app: render it
         try:
             rendered = render_page_text(url)
@@ -287,6 +312,10 @@ def fetch_description(ref: AtsRef, url: str, client: httpx.Client | None = None)
                 text = rendered
         except Exception:  # noqa: BLE001
             pass
+    if page_gone and len(text) < 600:
+        raise PostingClosed(f"the posting page is gone (HTTP {page_gone})")
     if not text:
         raise httpx.HTTPError(f"could not read the job description at {url}")
+    if len(text) < 1500 and CLOSED_TEXT.search(text):
+        raise PostingClosed("the posting page says it no longer accepts applications")
     return text

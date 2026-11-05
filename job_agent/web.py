@@ -60,6 +60,36 @@ SIDE_EFFECT_RE = re.compile(
     r"review and submit)\b",
     re.I,
 )
+# Buttons that send the application itself (as opposed to account and verification steps).
+SUBMIT_APP_RE = re.compile(
+    r"\bsubmit\b|send (my |the |your )?application|complete (my |the |your )?application|\bfinish\b|review and submit",
+    re.I,
+)
+ACCOUNT_RE = re.compile(
+    r"create (an |my |your )?account|sign ?up|register|verify|verification|resend|send (me )?(a |the )?(new )?(code|link|e-?mail)",
+    re.I,
+)
+# Steps of a multi-page form: they move on, they do not send anything.
+STEP_RE = re.compile(
+    r"\b(next|continue|save|back|previous|add|upload|search|sign ?in|log ?in|start|begin|edit|remove|delete|cancel|close|"
+    r"select|choose|browse|attach|ok|accept|agree|got it|skip|autofill|apply (manually|with))\b",
+    re.I,
+)
+ELEMENT_INFO_JS = """e => ({tag: e.tagName.toLowerCase(), type: (e.getAttribute('type') || '').toLowerCase(),
+                         in_form: !!e.closest('form')})"""
+CLOSED_RE = re.compile(
+    r"no longer (accepting (new )?applications|available|open|active|posted)|not accepting (new )?applications|"
+    r"(job|position|posting|requisition|role|opening) (has been|was|is) (closed|filled|removed|expired|no longer)|"
+    r"(this|the) (job|position|posting|opening) (has )?(expired|closed)|job not found|position not found|"
+    r"\b(job|position|posting|opening|requisition)\b[^.]{0,40}\b(has expired|has been (closed|filled|removed))|"
+    r"page (you('re| are) looking for )?(can(no|')t be found|could not be found|not found|does not exist)",
+    re.I,
+)
+ALREADY_APPLIED_RE = re.compile(
+    r"you('ve| have) already applied|already (submitted|applied) (an application )?(for|to) this|"
+    r"you have an? (existing|active|pending) application|duplicate application",
+    re.I,
+)
 COOKIE_RE = re.compile(r"^(accept( all)?( cookies)?|allow all( cookies)?|i accept|i agree|agree|got it|ok(ay)?|accept & close)$", re.I)
 
 
@@ -126,6 +156,8 @@ def start() -> None:
         f"--user-agent={USER_AGENT}", "--disable-dev-shm-usage",
         # Like Playwright's own launcher: CI runners (e.g. Ubuntu 24.04) block Chromium's sandbox.
         "--no-sandbox",
+        # Never grant camera, microphone, location, notifications or screen sharing to a job site.
+        "--deny-permission-prompts",
     ]
     log = open(_dir() / "browser.log", "ab")  # noqa: SIM115 - handed to the child process
     proc = subprocess.Popen(args, stdout=log, stderr=log, start_new_session=True)
@@ -284,6 +316,9 @@ def look(pg, job: Job, profile: Profile, gather_options: bool = True, memory: di
     for f in data["fields"]:
         c = _compact(f)
         c["filled"] = bool(f.get("filled"))
+        if f.get("shown") not in (None, "", []) and f["kind"] != "password":
+            shown = f["shown"]
+            c["value"] = shown[:120] if isinstance(shown, str) else shown
         fields.append(c)
     text = summary["text"]
     return {
@@ -297,6 +332,8 @@ def look(pg, job: Job, profile: Profile, gather_options: bool = True, memory: di
         "buttons": summary["clickables"],
         "captcha_challenge": forms._visible_challenge(top),
         "looks_submitted": bool(forms.SUCCESS_RE.search(text)),
+        "looks_closed": bool(CLOSED_RE.search(text)),
+        "already_applied": bool(ALREADY_APPLIED_RE.search(text)),
         "asks_for_code": bool(forms.CODE_RE.search(text)),
         "text": text[:2500],
         "may_enter_personal_data": allowed(pg.url, job),
@@ -319,36 +356,78 @@ def dismiss_cookie_banner(pg) -> bool:
     return False
 
 
+def _with_account(result: dict[str, Any], state: State) -> dict[str, Any]:
+    """Tell Claude when the vault already holds a login for this site (use "Sign in", not "Create account")."""
+    result["saved_account_for_this_site"] = vault.site_of(result.get("form_in_frame") or result["url"]) in state.accounts \
+        or vault.site_of(result["url"]) in state.accounts
+    return result
+
+
 def open_job(state: State, job: Job, profile: Profile) -> dict[str, Any]:
     _save_session({"job_id": job.id, "opened": time.time(), "last_action": time.time()})
     with page() as pg:
         pg.goto(job.apply_url or job.url, wait_until="domcontentloaded", timeout=60000)
         _settle(pg)
         dismiss_cookie_banner(pg)
-        return look(pg, job, profile, memory=state.memory)
+        return _with_account(look(pg, job, profile, memory=state.memory), state)
 
 
-def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
+def sends_application(label: str, info: dict[str, Any], filled: int) -> bool:
+    """Whether pressing this button would send the application. In doubt on a filled-in form, it would."""
+    if ACCOUNT_RE.search(label):
+        return False
+    if SUBMIT_APP_RE.search(label):
+        return True
+    # "Apply" starts an application on a job page (empty search boxes at most), but submits
+    # one at the end of a form that has been filled in.
+    if re.search(r"\bapply\b", label, re.I) and not STEP_RE.search(label):
+        return filled >= 2
+    # A submit button (or a button without a type inside a form, which HTML treats as one)
+    # that is not a "Next"/"Save and continue" step.
+    submit_type = info.get("type") in ("submit", "image") or (
+        info.get("tag") == "button" and not info.get("type") and info.get("in_form"))
+    return bool(submit_type) and filled >= 2 and not STEP_RE.search(label)
+
+
+def click(state: State, profile: Profile, ref: str, force: bool = False) -> dict[str, Any]:
+    from .apply import mark_submit_clicked
+
     job = _current_job(state)
     with page() as pg:
-        button = target(pg, job).locator(f'[data-ja-ref="{ref}"]').first
+        frame = target(pg, job)
+        button = frame.locator(f'[data-ja-ref="{ref}"]').first
         if not button.count():
             raise WebError(f"no element {ref!r} on this page; run `jobagent web look` again")
         label = (button.inner_text(timeout=2000) or button.get_attribute("value") or "").strip()
-        filled = 0
+        filled, fields = 0, []
         try:
-            fields = target(pg, job).evaluate(forms.EXTRACT_JS)["fields"]
+            fields = frame.evaluate(forms.EXTRACT_JS)["fields"]
             filled = sum(1 for f in fields if f.get("filled") and f["kind"] not in ("file",))
         except Exception:  # noqa: BLE001
             pass
-        # "Apply" starts an application on a job page (empty search boxes at most), but submits
-        # one at the end of a form that has been filled in.
-        submitting = SIDE_EFFECT_RE.search(label) or (re.search(r"\bapply\b", label, re.I) and filled >= 2)
-        if dry_run() and submitting:
+        try:
+            info = button.evaluate(ELEMENT_INFO_JS)
+        except Exception:  # noqa: BLE001
+            info = {}
+        sending = sends_application(label, info, filled)
+        if dry_run() and (sending or SIDE_EFFECT_RE.search(label)):
             raise WebError(
                 f"dry run: not pressing {label!r} (it would submit or create something). "
                 "This is as far as a rehearsal goes - record it with `jobagent web finish dry_run`."
             )
+        if sending:
+            # Last check before sending: answers on this page that contradict the profile.
+            wrong = [] if force else forms.audit(fields, profile, job.company)
+            if wrong:
+                lines = "; ".join(f"{w['key']} ({w['label'][:80]}) shows {w['answer']!r} but {w['from']} says "
+                                  f"{w['profile_says']!r}" for w in wrong)
+                raise WebError(
+                    f"not pressing {label!r}: these answers contradict the profile: {lines}. Fix them with "
+                    "`jobagent web fill --overwrite --json ...` (or `web fill --overwrite` to use the profile's answers). "
+                    "Only if you re-read the question and the page is right, press again with `web click <ref> --force`."
+                )
+            mark_submit_clicked(job, f"{label} @ {pg.url}")
+            state.log(job.id, "submit_clicked", label[:100])
         before = len(pg.context.pages)
         s = _session()
         s["last_action"] = time.time()
@@ -361,7 +440,7 @@ def click(state: State, profile: Profile, ref: str) -> dict[str, Any]:
             pg.wait_for_timeout(3000)
             result = look(pg, job, profile, memory=state.memory)
         result["opened_new_tab"] = len(pg.context.pages) > before
-        return result
+        return _with_account(result, state)
 
 
 def _robust_click(button: Any) -> None:
@@ -490,10 +569,32 @@ def screenshot(state: State, profile: Profile, name: str = "page") -> str:
     return str(path)
 
 
+FINISH_STATUSES = ("applied", "manual", "failed", "closed", "duplicate", "dry_run")
+
+
 def finish(state: State, profile: Profile, status: str, reason: str) -> dict[str, Any]:
+    """Record how the application ended.
+
+    applied    the site confirmed it (a confirmation page or e-mail)
+    manual     blocked (CAPTCHA, question the profile cannot answer, ...): kept for you to apply by hand
+    closed     the posting no longer accepts applications (not worth your time either)
+    duplicate  the site says you already applied
+    dry_run    a rehearsal got as far as it may
+    """
+    from .apply import submit_clicked
+
     job = _current_job(state)
+    if status not in FINISH_STATUSES:
+        raise WebError("status must be one of " + ", ".join(FINISH_STATUSES))
     try:
         screenshot(state, profile, "final")
+    except Exception:  # noqa: BLE001
+        pass
+    proof: dict[str, Any] = {}
+    try:
+        with page() as pg:
+            text = pg.evaluate("() => document.body.innerText.slice(0, 20000)")
+            proof = {"url": pg.url, "confirmation_text": bool(forms.SUCCESS_RE.search(text))}
     except Exception:  # noqa: BLE001
         pass
     if status == "applied":
@@ -501,16 +602,22 @@ def finish(state: State, profile: Profile, status: str, reason: str) -> dict[str
             raise WebError("dry run: use `jobagent web finish dry_run`")
         job.applied_at = time.time()
         job.result = "submitted"
-        job.application = {"mode": "browser", "at": time.time(), "note": reason[:300]}
+        # Confirmed when the page says so; otherwise Claude's own reading of it (recorded as such).
+        confirmed = bool(proof.get("confirmation_text"))
+        job.application = {"mode": "browser", "at": time.time(), "note": reason[:300], "proof": proof,
+                           "confirmed_by_page": confirmed, "submit_clicked": submit_clicked(job)}
         state.set_status(job, "applied", reason or job.apply_url)
     elif status == "dry_run":
         job.application = {"mode": "browser", "at": time.time(), "dry_run": True, "note": reason[:300]}
         state.jobs[job.id] = job
         state.log(job.id, "dry_run", "dry_run_ok")
-    elif status in ("manual", "failed"):
+    elif status in ("closed", "duplicate"):
         job.result = status
-        state.set_status(job, "manual", reason)
+        state.set_status(job, status, reason)
     else:
-        raise WebError("status must be applied, manual, failed or dry_run")
+        job.result = status
+        if submit_clicked(job):
+            reason = f"{reason} (a submit button was pressed: check your e-mail for a confirmation before applying again)"
+        state.set_status(job, "manual", reason)
     _save_session({})
     return {"id": job.id, "status": job.status}

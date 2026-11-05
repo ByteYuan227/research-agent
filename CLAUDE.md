@@ -17,8 +17,10 @@ Two agents live here:
 - Form-filling changes should be checked against real forms with the `dev-probe` workflow
   (`dry_run_fill` or `pipeline_smoke`); those modes never submit applications.
 - Keep the guarantees: resumes only select profile ids (`job_agent/resume.py`), file
-  uploads are limited to the generated resume/cover letter, and anything the profile
-  cannot answer goes to the manual queue.
+  uploads are limited to the generated resume/cover letter, anything the profile
+  cannot answer goes to the manual queue, answers that contradict the profile are never
+  submitted (`forms.audit`), and a job whose submit button was pressed is never applied
+  to again automatically (`apply.mark_submit_clicked`).
 
 ## Running the job hunt yourself
 

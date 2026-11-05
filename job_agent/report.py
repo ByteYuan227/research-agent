@@ -38,6 +38,9 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
     applied = sorted((j for j in jobs if j.status == "applied" and j.applied_at and start <= j.applied_at < end),
                      key=lambda j: -(j.score or 0))
     skipped = [j for j in jobs if j.status == "skipped"]
+    closed = [j for j in jobs if j.status in ("closed", "duplicate")]
+    retry = [j for j in jobs if j.status == "scored" and any(
+        e.job_id == j.id and e.type == "scored" and "will retry next run" in e.detail for e in events)]
     scored_today = [e for e in events if e.type in ("scored", "skipped")]
     new_manual = {j.id for j in jobs if j.status == "manual"}
     pending = sorted((j for j in state.jobs.values() if j.status == "manual"),
@@ -67,6 +70,11 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
         f"- ✋ 待你手动投递：**{len(pending)}**（今天新增 {len(new_manual)}）",
         f"- ⏭️ 匹配度不够、已跳过：{len(skipped)}",
     ]
+    if closed:
+        n_dup = sum(1 for j in closed if j.status == "duplicate")
+        lines.append(f"- 🚫 岗位已关闭或之前投过：{len(closed)}（之前投过 {n_dup} 个），不用管")
+    if retry:
+        lines.append(f"- 🔁 中途中断、下次自动重试：{len(retry)}")
     if rehearsed:
         ok = sum(1 for d in rehearsed.values() if d == "dry_run_ok")
         lines.append(f"- 🧪 演练模式：{len(rehearsed)} 个申请已准备好但没有提交（成功 {ok} 个）")
@@ -75,7 +83,10 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
     if applied:
         lines += ["## ✅ 今天投递的岗位", "", "| 公司 | 岗位 | 匹配度 | 地点 | |", "|---|---|---|---|---|"]
         for j in applied:
-            lines.append(f"| {_md(j.company)} | {_md(j.title)} | {j.score or '-'} | {_md(', '.join(j.locations[:2]))} | [链接]({j.url}) |")
+            app = j.application or {}
+            flag = " ⚠️ 未看到确认页，留意确认邮件" if app.get("mode") == "browser" and app.get("confirmed_by_page") is False else ""
+            lines.append(f"| {_md(j.company)} | {_md(j.title)}{flag} | {j.score or '-'} | {_md(', '.join(j.locations[:2]))} "
+                         f"| [链接]({j.url}) |")
         lines.append("")
         if full:
             lines += [f"- **{_md(j.company)}**：{_md(j.reason)}" for j in applied if j.reason] + [""]
@@ -91,7 +102,9 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
         for j in pending[:MANUAL_LIMIT]:
             new = "🆕 " if j.id in new_manual else ""
             score = f" · {j.score} 分" if j.score is not None else ""
-            lines.append(f"- [ ] {new}**{_md(j.company)}** · {_md(j.title)}{score} · {_md(_reason(state, j))[:120]} · "
+            reason = _reason(state, j)
+            maybe = "⚠️ **可能已经提交，先查邮件再决定要不要重投** · " if "submit button was pressed" in reason else ""
+            lines.append(f"- [ ] {new}**{_md(j.company)}** · {_md(j.title)}{score} · {maybe}{_md(reason)[:120]} · "
                          f"[申请链接]({j.url}) <!-- job:{j.id} -->")
         if len(pending) > MANUAL_LIMIT:
             lines.append(f"- …另有 {len(pending) - MANUAL_LIMIT} 个，见 `jobagent materials open`")
@@ -117,8 +130,6 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
 
     learned = run.get("learned") or []
     if learned:
-        from .memory import question_key
-
         lines += [f"<details><summary>🧠 新记住的回答（{len(learned)} 个，以后遇到同样的问题会自动使用）</summary>", ""]
         for q in learned[:40]:
             entry = next((v for v in state.memory.values() if v.get("question", "")[:160] == q), None)

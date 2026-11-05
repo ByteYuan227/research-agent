@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from . import inbox, notify, prefilter, sources, vault
-from .apply import ApplyError, applied_today, prepare, resume_path, submit, work_dir
+from .apply import ApplyError, applied_today, prepare, submit, work_dir
 from .profile import Preferences, ProfileError, has_profile, jobagent_home, load_profile
 from .report import build_report
 from .resume import PlanError, build_resume, validate_plan
@@ -191,6 +191,12 @@ def cmd_jd(args) -> int:
         ref = ats.AtsRef(job.ats, job.ats_company, job.ats_job_id, job.ats_region)
         try:
             text = ats.fetch_description(ref, job.url)
+        except ats.PostingClosed as exc:
+            state.set_status(job, "closed", str(exc))
+            save_state(state)
+            out({"id": job.id, "status": "closed", "reason": str(exc),
+                 "note": "the posting no longer takes applications; it has been recorded as closed, move on"})
+            return 0
         except Exception as exc:  # noqa: BLE001
             return fail(f"could not fetch description: {exc}")
         cache.write_text(text, encoding="utf-8")
@@ -276,7 +282,7 @@ def cmd_submit(args) -> int:
     # JOBAGENT_DRY_RUN=1 makes rehearsals safe even if the --dry-run flag is forgotten.
     dry_run = args.dry_run or os.environ.get("JOBAGENT_DRY_RUN") == "1"
     try:
-        result = submit(job, load_profile(), state, Path(args.answers), dry_run=dry_run)
+        result = submit(job, load_profile(), state, Path(args.answers), dry_run=dry_run, force=args.force)
     except ApplyError as exc:
         return fail(str(exc))
     save_state(state)
@@ -285,8 +291,13 @@ def cmd_submit(args) -> int:
 
 
 def cmd_mark(args) -> int:
+    from .apply import clear_submit_marker
+
     state = load_state()
     job = _job(state, args.job_id)
+    if args.status == "scored":  # you checked: it was not submitted, try again
+        clear_submit_marker(job)
+        job.retries = 0
     state.set_status(job, args.status, args.reason)
     save_state(state)
     out({"id": job.id, "status": job.status})
@@ -425,7 +436,7 @@ def cmd_web(args) -> int:
             with web.page() as pg:
                 result = web.look(pg, web._current_job(state), profile, memory=state.memory)
         elif args.action == "click":
-            result = web.click(state, profile, args.arg or "")
+            result = web.click(state, profile, args.arg or "", force=args.force)
         elif args.action == "goto":
             result = web.goto(state, profile, args.arg or "")
         elif args.action == "fill":
@@ -458,18 +469,57 @@ def cmd_web(args) -> int:
     return 0
 
 
+COMPANY_WINDOW_DAYS = 30
+
+
+def queue_order(job: Job, now: float) -> float:
+    """Best match first, with a head start for fresh postings (early applicants are read first)."""
+    age = (now - job.posted_at) / 86400 if job.posted_at else 99
+    return -((job.score or 0) + (8 if age < 1 else 4 if age < 3 else 0))
+
+
 def cmd_queue(args) -> int:
-    """Job ids waiting to be applied to, best score first (one per line, for scripts)."""
+    """Job ids waiting to be applied to, best first (one per line, for scripts).
+
+    Jobs beyond preferences.max_per_company applications to the same company in 30 days are skipped."""
+    from .prefilter import company_key
+
     state = load_state()
-    jobs = sorted((j for j in state.jobs.values() if j.status == "scored"), key=lambda j: -(j.score or 0))
-    for j in jobs:
+    now = time.time()
+    try:
+        cap = load_profile().preferences.max_per_company
+    except ProfileError:
+        cap = None
+    since = now - COMPANY_WINDOW_DAYS * 86400
+    per_company: dict[str, int] = {}
+    for j in state.jobs.values():
+        recent = (j.applied_at or 0) >= since if j.status in ("applied", "applied_manual") else \
+            j.status == "manual" and j.updated_at >= since
+        if recent:
+            per_company[company_key(j.company)] = per_company.get(company_key(j.company), 0) + 1
+    changed = False
+    for j in sorted((j for j in state.jobs.values() if j.status == "scored"), key=lambda j: queue_order(j, now)):
+        key = company_key(j.company)
+        if cap is not None and per_company.get(key, 0) >= cap:
+            state.set_status(j, "skipped", f"already {per_company[key]} applications to {j.company} in the last "
+                                           f"{COMPANY_WINDOW_DAYS} days (preferences.max_per_company = {cap})")
+            changed = True
+            continue
+        per_company[key] = per_company.get(key, 0) + 1
         print(j.id)
+    if changed:
+        save_state(state)
     return 0
+
+
+MAX_RETRIES = 1
 
 
 def cmd_settle(args) -> int:
     """After an apply session: make sure the job got an outcome."""
     from .web import _save_session
+
+    from .apply import submit_clicked
 
     state = load_state()
     job = state.jobs.get(args.job_id)
@@ -477,8 +527,16 @@ def cmd_settle(args) -> int:
         return 0
     _save_session({})
     if job.status in ("scored", "applying"):
-        if args.stopped in ("quota", "auth"):
+        if submit_clicked(job):
+            # It may have gone through: never apply twice. You check your e-mail and tick it off.
+            state.set_status(job, "manual", "a submit button was pressed but the session ended before the result was "
+                                            "recorded: check your e-mail for a confirmation before applying again")
+        elif args.stopped in ("quota", "auth"):
             state.set_status(job, "scored", f"interrupted ({args.stopped}); will retry next run")
+        elif str(args.exit) not in ("0", "") and job.retries < MAX_RETRIES:
+            # A timeout or crash (slow site, browser hiccup) gets one more try in the next run.
+            job.retries += 1
+            state.set_status(job, "scored", f"the session ended early (exit {args.exit}); will retry next run")
         else:
             state.set_status(job, "manual", f"the automatic application did not finish (exit {args.exit})")
         save_state(state)
@@ -536,7 +594,7 @@ def cmd_export(args) -> int:
     import csv
 
     state = load_state()
-    rows = sorted((j for j in state.jobs.values() if j.status in ("applied", "applied_manual", "manual", "skipped")),
+    rows = sorted((j for j in state.jobs.values() if j.status in ("applied", "applied_manual", "manual", "skipped", "closed", "duplicate")),
                   key=lambda j: -(j.applied_at or j.updated_at or 0))
     with open(args.file, "w", newline="", encoding="utf-8-sig") as fh:
         w = csv.writer(fh)
@@ -613,12 +671,16 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("job_id")
     s.add_argument("--answers", required=True, help='JSON: {"answers": {key: value}, "cover_letter": "..."}')
     s.add_argument("--dry-run", action="store_true", help="fill everything but do not submit")
+    s.add_argument("--force", action="store_true",
+                   help="submit although an answer differs from the profile's (only after re-reading that question)")
     s.set_defaults(fn=cmd_submit)
 
     s = sub.add_parser("mark", help="record a decision without applying")
     s.add_argument("job_id")
-    s.add_argument("--status", choices=["manual", "skipped", "failed", "scored", "applied_manual"], required=True,
-                   help="scored = try again next run; applied_manual = you applied yourself")
+    s.add_argument("--status", choices=["manual", "skipped", "failed", "scored", "applied_manual", "closed", "duplicate"],
+                   required=True,
+                   help="scored = try again next run; applied_manual = you applied yourself; "
+                        "closed = posting no longer open; duplicate = already applied")
     s.add_argument("--reason", required=True)
     s.set_defaults(fn=cmd_mark)
 
@@ -660,13 +722,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="drive a browser step by step (any application site): open|look|click|fill|goto|code|link|shot|finish|close",
     )
     s.add_argument("action", choices=["open", "look", "click", "fill", "goto", "code", "link", "shot", "finish", "close"])
-    s.add_argument("arg", nargs="?", help="job id (open), element ref (click), url (goto), status (finish)")
+    s.add_argument("arg", nargs="?",
+                   help="job id (open), element ref (click), url (goto), status (finish: applied|manual|closed|duplicate|dry_run)")
     s.add_argument("--answers", help="answers JSON file for fill")
     s.add_argument("--json", help='answers inline for fill, e.g. \'{"field_key": "value"}\'')
     s.add_argument("--overwrite", action="store_true", help="fill also refills fields that already have a value")
     s.add_argument("--hint", help="code: sender/subject hint")
     s.add_argument("--match", help="link: text the verification URL must contain")
     s.add_argument("--reason", help="finish: what happened")
+    s.add_argument("--force", action="store_true",
+                   help="click: press a submit button although an answer differs from the profile's (re-read it first)")
     s.set_defaults(fn=cmd_web)
 
     sub.add_parser("queue", help="job ids to apply to, best first").set_defaults(fn=cmd_queue)

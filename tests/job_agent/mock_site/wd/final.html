@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Mock Corp - Final step</title></head>
+<body>
+<h2>Final step</h2>
+<form id="f">
+  <div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" required></div>
+  <fieldset><legend>Will you now or in the future require visa sponsorship?</legend>
+    <label><input type="radio" name="spons" value="yes" required> Yes</label>
+    <label><input type="radio" name="spons" value="no"> No</label></fieldset>
+  <button type="submit">Done</button>
+</form>
+<script>
+  document.getElementById("f").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const spons = (document.querySelector("input[name=spons]:checked") || {}).value || "";
+    localStorage.setItem("final", JSON.stringify({ email: document.getElementById("email").value, spons }));
+    document.body.innerHTML = "<h1>Thank you for applying!</h1><p>We have received your application.</p>";
+  });
+</script>
+</body>
+</html>

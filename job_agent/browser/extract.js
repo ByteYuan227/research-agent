@@ -137,6 +137,15 @@
   });
   const fields = [];
   const used = new Set();
+  // The visible text of one radio / checkbox option.
+  function optionLabel(m) {
+    let t = "";
+    if (m.id) t = labelText(document.querySelector(`label[for="${CSS.escape(m.id)}"]`));
+    if (!t) t = labelText(m.closest("label"));
+    if (!t) t = clean(m.getAttribute("aria-label")) || clean(m.value);
+    return t;
+  }
+
   function addField(f, tagEl) {
     let key = f.key;
     let n = 2;
@@ -224,13 +233,7 @@
       }
       if (seenGroups.has(groupId)) continue;
       seenGroups.add(groupId);
-      const options = members.map((m) => {
-        let t = "";
-        if (m.id) t = labelText(document.querySelector(`label[for="${CSS.escape(m.id)}"]`));
-        if (!t) t = labelText(m.closest("label"));
-        if (!t) t = clean(m.getAttribute("aria-label")) || clean(m.value);
-        return t;
-      });
+      const options = members.map(optionLabel);
       const single = members.length === 1;
       let label = single ? labelFor(el, container) : containerTitle(container, el);
       if (!label && single) label = options[0];
@@ -325,41 +328,59 @@
     );
   }
 
-  // Whether each field already has a value (so multi-step flows know what is left).
+  // Whether each field already has a value (so multi-step flows know what is left), and what
+  // it shows (so answers can be checked against the profile before submitting). Never passwords.
   for (const f of fields) {
     const el = document.querySelector(`[data-ja-key="${CSS.escape(f.key)}"]`);
     if (!el) continue;
     let filled = false;
+    let shown = null;
     switch (f.kind) {
       case "radio":
-      case "checkbox_group":
-        filled = el.matches("input:checked") || !!el.querySelector("input:checked");
+      case "checkbox_group": {
+        const checked = el.matches("input:checked") ? [el] : Array.from(el.querySelectorAll("input:checked"));
+        filled = checked.length > 0;
+        const labels = checked.map(optionLabel).filter(Boolean);
+        shown = f.kind === "radio" ? labels[0] || null : labels;
         break;
+      }
       case "checkbox":
         filled = !!el.checked;
+        shown = !!el.checked;
         break;
-      case "button_group":
-        filled = !!el.querySelector("[aria-pressed='true'], [aria-checked='true'], [data-selected='true']");
+      case "button_group": {
+        const on = el.querySelector("[aria-pressed='true'], [aria-checked='true'], [data-selected='true']");
+        filled = !!on;
+        shown = on ? textOf(on) : null;
         break;
+      }
       case "file":
         filled = !!(el.files && el.files.length);
         break;
       case "select":
         filled = el.selectedIndex > 0 && !/^(select|choose|--)/i.test(clean(el.options[el.selectedIndex].textContent));
+        if (filled) shown = clean(el.options[el.selectedIndex].textContent);
         break;
       case "listbox":
         filled = !!textOf(el) && !/^(select one|select|choose|--)/i.test(textOf(el));
+        if (filled) shown = textOf(el);
         break;
       case "combobox": {
         const box = el.closest(".select__container, .select-shell, [data-field-path], .field-wrapper") || el.parentElement;
         const chosen = box && box.querySelector("[class*='single-value' i], [class*='singleValue' i], [class*='multi-value' i], [data-automation-id='selectedItem']");
         filled = !!((el.value && el.value.trim()) || (chosen && textOf(chosen)));
+        if (filled) shown = (chosen && textOf(chosen)) || clean(el.value);
         break;
       }
+      case "password":
+        filled = !!(el.value && String(el.value).trim());
+        break;
       default:
         filled = !!(el.value && String(el.value).trim());
+        if (filled) shown = String(el.value).slice(0, 300);
     }
     f.filled = filled;
+    if (shown !== null && !(Array.isArray(shown) && !shown.length)) f.shown = shown;
   }
 
   const submit =
