@@ -1,3 +1,14 @@
+# 两个 Claude Agent
+
+这个仓库里有两个基于 Claude 的 Agent：
+
+| Agent | 做什么 | 文档 |
+|---|---|---|
+| **求职 Agent**（`job_agent/`） | 每天自动找美国实习 / 应届生岗位，Claude 打分，按岗位定制简历（只挑选、不编造），通过 Greenhouse / Lever / Ashby 自动投递，自动读取邮箱验证码，晚上 8 点发日报。运行在 GitHub Actions 上，用你自己的 Claude 订阅额度 | [docs/job-agent.md](docs/job-agent.md) |
+| **深度研究 Agent**（`research_agent/`） | 给它一个问题，它自己拆解、联网搜索、阅读网页、记录证据，输出带引用的研究报告。主循环手写，不依赖任何 Agent 框架 | 下文 |
+
+---
+
 # Research Agent：深度研究 Agent
 
 给它一个问题，它会自己**拆解问题 → 联网搜索 → 阅读网页 → 记录证据 → 交叉核实**，最后输出一份**带引用来源的研究报告**。
