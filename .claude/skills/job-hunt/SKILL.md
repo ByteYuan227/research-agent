@@ -88,6 +88,11 @@ profile). Build it: `jobagent resume <id> --plan <work_dir>/plan.json`; if `page
   (only after `looks_submitted` or a clear confirmation), `jobagent web finish manual --reason
   "<what blocked you>"`, or in a dry run `jobagent web finish dry_run --reason "<how far>"`.
   Already have an account on this site? Use "Sign in": the vault fills the saved password.
+  Workday usually goes: Apply → Apply Manually → Create Account (or Sign In) → maybe a
+  verification e-mail (`jobagent web link --match myworkdayjobs`) → My Information →
+  My Experience (upload the resume; add work/education entries only if required, from the
+  profile) → Application Questions → Voluntary Disclosures → Self Identify → Review → Submit.
+  Fields that are hidden traps for bots never appear in `look`; only fill listed fields.
 - Dry runs (`dry_run: true` in outputs) cannot submit or create accounts: go as far as you
   can, then record `dry_run`.
 

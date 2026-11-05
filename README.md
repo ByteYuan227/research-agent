@@ -92,7 +92,8 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 
 | 部分 | 用途 |
 |---|---|
-| `personal`、`education`、`experience`、`projects`、`skills` | 简历素材。每条 bullet 有 id，Agent 按 JD 挑选、排序，可以换个说法贴近 JD 用词，但程序会检查：**不能出现原文没有的数字、资料里没有的技术或公司名** |
+| `personal` | 姓名、联系方式、链接、地址。Workday 等网站要求邮寄地址，请在 `location.street` 填上 |
+| `education`、`experience`、`projects`、`skills` | 简历素材。每条 bullet 有 id，Agent 按 JD 挑选、排序，可以换个说法贴近 JD 用词，但程序会检查：**不能出现原文没有的数字、资料里没有的技术或公司名** |
 | `work_authorization` | 是否公民 / 绿卡、国籍、签证类型、是否需要担保。非公民不会被答成公民，要求公民身份的岗位自动过滤 |
 | `declarations` | 事先声明：犯罪记录、待决指控、背调 / 药检同意、竞业协议、亲属在职、政府官员。遇到这类问题直接作答 |
 | `custom_answers` | 自定义问答：`{match: "正则", answer: "答案"}`，匹配到的问题优先用你的答案，覆盖所有内置规则 |
@@ -247,7 +248,8 @@ To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5
 
 | Section | Used for |
 |---|---|
-| `personal`, `education`, `experience`, `projects`, `skills` | Resume material. Every bullet has an id; the agent selects and orders them per job and may reword them in the JD's language — checked so that **no number or technology/company name absent from your profile can appear** |
+| `personal` | Name, contact details, links, address. Workday and similar portals require a mailing address: fill in `location.street` |
+| `education`, `experience`, `projects`, `skills` | Resume material. Every bullet has an id; the agent selects and orders them per job and may reword them in the JD's language — checked so that **no number or technology/company name absent from your profile can appear** |
 | `work_authorization` | Citizenship / permanent residency, citizenships, visa type, sponsorship. Non-citizens are never answered as citizens; citizenship-only jobs are filtered out |
 | `declarations` | Background questions answered in advance: criminal record, pending charges, background-check / drug-test consent, non-compete, relatives at the company, government official |
 | `custom_answers` | Your own answers: `{match: "<regex>", answer: "..."}`; they override every built-in rule |
