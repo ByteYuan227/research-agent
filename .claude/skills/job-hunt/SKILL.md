@@ -83,6 +83,8 @@ c. **Read the form.** `jobagent prepare <id>`. It lists every field with `sugges
      anything requiring information you do not have. Required → `manual`.
    - File fields accept only `"resume"` or `"cover_letter"`. Add a cover letter
      (`"cover_letter": "<text>"` in the answers file) only when a cover letter is required.
+   - Password fields (account sign-up) are filled by the vault with a generated password;
+     leave them as suggested. You never see or choose passwords.
 
 d. **Submit.** Write `{"answers": {"<field key>": <value>, ...}, "cover_letter": null}` to the
    `answers_file_hint` path, then `jobagent submit <id> --answers <file>`.

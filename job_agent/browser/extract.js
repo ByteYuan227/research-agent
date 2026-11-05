@@ -269,7 +269,7 @@
     else if (el.tagName === "TEXTAREA") kind = "textarea";
     else if (el.getAttribute("role") === "combobox" || el.getAttribute("aria-autocomplete") === "list") kind = "combobox";
     else if (type === "file") kind = "file";
-    else kind = ["email", "tel", "url", "number", "date"].includes(type) ? type : "text";
+    else kind = ["email", "tel", "url", "number", "date", "password"].includes(type) ? type : "text";
 
     const f = {
       key: stableKey(el, label),

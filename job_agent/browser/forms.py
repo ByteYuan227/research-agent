@@ -299,9 +299,14 @@ def _eeo(choice: str, f: dict, src: str) -> Suggestion | None:
     return Suggestion(DECLINE if choice == "decline" else choice, src)
 
 
+SITE_PASSWORD = "__site_password__"  # replaced by the vault at fill time; Claude never sees passwords
+
+
 def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[str, Path]) -> Suggestion | None:
     kind = field["kind"]
     label = field.get("label") or ""
+    if kind == "password":  # account creation / login: generated and stored by the vault
+        return Suggestion(SITE_PASSWORD, "vault")
     if kind == "file":
         text = f"{label} {field['key']}".lower()
         if re.search(r"resume|\bcv\b", text) and "resume" in files:
@@ -420,7 +425,7 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
         if kind == "file":
             el.set_input_files(str(value), timeout=10000)
             page.wait_for_timeout(800)
-        elif kind in ("text", "email", "tel", "url", "number", "date", "textarea"):
+        elif kind in ("text", "email", "tel", "url", "number", "date", "textarea", "password"):
             el.scroll_into_view_if_needed(timeout=3000)
             el.fill(str(value), timeout=5000)
             if kind == "text" and re.search(r"location|city", field.get("label", "") + key, re.I):

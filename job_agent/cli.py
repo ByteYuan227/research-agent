@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import inbox, notify, prefilter, sources
+from . import inbox, notify, prefilter, sources, vault
 from .apply import ApplyError, applied_today, prepare, resume_path, submit, work_dir
 from .profile import Preferences, ProfileError, has_profile, jobagent_home, load_profile
 from .report import build_report
@@ -354,6 +354,20 @@ def cmd_state(args) -> int:
     return 0
 
 
+def cmd_account(args) -> int:
+    state = load_state()
+    if args.action == "list":
+        out([{"site": a.site, "username": a.username, "created": _when(a.created_at)} for a in state.accounts.values()])
+        return 0
+    acct = state.accounts.get(vault.site_of(args.site or ""))
+    if acct is None:
+        return fail(f"no saved account for {args.site!r}")
+    if not vault.can_reveal():
+        return fail("passwords are never printed in CI; run this on your own computer")
+    out({"site": acct.site, "username": acct.username, "password": acct.password})
+    return 0
+
+
 def cmd_set_run(args) -> int:
     state = load_state()
     state.last_run[args.key] = args.value
@@ -442,6 +456,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=["export", "import"])
     s.add_argument("file")
     s.set_defaults(fn=cmd_state)
+
+    s = sub.add_parser("account", help="site accounts the agent created (list / password, on your own machine)")
+    s.add_argument("action", choices=["list", "password"])
+    s.add_argument("--site")
+    s.set_defaults(fn=cmd_account)
 
     s = sub.add_parser("set-run", help=argparse.SUPPRESS)
     s.add_argument("key")

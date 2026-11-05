@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from . import inbox
+from . import inbox, vault
 from .browser import forms
 from .browser.launch import launch, new_context
 from .profile import Profile, jobagent_home
@@ -145,6 +145,9 @@ def merge_answers(fields: list[dict[str, Any]], doc: dict[str, Any], files: dict
             merged.pop(f["key"])
         else:
             merged[f["key"]] = str(files[token])
+    for f in fields:  # passwords always come from the vault, never from Claude
+        if f["kind"] == "password":
+            merged[f["key"]] = forms.SITE_PASSWORD
     for f in fields:
         if f.get("required") and merged.get(f["key"]) in (None, "", []):
             problems.append(f"required field unanswered: {f['key']} ({f.get('label', '')[:80]})")
@@ -179,6 +182,13 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
         if applied_today(state, profile) >= prefs.max_applications_per_day:
             raise ApplyError("daily application limit reached")
 
+    fill_values = dict(merged)
+    password_keys = [k for k, v in merged.items() if v == forms.SITE_PASSWORD]
+    if password_keys:
+        account = vault.get_or_create(state, form["url"], profile.personal.email)
+        for k in password_keys:
+            fill_values[k] = account.password
+
     result: dict[str, Any]
     with sync_playwright() as pw:
         browser = launch(pw)
@@ -190,7 +200,7 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
                 if f["key"] in current and f.get("options") and not current[f["key"]].get("options"):
                     current[f["key"]]["options"] = f["options"]
             gone = [k for k in merged if k not in current]
-            fill = forms.fill_all(page, list(current.values()), merged)
+            fill = forms.fill_all(page, list(current.values()), fill_values)
             page.screenshot(path=str(wd / "filled.jpg"), full_page=True, type="jpeg", quality=45)
             if fill.errors or fill.missing_required or gone:
                 result = {
@@ -217,11 +227,12 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
             browser.close()
 
     labels = {f["key"]: f.get("label", f["key"]) for f in form["fields"]}
-    given = {
-        labels[k][:120]: (Path(v).name if isinstance(v, str) and v.startswith("/") else v)
-        for k, v in merged.items()
-        if k in labels
-    }
+    def shown(v: Any) -> Any:
+        if v == forms.SITE_PASSWORD:
+            return "(password generated and stored in the encrypted vault)"
+        return Path(v).name if isinstance(v, str) and v.startswith("/") else v
+
+    given = {labels[k][:120]: shown(v) for k, v in merged.items() if k in labels}
     job.attempts += 1
     job.application = {"answers": given, "outcome": result, "at": time.time(), "dry_run": dry_run}
     if dry_run:

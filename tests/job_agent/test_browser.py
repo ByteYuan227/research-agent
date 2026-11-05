@@ -125,3 +125,29 @@ def test_file_answers_are_restricted(site, profile, home):
     answers.write_text(json.dumps({"answers": {"why": "x", "resume": "/etc/passwd"}}))
     result = apply_mod.submit(job, profile, state, answers, dry_run=True)
     assert result["status"] == "incomplete" and any("resume" in p for p in result["problems"])
+
+
+def test_account_creation_uses_vault_password(site, profile, home, monkeypatch):
+    from job_agent import vault
+
+    job = _job(f"{site}/signup.html")
+    state = State()
+    state.jobs[job.id] = job
+    build_resume(profile, None, apply_mod.work_dir(job))
+    prepared = apply_mod.prepare(job, profile)
+    pw_fields = [f for f in prepared["fields"] if f["kind"] == "password"]
+    assert len(pw_fields) == 2 and all(f["suggested"] == "__site_password__" for f in pw_fields)
+
+    answers = apply_mod.work_dir(job) / "answers.json"
+    # Claude cannot choose the password: an attempted override is ignored.
+    answers.write_text(json.dumps({"answers": {"password": "hunter2"}}))
+    result = apply_mod.submit(job, profile, state, answers)
+    assert result["status"] == "submitted", result
+
+    acct = state.accounts["127.0.0.1"]
+    assert acct.username == profile.personal.email and len(acct.password) == 20 and acct.password != "hunter2"
+    shown = state.jobs[job.id].application["answers"]
+    assert acct.password not in json.dumps(shown) and "encrypted vault" in shown["Password"]
+
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    assert not vault.can_reveal()
