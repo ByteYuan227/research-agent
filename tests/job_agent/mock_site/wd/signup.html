@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Create Account</title></head><body>
+<main><h2>Create Account</h2>
+<div class="field-wrapper"><label for="email">Email Address *</label><input id="email" type="email" required></div>
+<div class="field-wrapper"><label for="pw">Password *</label><input id="pw" type="password" required></div>
+<div class="field-wrapper"><label for="pw2">Verify New Password *</label><input id="pw2" type="password" required></div>
+<div class="field-wrapper"><label><input type="checkbox" id="terms" required> I agree to the Terms and Conditions *</label></div>
+<p id="err" role="alert" hidden></p>
+<button type="button" id="create">Create Account</button></main>
+<script>
+document.getElementById("create").onclick = () => {
+  const e = document.getElementById("email").value, p = document.getElementById("pw").value, p2 = document.getElementById("pw2").value;
+  const err = document.getElementById("err");
+  if (!e || !p || p !== p2 || !document.getElementById("terms").checked) { err.hidden = false; err.textContent = "Please complete all required fields."; return; }
+  localStorage.setItem("account", JSON.stringify({email: e, password: p}));
+  location.href = "verify.html";
+};
+</script></body></html>

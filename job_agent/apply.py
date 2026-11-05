@@ -251,7 +251,7 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
         }[result["status"]]
         job.result = result["status"]
         state.set_status(job, "manual", reason)
-    else:
+    else:  # could not fill or submit: keep everything for the candidate to apply by hand
         job.result = result["status"]
-        state.set_status(job, "failed", json.dumps(result)[:400])
+        state.set_status(job, "manual", "automatic application failed: " + json.dumps(result)[:300])
     return result

@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>My Experience</title></head><body>
+<main><h2>My Experience</h2>
+<div class="field-wrapper"><label for="resume">Upload Resume *</label><input type="file" id="resume" required></div>
+<div class="field-wrapper"><label for="why">Why are you interested in this role? *</label><textarea id="why" required></textarea></div>
+<fieldset><legend>Have you ever been convicted of a felony? *</legend>
+  <label><input type="radio" name="felony" value="yes"> Yes</label><label><input type="radio" name="felony" value="no"> No</label></fieldset>
+<p id="err" role="alert"></p>
+<button type="button" id="next">Next</button></main>
+<script>
+document.getElementById("next").onclick = () => {
+  const f = document.getElementById("resume").files[0], why = document.getElementById("why").value;
+  const fel = document.querySelector("input[name=felony]:checked");
+  if (!f || !why || !fel) { document.getElementById("err").textContent = "Errors found: complete all required fields"; return; }
+  localStorage.setItem("step2", JSON.stringify({resume: f.name, why, felony: fel.value}));
+  location.href = "review.html";
+};
+</script></body></html>

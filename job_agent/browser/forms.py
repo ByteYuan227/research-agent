@@ -27,22 +27,31 @@ DECLINE = "__decline__"  # pick the "decline to answer" option
 ACK = "__ack__"  # pick the "I acknowledge / agree / yes" option
 
 OPTIONS_JS = """(key) => {
-  const el = document.querySelector(`[data-ja-key="${CSS.escape(key)}"]`);
-  if (!el) return null;
-  const texts = (nodes) => Array.from(nodes)
-    .map(n => (n.innerText || n.textContent || '').replace(/\\s+/g, ' ').trim()).filter(Boolean);
-  const ctl = el.getAttribute('aria-controls') || el.getAttribute('aria-owns');
-  if (ctl) {
-    const lb = document.getElementById(ctl);
-    if (lb) { const o = texts(lb.querySelectorAll('[role=option]')); if (o.length) return o; }
+  // Tag the visible options of the dropdown belonging to field `key` with data-ja-opt
+  // and return their texts. Handles react-select (Greenhouse), Ashby, and portal-rendered
+  // listboxes such as Workday's.
+  const clean = (s) => (s || '').replace(/\\s+/g, ' ').trim();
+  const visible = (el) => { const st = getComputedStyle(el);
+    if (st.display === 'none' || st.visibility === 'hidden') return false;
+    const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+  document.querySelectorAll('[data-ja-opt]').forEach(e => e.removeAttribute('data-ja-opt'));
+  const el = key ? document.querySelector(`[data-ja-key="${CSS.escape(key)}"]`) : null;
+  const scopes = [];
+  if (el) {
+    const ctl = el.getAttribute('aria-controls') || el.getAttribute('aria-owns');
+    if (ctl && document.getElementById(ctl)) scopes.push(document.getElementById(ctl));
+    const box = el.closest('.select__container, .select-shell, [data-field-path], .field-wrapper, .application-question');
+    if (box) scopes.push(box);
   }
-  const box = el.closest('.select__container, .select-shell, [data-field-path], .field-wrapper, .application-question')
-    || el.parentElement;
-  const own = texts(box.querySelectorAll('[role=option]'));
-  if (own.length) return own;
-  const visible = Array.from(document.querySelectorAll('[role=listbox]')).filter(l => {
-    const r = l.getBoundingClientRect(); return r.width > 0 && r.height > 0; });
-  if (visible.length) return texts(visible[visible.length - 1].querySelectorAll('[role=option]'));
+  scopes.push(...Array.from(document.querySelectorAll(
+    "[role=listbox], [data-automation-id='activeListContainer'], [data-automation-id*='promptOption' i]")).filter(visible));
+  for (const scope of scopes) {
+    const opts = Array.from(scope.querySelectorAll(
+      "[role=option], [data-automation-id='promptOption'], [data-automation-id='menuItem']")).filter(visible);
+    if (opts.length) {
+      return opts.slice(0, 400).map((o, i) => { o.setAttribute('data-ja-opt', String(i)); return clean(o.innerText || o.textContent); });
+    }
+  }
   return [];
 }"""
 
@@ -239,7 +248,7 @@ def _sponsorship(p: Profile, f: dict) -> Suggestion:
 
 TEXTY = ("text", "email", "tel", "url", "textarea")
 AGREEMENT_KINDS = ("checkbox", "radio", "button_group", "select", "combobox", "listbox")
-CHOICE = ("select", "combobox", "radio", "button_group")
+CHOICE = ("select", "combobox", "radio", "button_group", "listbox")
 
 RULES: list[Rule] = [
     Rule(r"^(legal )?first name|given name", TEXTY, lambda p, f, c: Suggestion(p.personal.first_name, "personal.first_name")),
@@ -479,23 +488,16 @@ def combobox_options(page, key: str, limit: int = 80) -> list[str]:
 
 
 def _click_option(page, key: str, wanted: str) -> bool:
+    """Click the option of field `key`'s open dropdown that best matches `wanted`."""
     opts = page.evaluate(OPTIONS_JS, key) or []
     choice = match_option(wanted, opts) if opts else None
     if choice is None:
         return False
-    el = locate(page, key)
-    box = el.locator(
-        "xpath=ancestor::*[contains(@class,'select__container') or contains(@class,'select-shell') or @data-field-path][1]"
-    )
-    candidates = [box.get_by_role("option", name=choice, exact=True), page.get_by_role("option", name=choice, exact=True)]
-    for cand in candidates:
-        try:
-            if cand.count():
-                cand.first.click(timeout=3000)
-                return True
-        except Exception:  # noqa: BLE001
-            continue
-    return False
+    try:
+        page.locator(f'[data-ja-opt="{opts.index(choice)}"]').first.click(timeout=3000)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
@@ -543,6 +545,23 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
                     if not _click_option(page, key, wanted) and not (is_place and _click_option(page, key, query)):
                         page.keyboard.press("Enter")
                 page.wait_for_timeout(300)
+        elif kind == "listbox":
+            wanted = str(value)
+            if value in (DECLINE, ACK):
+                opts = field.get("options") or combobox_options(page, key)
+                wanted = match_option(value, opts) or ""
+                if not wanted:
+                    return f"no option for {value}"
+            el.scroll_into_view_if_needed(timeout=3000)
+            el.click(timeout=4000)
+            page.wait_for_timeout(500)
+            if not _click_option(page, key, wanted):
+                page.keyboard.type(wanted[:30])
+                page.wait_for_timeout(500)
+                if not _click_option(page, key, wanted):
+                    page.keyboard.press("Escape")
+                    return f"no option matches {wanted!r}"
+            page.wait_for_timeout(300)
         elif kind in ("radio", "checkbox_group"):
             values = value if isinstance(value, list) else [value]
             options = field.get("options") or []

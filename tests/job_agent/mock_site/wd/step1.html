@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>My Information</title></head><body>
+<main><h2>My Information</h2>
+<div class="field-wrapper"><label id="hdyh-label">How Did You Hear About Us? *</label>
+  <button type="button" id="hdyh" aria-haspopup="listbox" aria-labelledby="hdyh-label" aria-label="How Did You Hear About Us? Select One Required">Select One</button>
+  <div id="hdyh-pop" role="listbox" hidden>
+    <div role="option">Job Board</div><div role="option">LinkedIn</div><div role="option">Referral</div><div role="option">Other</div>
+  </div></div>
+<div class="field-wrapper"><label for="first">Given Name(s) *</label><input id="first" required></div>
+<div class="field-wrapper"><label for="last">Family Name *</label><input id="last" required></div>
+<div class="field-wrapper"><label for="phone">Phone Number *</label><input id="phone" type="tel" required></div>
+<div class="field-wrapper"><label for="cit">Country of Citizenship *</label><input id="cit" required></div>
+<p id="err" role="alert"></p>
+<button type="button" id="next">Save and Continue</button></main>
+<script>
+const btn = document.getElementById("hdyh"), pop = document.getElementById("hdyh-pop");
+btn.onclick = () => { pop.hidden = !pop.hidden; };
+pop.querySelectorAll("[role=option]").forEach(o => o.onclick = () => { btn.textContent = o.textContent; pop.hidden = true; });
+document.getElementById("next").onclick = () => {
+  const v = id => document.getElementById(id).value;
+  if (btn.textContent === "Select One" || !v("first") || !v("last") || !v("phone") || !v("cit")) {
+    document.getElementById("err").textContent = "Errors found: complete all required fields"; return; }
+  localStorage.setItem("step1", JSON.stringify({hdyh: btn.textContent, first: v("first"), last: v("last"), phone: v("phone"), cit: v("cit")}));
+  location.href = "step2.html";
+};
+</script></body></html>

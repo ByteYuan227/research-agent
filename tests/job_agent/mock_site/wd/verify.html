@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Verify your email</title></head><body>
+<main><h2>Verify your email</h2><p>We sent a verification code to your email. Enter the code below.</p>
+<label for="code">Verification code</label><input id="code" autocomplete="one-time-code">
+<button type="button" id="verify">Verify</button><p id="err" role="alert"></p></main>
+<script>
+document.getElementById("verify").onclick = () => {
+  if (document.getElementById("code").value === "AB12CD34") location.href = "step1.html";
+  else document.getElementById("err").textContent = "Invalid code";
+};
+</script></body></html>

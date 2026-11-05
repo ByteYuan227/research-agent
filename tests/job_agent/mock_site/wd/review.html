@@ -1,0 +1,6 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Review</title></head><body>
+<main><h2>Review</h2><pre id="sum"></pre><button type="button" id="submit">Submit</button></main>
+<script>
+document.getElementById("sum").textContent = localStorage.getItem("step1") + "\n" + localStorage.getItem("step2");
+document.getElementById("submit").onclick = () => { localStorage.setItem("submitted", "yes"); location.href = "done.html"; };
+</script></body></html>

@@ -373,6 +373,57 @@ def cmd_account(args) -> int:
     return 0
 
 
+def cmd_web(args) -> int:
+    from . import web
+
+    if args.action == "close":
+        web.stop()
+        out({"closed": True})
+        return 0
+    state = load_state()
+    try:
+        profile = load_profile()
+        if args.action == "open":
+            if not args.arg:
+                return fail("usage: jobagent web open <job_id>")
+            result = web.open_job(state, _job(state, args.arg), profile)
+        elif args.action == "look":
+            with web.page() as pg:
+                result = web.look(pg, web._current_job(state), profile)
+        elif args.action == "click":
+            result = web.click(state, profile, args.arg or "")
+        elif args.action == "goto":
+            result = web.goto(state, profile, args.arg or "")
+        elif args.action == "fill":
+            answers = {}
+            if args.answers:
+                doc = json.loads(Path(args.answers).read_text(encoding="utf-8"))
+                answers = doc.get("answers", doc)
+            if args.json:
+                doc = json.loads(args.json)
+                answers.update(doc.get("answers", doc))
+            result = web.fill(state, profile, answers, overwrite=args.overwrite)
+        elif args.action == "code":
+            result = web.email_code(state, profile, args.hint or "")
+        elif args.action == "link":
+            result = web.email_link(state, profile, args.match or args.arg or "")
+        elif args.action == "shot":
+            result = {"screenshot": web.screenshot(state, profile, args.arg or "page")}
+        elif args.action == "finish":
+            result = web.finish(state, profile, args.arg or "", args.reason or "")
+        else:
+            return fail(f"unknown web action {args.action}")
+    except web.WebError as exc:
+        save_state(state)
+        return fail(str(exc))
+    except Exception as exc:  # noqa: BLE001 - report browser errors to Claude instead of crashing
+        save_state(state)
+        return fail(f"{type(exc).__name__}: {str(exc).splitlines()[0][:300]}")
+    save_state(state)
+    out(result)
+    return 0
+
+
 def cmd_first_run(args) -> int:
     """Has the agent ever filled a form (dry run or real)? Used to make the first scheduled run a rehearsal."""
     state = load_state()
@@ -474,6 +525,20 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("action", choices=["list", "password"])
     s.add_argument("--site")
     s.set_defaults(fn=cmd_account)
+
+    s = sub.add_parser(
+        "web",
+        help="drive a browser step by step (any application site): open|look|click|fill|goto|code|link|shot|finish|close",
+    )
+    s.add_argument("action", choices=["open", "look", "click", "fill", "goto", "code", "link", "shot", "finish", "close"])
+    s.add_argument("arg", nargs="?", help="job id (open), element ref (click), url (goto), status (finish)")
+    s.add_argument("--answers", help="answers JSON file for fill")
+    s.add_argument("--json", help='answers inline for fill, e.g. \'{"field_key": "value"}\'')
+    s.add_argument("--overwrite", action="store_true", help="fill also refills fields that already have a value")
+    s.add_argument("--hint", help="code: sender/subject hint")
+    s.add_argument("--match", help="link: text the verification URL must contain")
+    s.add_argument("--reason", help="finish: what happened")
+    s.set_defaults(fn=cmd_web)
 
     sub.add_parser("first-run", help="has the agent never filled a form yet?").set_defaults(fn=cmd_first_run)
 

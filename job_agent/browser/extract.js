@@ -130,6 +130,11 @@
     return false;
   }
 
+  // Tags from an earlier run on this page would hide fields from this run.
+  document.querySelectorAll("[data-ja-key], [data-ja-kind]").forEach((e) => {
+    e.removeAttribute("data-ja-key");
+    e.removeAttribute("data-ja-kind");
+  });
   const fields = [];
   const used = new Set();
   function addField(f, tagEl) {
@@ -139,6 +144,7 @@
     used.add(key);
     f.key = key;
     tagEl.setAttribute("data-ja-key", key);
+    tagEl.setAttribute("data-ja-kind", f.kind);
     fields.push(f);
   }
   function stableKey(el, label) {
@@ -267,7 +273,13 @@
     let kind;
     if (el.tagName === "SELECT") kind = "select";
     else if (el.tagName === "TEXTAREA") kind = "textarea";
-    else if (el.getAttribute("role") === "combobox" || el.getAttribute("aria-autocomplete") === "list") kind = "combobox";
+    else if (
+      el.getAttribute("role") === "combobox" ||
+      el.getAttribute("aria-autocomplete") === "list" ||
+      el.getAttribute("aria-haspopup") === "listbox" ||
+      el.getAttribute("data-automation-id") === "searchBox"
+    )
+      kind = "combobox";
     else if (type === "file") kind = "file";
     else kind = ["email", "tel", "url", "number", "date", "password"].includes(type) ? type : "text";
 
@@ -288,6 +300,63 @@
     if (kind === "combobox") f.multiple = /\[\]$/.test(el.name || el.id || "");
     if (kind === "file") f.accept = el.getAttribute("accept") || "";
     addField(f, el);
+  }
+
+  // Dropdowns rendered as buttons that open a listbox (Workday "Select One").
+  for (const btn of document.querySelectorAll("button[aria-haspopup='listbox'], [role='button'][aria-haspopup='listbox']")) {
+    if (!isVisible(btn) || (btn.parentElement && btn.parentElement.closest("[data-ja-key]"))) continue;
+    const container = questionContainer(btn);
+    let label = labelFor(btn, container);
+    const current = textOf(btn);
+    // Workday puts "<label> <current value> Required" in aria-label.
+    label = clean(label.replace(current, " ").replace(/\b(select one|required)\b/gi, " "));
+    addField(
+      {
+        key: (btn.id && !unstableId(btn.id) && btn.id) || fieldPath(btn) || "label:" + slug(label || "listbox"),
+        kind: "listbox",
+        label: stripMarks(label),
+        required: /required/i.test(btn.getAttribute("aria-label") || "") || requiredFlag(btn, label, container),
+        description: description(container, btn),
+      },
+      btn
+    );
+  }
+
+  // Whether each field already has a value (so multi-step flows know what is left).
+  for (const f of fields) {
+    const el = document.querySelector(`[data-ja-key="${CSS.escape(f.key)}"]`);
+    if (!el) continue;
+    let filled = false;
+    switch (f.kind) {
+      case "radio":
+      case "checkbox_group":
+        filled = el.matches("input:checked") || !!el.querySelector("input:checked");
+        break;
+      case "checkbox":
+        filled = !!el.checked;
+        break;
+      case "button_group":
+        filled = !!el.querySelector("[aria-pressed='true'], [aria-checked='true'], [data-selected='true']");
+        break;
+      case "file":
+        filled = !!(el.files && el.files.length);
+        break;
+      case "select":
+        filled = el.selectedIndex > 0 && !/^(select|choose|--)/i.test(clean(el.options[el.selectedIndex].textContent));
+        break;
+      case "listbox":
+        filled = !!textOf(el) && !/^(select one|select|choose|--)/i.test(textOf(el));
+        break;
+      case "combobox": {
+        const box = el.closest(".select__container, .select-shell, [data-field-path], .field-wrapper") || el.parentElement;
+        const chosen = box && box.querySelector("[class*='single-value' i], [class*='singleValue' i], [class*='multi-value' i], [data-automation-id='selectedItem']");
+        filled = !!((el.value && el.value.trim()) || (chosen && textOf(chosen)));
+        break;
+      }
+      default:
+        filled = !!(el.value && String(el.value).trim());
+    }
+    f.filled = filled;
   }
 
   const submit =
