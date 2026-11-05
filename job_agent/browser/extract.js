@@ -249,7 +249,12 @@
       continue;
     }
 
-    const label = labelFor(el, container);
+    let label = labelFor(el, container);
+    // Greenhouse labels file inputs with their button text ("Attach"); use the question title.
+    if (type === "file" && /^(attach|upload|choose|browse|select|drop)\b/i.test(label)) {
+      const title = containerTitle(container, el);
+      if (title && title !== label) label = title;
+    }
     // Unlabelled, unfocusable inputs are validation helpers of custom widgets (react-select).
     if (type !== "file" && el.getAttribute("role") !== "combobox" && (el.getAttribute("aria-hidden") === "true" ||
         (el.getAttribute("tabindex") === "-1" && !label))) continue;
