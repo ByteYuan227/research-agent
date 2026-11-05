@@ -272,3 +272,71 @@ def test_agreements_accepted_but_not_factual_attestations(profile):
 
 def test_no_daily_cap_by_default(profile):
     assert profile.preferences.max_applications_per_day is None
+
+
+# ---------------------------------------------------------------- JD tailoring, memory, export
+
+
+def test_rewrites_keep_the_facts(profile):
+    from job_agent.resume import PlanError, render_text, validate_plan
+
+    plan = validate_plan({"rewrites": {"infra_1": "Reduced LLM serving latency by 35% with continuous batching and a "
+                                                  "paged KV-cache in a PyTorch/CUDA stack."},
+                          "summary_text": "M.S. student building LLM inference systems with PyTorch and Triton."}, profile)
+    text = render_text(profile, plan)
+    assert "Reduced LLM serving latency by 35%" in text and text.startswith("Alex Chen")
+    for bad in ({"rewrites": {"infra_1": "Cut LLM inference latency by 50%."}},          # new number
+                {"rewrites": {"infra_1": "Cut LLM inference latency by 35% at Meta."}},   # new organisation
+                {"summary_text": "Engineer with 5 years of experience at Google."}):
+        with pytest.raises(PlanError):
+            validate_plan(bad, profile)
+
+
+def test_memory_reuses_answers_but_not_essays(profile):
+    from job_agent import memory
+    from job_agent.browser.forms import suggest
+
+    state = State()
+    fields = [
+        {"key": "q1", "kind": "radio", "label": "Are you comfortable working on-site 5 days a week?", "options": ["Yes", "No"]},
+        {"key": "q2", "kind": "textarea", "label": "Why do you want to work at Acme?"},
+        {"key": "q3", "kind": "text", "label": "Which time zone are you in?"},
+    ]
+    learned = memory.remember(state, fields, {"q1": "Yes", "q2": "Because Acme ...", "q3": "Eastern"}, "Acme")
+    assert len(learned) == 2 and len(state.memory) == 2
+    later = {"key": "x", "kind": "button_group", "label": "Are you comfortable working on-site 5 days a week?",
+             "options": ["Yes", "No"]}
+    s = suggest(later, profile, "Other Co", {}, state.memory)
+    assert s.value == "Yes" and s.source == "memory"
+    assert suggest({"key": "y", "kind": "textarea", "label": "Why do you want to work at Other Co?"}, profile,
+                   "Other Co", {}, state.memory) is None
+
+
+def test_export_csv(tmp_path, home):
+    import csv
+
+    from job_agent.cli import main
+    from job_agent.store import save_state
+
+    state = State()
+    j = job(score=90)
+    j.applied_at = time.time()
+    state.set_status(j, "applied", "ok")
+    save_state(state)
+    out = tmp_path / "apps.csv"
+    assert main(["export", str(out)]) == 0
+    rows = list(csv.DictReader(out.open(encoding="utf-8-sig")))
+    assert rows[0]["company"] == "Acme" and rows[0]["status"] == "applied" and rows[0]["score"] == "90"
+
+
+def test_init_creates_profile_once(tmp_path, monkeypatch):
+    from job_agent.cli import main
+
+    monkeypatch.setenv("JOBAGENT_HOME", str(tmp_path / "h"))
+    monkeypatch.delenv("JOBAGENT_PROFILE", raising=False)
+    monkeypatch.delenv("JOBAGENT_PROFILE_YAML", raising=False)
+    assert main(["init"]) == 0
+    p = tmp_path / "h" / "profile.yaml"
+    assert p.exists()
+    p.write_text("edited")
+    assert main(["init"]) == 0 and p.read_text() == "edited"  # never overwritten

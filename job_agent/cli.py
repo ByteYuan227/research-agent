@@ -97,6 +97,35 @@ def cmd_check(args) -> int:
     return 0
 
 
+def cmd_init(args) -> int:
+    """Create ~/.jobagent/profile.yaml from the template (never overwrites)."""
+    import shutil
+
+    home = jobagent_home()
+    home.mkdir(parents=True, exist_ok=True)
+    target = home / "profile.yaml"
+    template = Path(__file__).resolve().parents[1] / "examples" / "profile.example.yaml"
+    created = False
+    if not target.exists():
+        shutil.copy(template, target)
+        target.chmod(0o600)
+        created = True
+    result: dict[str, Any] = {"profile": str(target), "created": created}
+    if args.sample_resume:
+        try:
+            profile = load_profile()
+        except ProfileError as exc:
+            return fail(str(exc))
+        result["sample_resume"] = str(build_resume(profile, None, home / "sample"))
+    result["next"] = [
+        "Edit the profile (or ask Claude Code: 'set up my job agent profile from my resume')",
+        "jobagent check",
+        "bash scripts/setup_secrets.sh  (stores everything as GitHub secrets)",
+    ]
+    out(result)
+    return 0
+
+
 def cmd_keygen(args) -> int:
     print(generate_key())
     return 0
@@ -540,6 +569,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="jobagent", description="Job search agent tools (JSON in, JSON out).")
     sub = p.add_subparsers(dest="cmd", required=True)
 
+    s = sub.add_parser("init", help="create ~/.jobagent/profile.yaml from the template")
+    s.add_argument("--sample-resume", action="store_true", help="also render your full resume as a PDF to check it")
+    s.set_defaults(fn=cmd_init)
     sub.add_parser("check", help="check profile, browser and email setup").set_defaults(fn=cmd_check)
     sub.add_parser("keygen", help="print a new state encryption key").set_defaults(fn=cmd_keygen)
     sub.add_parser("discover", help="fetch open jobs, filter, and list candidates").set_defaults(fn=cmd_discover)
