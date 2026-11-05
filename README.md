@@ -1,196 +1,301 @@
-# 两个 Claude Agent
+# Job Agent · 求职 Agent
 
-这个仓库里有两个基于 Claude 的 Agent：
+**[中文](#中文) · [English](#english)**
 
-| Agent | 做什么 | 文档 |
-|---|---|---|
-| **求职 Agent**（`job_agent/`） | 每天自动找美国实习 / 应届生岗位，Claude 打分，按岗位定制简历（只挑选、不编造），通过 Greenhouse / Lever / Ashby 自动投递，自动读取邮箱验证码，晚上 8 点发日报。运行在 GitHub Actions 上，用你自己的 Claude 订阅额度 | [docs/job-agent.md](docs/job-agent.md) |
-| **深度研究 Agent**（`research_agent/`） | 给它一个问题，它自己拆解、联网搜索、阅读网页、记录证据，输出带引用的研究报告。主循环手写，不依赖任何 Agent 框架 | 下文 |
+A Claude-powered agent that finds US internship / new-grad jobs every day, tailors your resume to each job description, applies on any application site (Greenhouse, Lever, Ashby, Workday, iCIMS, SmartRecruiters, company portals...), reads verification emails, and sends you an evening report. It runs on GitHub Actions with **your own Claude subscription** — no API key needed.
+
+每天自动找美国实习 / 应届岗位，按 JD 定制简历，在任何招聘网站上自动投递（Greenhouse、Lever、Ashby、Workday、iCIMS、SmartRecruiters、公司官网……），自动读取邮箱验证码，每晚发日报。运行在 GitHub Actions 上，用的是**你自己的 Claude 订阅额度**，不需要 API Key。
+
+> This repository also contains a deep-research agent: see [docs/research-agent.md](docs/research-agent.md).
+> 本仓库还有一个深度研究 Agent，见 [docs/research-agent.md](docs/research-agent.md)。
 
 ---
 
-# Research Agent：深度研究 Agent
+## 中文
 
-给它一个问题，它会自己**拆解问题 → 联网搜索 → 阅读网页 → 记录证据 → 交叉核实**，最后输出一份**带引用来源的研究报告**。
+### 它每天做什么
 
-基于 [Claude API](https://platform.claude.com/docs) 和官方 Python SDK `anthropic`，**不依赖 LangChain 等 Agent 框架**。Agent 的主循环、工具调度、错误恢复都是手写的，代码量小，适合用来理解 Agent 是怎么运转的。
-
-```text
-$ research-agent "2026 年国内 AI Agent 方向的实习岗位，对技能有什么要求？"
-
-──────────────── 第 1/30 轮 ────────────────
-💭 先把问题拆成几个方向：招聘公司、岗位职责、技能要求、面试形式……
-研究计划
- ◐ 1. 哪些公司在招 AI Agent 实习生
- ○ 2. 岗位职责通常包括什么
- ○ 3. 技能要求：语言、框架、模型相关知识
- ○ 4. 面试考察重点
-🔍 搜索 AI Agent 实习 招聘 2026
-   找到 10 条结果
-📄 阅读 https://...
-📝 已记录发现 #1（笔记中共 1 条） ……
-```
-
-## 功能
-
-- **自主规划**：先把大问题拆成 3 到 6 个子问题，过程中实时更新每个子问题的进度。
-- **联网检索**：用 Claude 的服务端工具 `web_search` 搜索网页、`web_fetch` 读取全文。
-- **证据笔记**：每条关键发现都连同原文摘录和来源 URL 记进笔记，写报告时按编号引用。
-- **报告输出**：Markdown 格式，结构为核心结论、正文、不确定性与局限、参考来源。
-- **过程可见**：终端里实时显示思考摘要、搜索词、读取的网页和记录的发现。
-- **成本可控**：限制最大轮数和每轮搜索次数，统计 token 用量和预估费用，开启提示词缓存。
-- **出错能恢复**：工具参数不合法时把错误返回给模型让它自己修正；输出被截断时让它接着写；预算快用完时提醒它收尾；模型拒答时自动切换备用模型。
-
-## 快速开始
-
-需要 Python 3.10 及以上，以及一个 [Anthropic API Key](https://platform.claude.com/settings/keys)。
-
-```bash
-git clone https://github.com/ByteYuan227/research-agent.git
-```
-
-```bash
-cd research-agent && python -m venv .venv && source .venv/bin/activate
-```
-
-```bash
-pip install -e .
-```
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
-
-```bash
-research-agent "2026 年国内 AI Agent 方向的实习岗位，对技能有什么要求？"
-```
-
-报告保存在 `reports/<时间>-<问题>/` 目录下：
-
-| 文件 | 内容 |
+| 时间（美东） | 做什么 |
 |---|---|
-| `report.md` | 最终研究报告 |
-| `findings.json` | 研究计划、全部发现、来源列表、token 用量和预估费用 |
-| `transcript.json` | 完整的对话记录，加 `--save-transcript` 才会生成，调试时有用 |
+| 19:17 | 从 SimplifyJobs 美国实习 / 应届岗位库、你关注的公司招聘页拉取所有在招岗位，按类型、实习季、地点、签证限制、发布时间、重复岗位初筛 |
+| 随后 | Claude 逐个读 JD 打分（0–100），要求公民身份 / 安全许可等硬性不符的直接跳过 |
+| 随后 | 对每个达到分数线的岗位：按 JD 定制一页简历 → 打开申请页 → 需要注册就注册（密码自动生成并加密保存）→ 读邮箱验证码 → 逐页填表、上传简历、回答问题 → 提交 |
+| 约 20:00 起 | 在 GitHub 发日报 issue 并 @ 你（可同时发邮件）：投了哪些、哪些需要你手动投、邮箱里的面试邀请 |
 
-### 常用参数
+**不设投递上限**，能投的都投。投不成的（验证码、需要你本人提供的材料等）会把定制好的简历和准备好的回答保存下来，进入日报里的「待你手动投递」清单。
 
-| 参数 | 默认值 | 说明 |
-|---|---|---|
-| `--effort` | `high` | 思考力度，可选 `low` `medium` `high` `xhigh` `max`。越高越仔细，也越贵 |
-| `--max-turns` | `30` | 最多调用模型的轮数，是控制成本最直接的参数 |
-| `--searches-per-turn` | `5` | 每轮最多搜索次数 |
-| `--fetches-per-turn` | `5` | 每轮最多读取的网页数 |
-| `--model` | `claude-opus-5-5` | 模型 ID |
-| `--hide-thinking` | 关 | 不显示思考摘要 |
-| `--no-fallbacks` | 关 | 关闭拒答时自动切换备用模型 |
-| `-o` | `reports` | 输出目录 |
+### 快速开始（3 步）
 
-### 费用
+> 前提：Claude Pro / Max 订阅；GitHub 账号；电脑上装了 Python 3.10+、Node.js 18+ 和 [Claude Code](https://code.claude.com/docs)（在 VS Code 里用过 Claude Code 就已经有了）。
 
-调用 Claude API 按用量计费，和 Claude Pro/Max 订阅是两套账单。一次研究的费用主要取决于轮数和读取的网页数量，运行结束时终端会显示本次的 token 用量和预估费用。想先低成本试一下，可以这样跑：
+**第 1 步：仓库设为私有。** GitHub 仓库页 → Settings → General → 最下方 Change visibility → Make private。（公开也能用，但日报所有人可见。）
 
-```bash
-research-agent "你的问题" --effort medium --max-turns 10
-```
+**第 2 步：让 Claude 帮你生成个人资料。** 克隆仓库，在仓库目录里打开 Claude Code（VS Code 或终端都行），然后说：
 
-## 它是怎么工作的
+> 帮我配置求职 Agent，我的简历在 ~/Downloads/resume.pdf
 
-```mermaid
-flowchart TD
-    Q[用户问题] --> M[messages 对话历史]
-    M --> C["调用 Claude（流式）<br/>模型 + 系统提示词 + 工具列表"]
-    C --> S{stop_reason}
-    S -- "tool_use" --> T["本地执行工具<br/>update_plan / record_finding / review_findings"]
-    T -- "tool_result 追加到历史" --> M
-    S -- "pause_turn" --> M
-    S -- "max_tokens" --> R["截断恢复<br/>工具调用不执行，文本让模型接着写"]
-    R --> M
-    S -- "end_turn" --> F[最终报告]
-    S -- "refusal" --> X[结束]
-    C -. "服务端执行" .-> W["web_search / web_fetch<br/>结果直接出现在回复里"]
-```
+Claude 会读你的简历、问你几个简历上没有的问题（签证、是否需要担保、犯罪记录等事先声明、求职偏好），生成 `~/.jobagent/profile.yaml` 并检查格式。
 
-核心就是 [`research_agent/agent.py`](research_agent/agent.py) 里的一个循环：
-
-1. 把对话历史 `messages` 发给 Claude，带上系统提示词和工具定义。
-2. Claude 的回复里可能有：
-   - **服务端工具调用**（`web_search`、`web_fetch`）：在 Anthropic 的服务器上执行，结果已经包含在回复里，本地什么都不用做。
-   - **客户端工具调用**（`tool_use`）：由我们在本地执行，再把结果作为 `tool_result` 发回去。
-3. 把 Claude 的回复**原样**追加到历史，再追加工具结果，然后进入下一轮。
-4. Claude 不再调用工具、直接输出文字时，这段文字就是最终报告。
-
-### 两类工具
-
-| 工具 | 在哪执行 | 作用 |
-|---|---|---|
-| `web_search` | Anthropic 服务器 | 搜索网页 |
-| `web_fetch` | Anthropic 服务器 | 读取网页全文，带引用定位 |
-| `update_plan` | 本地 | 创建或更新研究计划（子问题和状态） |
-| `record_finding` | 本地 | 记录一条发现：结论、证据摘录、来源、可信度 |
-| `review_findings` | 本地 | 按子问题汇总全部发现并给来源编号，写报告前调用 |
-
-本地工具都操作同一个 `Notebook` 对象，它就是 Agent 在这次研究中的工作记忆，代码在 [`research_agent/tools.py`](research_agent/tools.py)。
-
-## 设计要点
-
-这些是写这个 Agent 时做的具体取舍，也是理解 Agent 工程的关键点：
-
-1. **对话历史只追加、不修改**。每轮把模型回复的完整 `content` 原样追加，包括思考块、服务端工具块和备用模型切换块，不做删改。这样提示词缓存能命中，模型的思考块也保持有效。
-2. **动态信息不放进系统提示词**。今天的日期写在第一条用户消息里，系统提示词每轮都一样，可以被缓存。
-3. **中途指令用 system 消息追加**。预算快用完时，在历史末尾追加一条 `role: "system"` 的收尾提醒，而不是修改开头的系统提示词，避免整段缓存失效。
-4. **一轮的多个工具结果放在同一条消息里返回**，并且用 `tool_use_id` 一一对应。拆成多条消息会让模型逐渐不再并行调用工具。
-5. **工具参数先校验再执行**。请求是流式的，工具参数开启了 `eager_input_streaming`，API 不再替我们校验，所以每个参数都先过一遍 pydantic 模型。校验失败时返回 `is_error: true` 的结果，让模型自己修正后重试。
-6. **区分不同的停止原因**：
-   - `pause_turn`：服务端工具跑太久被暂停，原样重发即可。
-   - `max_tokens`：如果截断发生在工具调用里，这次调用不执行；如果截断发生在报告正文里，让模型接着写，再把前后两段拼起来。
-   - `refusal`：直接结束，不执行这一轮的任何工具。
-7. **拒答兜底**：开启服务端 `fallbacks: "default"`。安全分类器误拒时，API 会在同一次请求里换备用模型重跑。
-8. **成本可见**：累计每轮的 token 和搜索次数，按模型价格估算费用。
-
-## 项目结构
-
-```text
-research_agent/
-  agent.py     Agent 主循环：调用模型、分发工具、处理各种停止原因、统计用量
-  tools.py     工具定义：服务端 web 工具 + 本地工具（Notebook）+ 参数校验
-  prompts.py   系统提示词和中途提醒
-  cli.py       命令行界面，用 rich 显示实时进度
-  output.py    把报告和笔记保存到磁盘
-tests/
-  fakes.py     模拟的 Anthropic 客户端，按脚本返回回复，测试不需要 API Key
-  test_agent.py / test_tools.py
-```
-
-## 运行测试
-
-测试用模拟客户端覆盖了主循环的所有分支，不需要 API Key，也不产生费用。
+**第 3 步：一条命令把配置存进 GitHub。** 需要 [GitHub CLI](https://cli.github.com)，先运行 `gh auth login`。然后运行下面的脚本，它会检查资料、生成加密密钥，并提示你粘贴 `claude setup-token` 生成的订阅令牌：
 
 ```bash
-pip install -e '.[dev]' && pytest
+bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 ```
 
-## 在代码里调用
+完成。去 GitHub → Actions → **job-hunt** → Run workflow，勾选 **dry_run** 先演练一次（只准备、不提交），然后在 Issues 里看日报。之后每天自动运行；**第一次定时运行也会自动按演练处理**，第二天才开始正式投递。
 
-```python
-from research_agent import AgentConfig, ResearchAgent
+### 详细配置步骤（手动方式）
 
-agent = ResearchAgent(config=AgentConfig(effort="medium", max_turns=15))
-result = agent.run("RAG 和长上下文各适合什么场景？")
-print(result.report)
-print(result.notebook.sources())
-print(result.usage.estimated_cost("claude-opus-5-5"))
+不想用脚本的话，按下面做，效果一样。
+
+1. **安装**
+   ```bash
+   git clone https://github.com/<你的用户名>/research-agent.git
+   ```
+   ```bash
+   cd research-agent && python -m venv .venv && source .venv/bin/activate
+   ```
+   ```bash
+   pip install -e . && python -m playwright install chromium
+   ```
+2. **创建资料**：运行 `jobagent init`，它会生成 `~/.jobagent/profile.yaml`。按里面的中文注释填写，然后运行 `jobagent check` 直到显示 `"profile": "ok"`。
+3. **订阅令牌**：在终端运行 `claude setup-token`，浏览器里授权后会输出一个 `sk-ant-oat…` 开头的令牌，有效期一年。
+4. **加密密钥**：运行 `python -m job_agent keygen`，复制输出。
+5. **（推荐）Gmail 应用专用密码**：Google 账号开启两步验证 → 安全 → 应用专用密码，创建一个。用于读取验证码、跟踪面试邀请、给你发邮件版日报（附带待手动投递岗位的定制简历）。
+6. **添加 Secrets**：仓库 → Settings → Secrets and variables → Actions → New repository secret：
+
+| Secret | 内容 | 必需 |
+|---|---|---|
+| `JOBAGENT_PROFILE_YAML` | 整个 profile.yaml 的内容 | ✅ |
+| `CLAUDE_CODE_OAUTH_TOKEN` | 第 3 步的令牌 | ✅（或用 `ANTHROPIC_API_KEY` 按量付费） |
+| `JOBAGENT_STATE_KEY` | 第 4 步的密钥（**丢了就读不回历史记录**，请另存一份） | ✅ |
+| `JOBAGENT_IMAP_USER` | Gmail 地址 | 推荐 |
+| `JOBAGENT_IMAP_PASSWORD` | Gmail 应用专用密码 | 推荐 |
+
+7. **演练**：Actions → job-hunt → Run workflow → 勾选 dry_run。
+
+### 个人资料：怎么让 Agent 按你的情况回答
+
+`profile.yaml` 是 Agent 唯一的事实来源。它不会编造任何经历、数字或身份信息。
+
+| 部分 | 用途 |
+|---|---|
+| `personal`、`education`、`experience`、`projects`、`skills` | 简历素材。每条 bullet 有 id，Agent 按 JD 挑选、排序，可以换个说法贴近 JD 用词，但程序会检查：**不能出现原文没有的数字、资料里没有的技术或公司名** |
+| `work_authorization` | 是否公民 / 绿卡、国籍、签证类型、是否需要担保。非公民不会被答成公民，要求公民身份的岗位自动过滤 |
+| `declarations` | 事先声明：犯罪记录、待决指控、背调 / 药检同意、竞业协议、亲属在职、政府官员。遇到这类问题直接作答 |
+| `custom_answers` | 自定义问答：`{match: "正则", answer: "答案"}`，匹配到的问题优先用你的答案，覆盖所有内置规则 |
+| `about_me` | 几条自由文本事实，Claude 回答其他问题时可以引用 |
+| `answers` | 常用回答（开始日期、是否愿意搬迁、薪资期望、EEO 等），以及：服务条款 / 仲裁 / 隐私协议自动同意（`accept_agreements`），AI 写回答（`write_answers`） |
+| `preferences` | 岗位类型、实习季、关键词、地点、排除公司、最低分（`min_score`）、每天上限（`max_applications_per_day: null` 表示不限） |
+
+Claude 回答过的非标准问题会被记住（「学到的回答」），下次遇到同样的问题自动使用，日报里会列出来；答错了就在 `custom_answers` 里写正确答案覆盖。
+
+### 日报和「待你手动投递」清单
+
+- 每天一个 issue，旧的自动关闭。待手动投递的岗位是**累计清单**，每项带申请链接和原因；**投完在 issue 里勾选**，下次运行记为「你已手动投递」。
+- 定制简历和准备好的回答：
+  - 配了邮箱：当天新增岗位的简历作为附件发到邮箱；
+  - 私有仓库：当次运行页面底部的 Artifacts（保留 14 天）；
+  - 任何仓库：加密保存在 `jobagent-data` 分支，在你电脑上解开：
+    ```bash
+    git fetch origin jobagent-data && git show FETCH_HEAD:materials.enc > materials.enc
+    ```
+    ```bash
+    JOBAGENT_STATE_KEY=<你的密钥> jobagent materials open materials.enc
+    ```
+- 导出所有投递记录为表格：先用同样方式取出 `state.enc`，运行 `jobagent state import state.enc`，再运行 `jobagent export applications.csv`。
+- Agent 注册的网站账号：`jobagent account list`；查看某个网站的密码：`jobagent account password --site <域名>`（只能在你自己电脑上运行）。
+
+### 额度用完、令牌过期怎么办
+
+| 情况 | Agent 的处理 | 你需要做 |
+|---|---|---|
+| Claude 订阅额度用完（5 小时 / 每周上限） | 立刻停止，日报顶部写明，没投完的岗位保留，下次运行接着做 | 一般不用管；想多投可以升级订阅 |
+| API Key 余额不足 | 同上 | 到 Claude Console 充值 |
+| 令牌失效或过期（一年有效） | 停止并在日报提示 | 重新运行 `claude setup-token`，更新 Secret `CLAUDE_CODE_OAUTH_TOKEN` |
+| 运行时间超过 5 小时 | 停止开始新的投递，剩下的明天继续 | 不用管 |
+| 遇到图形验证码 | 不破解，进入手动清单 | 手动投递 |
+
+订阅额度和你平时用 Claude 是共用的。投递量大的日子，晚上那几个小时你自己用 Claude 可能会更快碰到上限。
+
+### 在自己电脑上运行（不用 GitHub）
+
+已登录 Claude Code、填好 `~/.jobagent/profile.yaml` 后：
+
+```bash
+JOBAGENT_DRY_RUN=1 bash scripts/daily_run.sh
 ```
 
-如果想把进度显示到别的界面（比如网页），继承 `Hooks` 并重写需要的回调即可，参考 `cli.py` 里的 `ConsoleHooks`。
+去掉 `JOBAGENT_DRY_RUN=1` 就是正式投递。查看结果：
 
-## 可以继续扩展的方向
+```bash
+jobagent report
+```
 
-- **并行子 Agent**：每个子问题交给一个独立的子 Agent 研究，主 Agent 只负责汇总，研究更快，主上下文也更干净。
-- **评测**：准备一批有标准答案的问题，自动给报告的准确性和引用质量打分，再用分数来调提示词。
-- **Web 界面**：用 FastAPI 加 SSE 把 `Hooks` 的事件推到浏览器。
-- **本地知识库**：增加一个检索本地 PDF 或笔记的工具，让 Agent 同时使用网上和私有资料。
-- **长任务记忆**：研究很长时开启上下文压缩（compaction），或把笔记持久化，支持中断后继续。
+### 它不会做的事
+
+- 不编造任何事实，也不替你做虚假声明（比如「我声明没有使用 AI」）。需要这类声明的岗位会准备好全部材料，转给你手动处理。
+- 不破解验证码，不绕过网站的机器人检测。
+- 不登录你的 LinkedIn / Indeed（容易封号），岗位来源也不包括它们。
+- 个人信息只会填进招聘方自己的网站或已知的招聘系统。岗位页面里的「忽略之前的指令」之类文字会被当作数据，不会执行。
+- 密码由程序生成和填写，Claude 看不到。
+
+### 常用命令
+
+| 命令 | 作用 |
+|---|---|
+| `jobagent init` / `jobagent check` | 创建资料模板 / 检查配置 |
+| `jobagent discover` | 拉取并筛选岗位 |
+| `jobagent status` / `jobagent report` | 统计 / 当天日报 |
+| `jobagent materials open materials.enc` | 解开待手动投递岗位的材料 |
+| `jobagent export applications.csv` | 导出投递记录 |
+| `jobagent memory` | 查看学到的回答 |
+| `jobagent --help` | 全部命令 |
+
+设计和实现细节见 [docs/job-agent.md](docs/job-agent.md)。
+
+---
+
+## English
+
+### What it does every day
+
+| Time (US Eastern) | What happens |
+|---|---|
+| 7:17 pm | Pulls every open role from the SimplifyJobs US internship / new-grad lists and the career pages of companies you follow; filters by job type, term, location, visa restrictions, recency and duplicates |
+| then | Claude reads each job description and scores it 0–100; hard blockers (citizenship, clearance, no sponsorship) are skipped |
+| then | For every job above your threshold: tailors a one-page resume to the JD → opens the application → signs up if needed (generated password, stored encrypted) → reads the email verification code → fills every step, uploads the resume, answers the questions → submits |
+| ~8 pm onward | Posts a daily report issue that @-mentions you (and optionally emails it): what was submitted, what needs you, interview invitations in your inbox |
+
+There is **no daily cap**. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**.
+
+### Quick start (3 steps)
+
+> You need: a Claude Pro / Max subscription, a GitHub account, and Python 3.10+, Node.js 18+ and [Claude Code](https://code.claude.com/docs) on your computer (already there if you use Claude Code in VS Code).
+
+**1. Make the repository private.** Repository → Settings → General → Change visibility → Make private. (Public works too, but the reports are visible to everyone.)
+
+**2. Let Claude build your profile.** Clone the repository, open Claude Code in it (VS Code or terminal) and say:
+
+> Set up my job agent profile from my resume at ~/Downloads/resume.pdf
+
+Claude reads your resume, asks what a resume does not say (visa status, sponsorship, background declarations, preferences), writes `~/.jobagent/profile.yaml` and validates it.
+
+**3. Store the configuration in GitHub with one command.** It needs the [GitHub CLI](https://cli.github.com) (run `gh auth login` first). The script validates the profile, creates the encryption key and asks you to paste the subscription token from `claude setup-token`:
+
+```bash
+bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
+```
+
+Done. Go to GitHub → Actions → **job-hunt** → Run workflow with **dry_run** checked to rehearse (prepares everything, submits nothing), then read the report under Issues. From then on it runs daily; **the first scheduled run is always a rehearsal**, so real submissions start the day after.
+
+### Detailed setup (manual)
+
+1. **Install**
+   ```bash
+   git clone https://github.com/<your-username>/research-agent.git
+   ```
+   ```bash
+   cd research-agent && python -m venv .venv && source .venv/bin/activate
+   ```
+   ```bash
+   pip install -e . && python -m playwright install chromium
+   ```
+2. **Profile**: `jobagent init` creates `~/.jobagent/profile.yaml`. Fill it in (every field is commented), then run `jobagent check` until it reports `"profile": "ok"`.
+3. **Subscription token**: run `claude setup-token`, approve in the browser, and copy the `sk-ant-oat…` token (valid for one year).
+4. **Encryption key**: run `python -m job_agent keygen` and copy the output.
+5. **(Recommended) Gmail app password**: Google Account (2-step verification on) → Security → App passwords. Used to read verification codes, track interview invitations and email you the report (with tailored resumes for the apply-by-hand list attached).
+6. **Secrets**: Repository → Settings → Secrets and variables → Actions → New repository secret:
+
+| Secret | Value | Required |
+|---|---|---|
+| `JOBAGENT_PROFILE_YAML` | the whole profile.yaml | ✅ |
+| `CLAUDE_CODE_OAUTH_TOKEN` | token from step 3 | ✅ (or `ANTHROPIC_API_KEY` for pay-as-you-go) |
+| `JOBAGENT_STATE_KEY` | key from step 4 (**keep a copy: without it the history cannot be read**) | ✅ |
+| `JOBAGENT_IMAP_USER` | your Gmail address | recommended |
+| `JOBAGENT_IMAP_PASSWORD` | the Gmail app password | recommended |
+
+7. **Rehearse**: Actions → job-hunt → Run workflow → check dry_run.
+
+### Your profile: how answers are tailored to you
+
+`profile.yaml` is the agent's only source of facts; it never invents experience, numbers or eligibility.
+
+| Section | Used for |
+|---|---|
+| `personal`, `education`, `experience`, `projects`, `skills` | Resume material. Every bullet has an id; the agent selects and orders them per job and may reword them in the JD's language — checked so that **no number or technology/company name absent from your profile can appear** |
+| `work_authorization` | Citizenship / permanent residency, citizenships, visa type, sponsorship. Non-citizens are never answered as citizens; citizenship-only jobs are filtered out |
+| `declarations` | Background questions answered in advance: criminal record, pending charges, background-check / drug-test consent, non-compete, relatives at the company, government official |
+| `custom_answers` | Your own answers: `{match: "<regex>", answer: "..."}`; they override every built-in rule |
+| `about_me` | Free-form facts Claude may use for other questions |
+| `answers` | Common answers (start date, relocation, salary, EEO…), plus automatic acceptance of terms / arbitration / privacy notices (`accept_agreements`) and AI-written answers (`write_answers`) |
+| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited) |
+
+Answers Claude gives to non-standard questions are remembered and reused for the same question later (listed in the report as learned answers). If one is wrong, add the correct answer to `custom_answers`.
+
+### The report and the apply-by-hand checklist
+
+- One issue per day; older ones are closed. Jobs waiting for you form a **cumulative checklist** with links and reasons. **Tick a box once you have applied**: the next run records it as applied by you.
+- Tailored resumes and prepared answers:
+  - with email configured: today's resumes are attached to the email report;
+  - private repositories: the run's Artifacts (kept 14 days);
+  - any repository: encrypted on the `jobagent-data` branch. Unpack them on your computer:
+    ```bash
+    git fetch origin jobagent-data && git show FETCH_HEAD:materials.enc > materials.enc
+    ```
+    ```bash
+    JOBAGENT_STATE_KEY=<your key> jobagent materials open materials.enc
+    ```
+- All applications as a spreadsheet: fetch `state.enc` the same way, run `jobagent state import state.enc`, then `jobagent export applications.csv`.
+- Accounts the agent created: `jobagent account list`; a site's password: `jobagent account password --site <domain>` (your own computer only).
+
+### When Claude's quota or token runs out
+
+| Situation | What the agent does | What you do |
+|---|---|---|
+| Subscription limit reached (5-hour / weekly) | Stops at once, says so at the top of the report, keeps unfinished jobs for the next run | Usually nothing; upgrade the plan to apply to more per day |
+| API credit exhausted | Same | Top up in the Claude Console |
+| Token invalid or expired (valid one year) | Stops and says so in the report | Run `claude setup-token` again and update `CLAUDE_CODE_OAUTH_TOKEN` |
+| Run longer than 5 hours | Stops starting new applications; the rest continue tomorrow | Nothing |
+| CAPTCHA | Never solved; the job goes on your checklist | Apply by hand |
+
+The subscription quota is shared with your own use of Claude, so on heavy days you may hit your limit sooner in the evening.
+
+### Running on your own computer (no GitHub)
+
+With Claude Code logged in and `~/.jobagent/profile.yaml` filled in:
+
+```bash
+JOBAGENT_DRY_RUN=1 bash scripts/daily_run.sh
+```
+
+Drop `JOBAGENT_DRY_RUN=1` to apply for real. See the results:
+
+```bash
+jobagent report
+```
+
+### What it will not do
+
+- Invent facts, or make false statements for you (such as certifying that no AI was used). Jobs that require one are prepared and handed to you.
+- Solve CAPTCHAs or evade bot detection.
+- Log in to LinkedIn / Indeed (account bans); they are not job sources either.
+- Type personal data anywhere but the employer's own site or a known applicant system. Text on job pages ("ignore previous instructions"…) is treated as data, never as instructions.
+- Show passwords to Claude: they are generated and typed by the program.
+
+### Command cheat sheet
+
+| Command | What it does |
+|---|---|
+| `jobagent init` / `jobagent check` | create the profile template / check the setup |
+| `jobagent discover` | fetch and filter jobs |
+| `jobagent status` / `jobagent report` | counts / today's report |
+| `jobagent materials open materials.enc` | unpack materials for the apply-by-hand list |
+| `jobagent export applications.csv` | all applications as CSV |
+| `jobagent memory` | learned answers |
+| `jobagent --help` | every command |
+
+Design and implementation notes (Chinese): [docs/job-agent.md](docs/job-agent.md).
 
 ## License
 
