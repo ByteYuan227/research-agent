@@ -1,190 +1,83 @@
-# 求职 Agent：自动找岗位、定制简历、投递、每日汇报
+# 求职 Agent：设计与实现
 
-这个 Agent 每天晚上自动运行一次，面向**美国的实习和应届生岗位**：
-
-1. **找岗位**：从 SimplifyJobs 维护的美国实习 / 应届生岗位库，以及你指定公司的 Greenhouse、Lever、Ashby 招聘页，拉取所有在招岗位。
-2. **初筛**：按岗位类型、实习季、地点、发布时间、签证限制、职级关键词过滤，去掉重复，留下最值得细看的几十个。
-3. **Claude 精读打分**：Claude 逐个阅读岗位描述，按技能、级别、兴趣、地点打 0 到 100 分。会排除硬性不符的岗位，比如要求美国公民、明确不提供签证担保。
-4. **定制简历**：针对每个要投的岗位，从你的简历素材里挑最相关的经历和技能，生成一页 PDF。**只挑选和排序，绝不编造。**
-5. **自动投递**：打开岗位的申请表，读出所有问题，标准问题按你的资料作答，其余问题 Claude 只依据你的资料回答，然后上传简历、提交。如果需要邮箱验证码，会自动读取你的邮箱完成验证。
-6. **每日汇报**：每天晚上 8 点左右在 GitHub 上发一条日报，并 @ 你：投了哪些岗位、哪些需要你手动处理、邮箱里有没有面试邀请。
-
-运行在 GitHub Actions 上，用的是**你自己的 Claude 订阅额度**（Claude Code 的订阅令牌），不需要 API Key。
-
-## 它不会做的事
-
-| 情况 | 处理方式 |
-|---|---|
-| 申请表里有你的资料回答不了的必答题（推荐人、成绩单等） | 不瞎填，列进「需要你手动处理」 |
-| 雇主明确限制用 AI 撰写申请内容 | 不替你写回答，转人工 |
-| 必须同意仲裁协议才能提交 | 默认不替你同意，转人工（可在资料里打开） |
-| 遇到图形验证码 / 滑块 | 不破解，转人工 |
-| Workday、TikTok/字节、公司自建招聘系统 | 仍然定制好简历，但转人工投递（这些系统需要注册账号，自动化很不稳定） |
-| 岗位页面里写着「忽略之前的指令」之类的文字 | 当作数据，不执行（防提示注入） |
-| LinkedIn、Indeed、Handshake | 不使用：这些平台禁止自动化，容易封号 |
-
-另外有两条保护：每天最多投递的数量有上限（默认 10 个），只投 Claude 打分不低于阈值（默认 75）的岗位。
-
-## 配置步骤（大约 15 分钟）
-
-### 1. 把仓库改成私有（强烈建议）
-
-GitHub 仓库页面 → Settings → General → 最下方 Danger Zone → Change visibility → Make private。
-
-公开仓库也能用：个人资料放在加密的 Secrets 里，投递记录加密保存，日报会自动隐去打分理由和你的回答。但日报 issue 和运行记录在公开仓库里所有人都能看到，私有仓库更稳妥。私有仓库每月有 2000 分钟免费的 Actions 时长，每天跑一次足够用。
-
-### 2. 填写个人资料
-
-把 [`examples/profile.example.yaml`](../examples/profile.example.yaml) 复制一份到**仓库之外**的地方，比如 `~/.jobagent/profile.yaml`，把示例人物换成你自己的信息。文件里每一项都有中文注释。要点：
-
-- **每条经历多写几个 bullet**：Agent 会根据岗位挑最相关的 2 到 4 条，素材越多，定制效果越好。
-- **签证信息要如实填**：`work_authorization` 决定了怎么回答「是否需要签证担保」。F-1 学生通常填 `authorized_to_work_in_us: true`、`requires_sponsorship_future: true`。
-- **筛选条件**：`preferences` 里是求职偏好，比如岗位类型、实习季、关键词、最低分、每天上限。
-
-不想手动填的话，可以把简历发给 Claude，让它按这个模板转成 YAML，你再检查一遍。
-
-在本地检查格式：
-
-```bash
-pip install -e . && JOBAGENT_PROFILE=~/.jobagent/profile.yaml jobagent check
-```
-
-### 3. 生成 Claude 订阅令牌
-
-在本地终端运行下面的命令（需要已安装 Claude Code，在 VS Code 里用过 Claude Code 的话通常已经装好了），按提示登录后，会输出一个以 `sk-ant-oat` 开头的令牌：
-
-```bash
-claude setup-token
-```
-
-### 4. 生成状态加密密钥
-
-```bash
-python -m job_agent keygen
-```
-
-### 5.（推荐）Gmail 应用专用密码
-
-用于自动读取验证码、跟踪面试邀请，也可以用来给你发邮件版日报。前提是 Google 账号开启了两步验证，然后在 Google 账号 → 安全 → 应用专用密码，创建一个 16 位密码。
-
-### 6. 把这些添加到仓库的 Secrets
-
-仓库 → Settings → Secrets and variables → Actions → New repository secret：
-
-| Secret 名称 | 内容 | 必需 |
-|---|---|---|
-| `JOBAGENT_PROFILE_YAML` | 整个 profile.yaml 文件的内容 | ✅ |
-| `CLAUDE_CODE_OAUTH_TOKEN` | 第 3 步得到的令牌 | ✅（或者用 `ANTHROPIC_API_KEY` 按量付费） |
-| `JOBAGENT_STATE_KEY` | 第 4 步得到的密钥 | ✅（不配的话 Agent 记不住投过哪些岗位） |
-| `JOBAGENT_IMAP_USER` | 你的 Gmail 地址 | 推荐 |
-| `JOBAGENT_IMAP_PASSWORD` | 第 5 步的应用专用密码 | 推荐 |
-
-用 GitHub CLI 的话也可以一条命令设置：
-
-```bash
-gh secret set JOBAGENT_PROFILE_YAML < ~/.jobagent/profile.yaml
-```
-
-第 2 到 6 步也可以用一个脚本完成（需要已登录的 GitHub CLI）。它会检查资料格式、生成密钥，并提示你粘贴令牌：
-
-```bash
-bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
-```
-
-### 7. 先演练一次
-
-仓库 → Actions → **job-hunt** → Run workflow，勾选 **dry_run**。演练模式会完整走一遍流程，但**不会真正提交**任何申请。这一点由程序强制保证，不依赖 Claude 是否遵守指令。跑完后去 Issues 页面看日报，确认打分和简历都合理。
-
-就算你跳过这一步，**第一次定时运行也会自动按演练处理**：先给你一份「已填好、未提交」的日报，第二天才开始正式投递。
-
-之后每天美东时间 **19:17** 自动运行，**20:00 左右**收到日报。想暂停的话：Actions → job-hunt → 右上角 `···` → Disable workflow。
-
-## 日常使用
-
-- **看日报**：每天的 issue 会 @ 你，GitHub App 和邮箱都会收到通知。
-- **处理「需要你手动处理」的岗位**：日报里有链接和原因。私有仓库的话，定制好的简历在当天运行记录的 Artifacts 里。
-- **调整策略**：改 `JOBAGENT_PROFILE_YAML` 里的 `preferences`：
-  - 投得太少：降低 `min_score`，放宽 `title_exclude`，或增加 `keywords`
-  - 投得太多：提高 `min_score`，或降低 `max_applications_per_day`
-  - 只准备材料、不自动提交：设 `auto_apply: false`
-- **指定模型**：在仓库 Settings → Variables 里添加 `JOBAGENT_CLAUDE_MODEL`（比如 `claude-opus-5-5`）。不设置就用订阅的默认模型。
-- **在本地跑**：设置好 `~/.jobagent/profile.yaml` 后，在仓库目录打开 Claude Code，说「按 job-hunt 技能跑一次今天的求职」即可。
-- **额外想投的岗位**：在别处看到的岗位链接，放进 `preferences.sources.extra_urls`，第二天就会被纳入打分和投递。
-
-### 账号、密码和验证码
-
-- **创建账号**：申请表里出现密码框时（也就是需要注册账号的网站），程序会为这个网站生成一个 20 位的强密码，用你的邮箱作为用户名，填好后保存在加密状态里。**Claude 看不到、也不能指定密码**，它看到的只是一个占位符。
-- **查看保存的账号**：在你自己电脑上，先把状态解密到本地，再列出账号或查看某个网站的密码：
-
-  ```bash
-  JOBAGENT_STATE_KEY=<你的密钥> jobagent state import state.enc
-  ```
-
-  ```bash
-  jobagent account list
-  ```
-
-  ```bash
-  jobagent account password --site <网站域名>
-  ```
-
-  其中 `state.enc` 来自仓库的 `jobagent-data` 分支。查看密码的命令在 GitHub Actions 里会直接拒绝执行，密码不会出现在日志中。
-- **邮箱验证码**：配置了 Gmail 应用专用密码后，提交时如果网站要求输入邮箱验证码，程序会在 2 分钟内从收件箱读取验证码并自动填写。程序只读邮件，不会发送、删除或标记任何邮件。
-
-## 已经验证过什么
-
-开发时用**虚构的示例资料**，在真实的招聘网站上做了以下测试。**所有测试都没有提交任何申请。**
-
-| 测试 | 结果 |
-|---|---|
-| 读取 20 个真实申请表的结构（Greenhouse / Lever / Ashby） | 20/20 成功读取 |
-| 用示例资料填写这 20 个表单，不提交 | 17/20 填完且页面没有报错；剩下 3 个要求上传成绩单或作品集，会按设计转人工 |
-| 全流程演练：当天最新岗位 → 筛选 → 简历 → 读表 → 填表 | 8/8 填写成功 |
-| Claude 按技能手册独立跑完整流程（模拟岗位） | 打分正确（安全许可岗位被排除），识别并忽略了岗位描述里植入的提示注入，只依据资料写出申请回答 |
-| 本地模拟页面：提交、邮箱验证码、注册账号、强制演练 | 单元测试和浏览器测试共 67 个，全部通过 |
-
-真实提交时，Greenhouse 和 Ashby 用的是隐形 reCAPTCHA，Lever 用的是 hCaptcha，它们对 GitHub 服务器 IP 的反应只有真正提交时才知道。如果被拦截，岗位会进入「需要你手动处理」，日报里会写明原因。
+安装和使用见 [README](../README.md)。这里讲它是怎么工作的、为什么这样设计。
 
 ## 架构
 
 ```mermaid
-flowchart LR
-    subgraph GA["GitHub Actions（每天 19:17 ET）"]
-        D["jobagent discover<br/>拉取 + 规则初筛"] --> C["Claude Code（订阅额度）<br/>按 job-hunt 技能执行"]
-        C -->|"jd / score"| S["打分"]
-        C -->|"resume --plan"| R["定制简历 PDF"]
-        C -->|"prepare / submit"| B["Playwright 浏览器<br/>读表单、填表、提交"]
-        C -->|"inbox / note"| M["邮箱：验证码、面试邀请"]
-        B --> ST[("加密状态<br/>jobagent-data 分支")]
-        C --> REP["日报 issue / 邮件"]
+flowchart TD
+    subgraph GA["GitHub Actions（每天 19:17 ET，scripts/daily_run.sh）"]
+        D["jobagent discover<br/>拉取 + 规则初筛 + 去重"] --> S["Claude 会话：SCORE<br/>读 JD、打分"]
+        S --> Q{"jobagent queue<br/>待投岗位，按分数排序"}
+        Q -->|"每个岗位一个会话"| A["Claude 会话：APPLY &lt;id&gt;<br/>按 JD 定制简历 → 投递"]
+        A -->|"Greenhouse / Lever / Ashby"| F["prepare / submit<br/>一次性读表、填表、提交"]
+        A -->|"其他所有网站"| W["jobagent web<br/>常驻浏览器，逐页 look / fill / click"]
+        A --> I["Claude 会话：INBOX<br/>面试邀请、OA、拒信"]
+        I --> R["日报 issue / 邮件<br/>+ 待手动投递清单"]
     end
     SJ["SimplifyJobs 岗位库"] --> D
-    ATS["Greenhouse / Lever / Ashby"] --> D
-    B --> ATS
+    ATS["Greenhouse / Lever / Ashby API"] --> D
+    F --> ST[("加密状态 + 材料包<br/>jobagent-data 分支")]
+    W --> ST
 ```
 
-职责分成两部分：
+分工：
 
-- **确定性的工作交给代码**：拉岗位、过滤、去重、渲染简历、操作浏览器、记账、加密存储，全部在 `job_agent/` 里，有单元测试和浏览器测试覆盖。
-- **需要判断的工作交给 Claude**：岗位匹配度、挑选简历内容、回答非标准问题、理解邮件。Claude 只能通过 `jobagent` 命令行行动，工作流里用 `--allowedTools "Bash(jobagent *)"` 限制了它能执行的命令。
+- **代码负责确定性的工作**：拉岗位、过滤、去重、渲染简历、校验改写、操作浏览器、按规则回答标准问题、记账、加密存储。全部在 `job_agent/` 里，有单元测试和浏览器测试。
+- **Claude 负责需要判断的工作**：岗位匹配度、挑选和改写简历内容、回答非标准问题、在陌生网站上一步步操作、理解邮件。Claude 只能执行 `jobagent` 命令（`--allowedTools "Bash(jobagent *)"`），没有任何联网工具。
 
-主要设计点：
+### 为什么每个岗位一个 Claude 会话
 
-1. **不编造的简历**：Claude 输出的是「挑哪些 bullet、按什么顺序」的计划，代码校验每个 id 都来自你的资料，结构上就不可能写进不存在的经历。
-2. **能确定的答案不交给模型**：姓名、邮箱、签证、EEO、学历这些标准问题由规则从资料中直接得出。模型只处理剩下的问题，既省 token 也更可靠。
-3. **防提示注入**：岗位描述和申请表都当作不可信数据。Claude 能执行的命令只有 `jobagent`，文件上传也只能选「简历」或「求职信」两种，测试里专门验证了上传 `/etc/passwd` 会被拒绝。
-4. **隐私**：个人资料只存在 Secrets 中。投递记录用 Fernet 加密后存放在单独的分支。公开仓库的日报会自动隐去敏感细节，Claude 的完整对话记录不会打印到日志里。
-5. **人在环路中**：遇到验证码、法律协议、雇主的 AI 限制、回答不了的问题，一律转人工，并在日报里写明原因。
+不设投递上限后，一天可能要投几十个岗位，每个多步申请要几十次操作。放在同一个会话里，上下文会越积越长，后面的岗位质量下降，一处出错也会拖累全部。`scripts/daily_run.sh` 给每个岗位单独起一个会话（上限 150 轮、25 分钟），结束后用 `jobagent settle` 兜底：会话没给出结果的岗位转入手动清单；因为额度用完而中断的，留到下次运行重试。
 
-## 开发者工具
+### 两种投递方式
 
-- `jobagent --help`：所有命令，都输出 JSON。
-- `dev-probe` 工作流：在真实申请页面上做只读探测（`probe_forms`）、填表演练（`dry_run_fill`）或全流程演练（`pipeline_smoke`）。**这几种模式都不会提交任何申请。**
-- 测试：`pytest tests/job_agent`。浏览器测试会在本地起一个模拟申请页，覆盖填表、提交和邮箱验证码流程。
+1. **表单流程**（Greenhouse、Lever、Ashby，约占岗位库的三分之一）：`prepare` 读出整张表单，每个字段附上从资料推出的建议答案；Claude 补上剩下的，`submit` 在新开的浏览器里一次性填写、复查、提交，并识别提交结果（成功页面、验证码挑战、邮箱验证码）。
+2. **浏览器流程**（Workday、iCIMS、SmartRecruiters、TikTok、公司官网等）：`jobagent web` 让一个 Chromium 在后台常驻（CDP 连接），Claude 每一步调用 `look` 看页面（字段、按钮、提示、正文），用 `fill` 填写，用 `click` 按钮，用 `code` / `link` 完成邮箱验证，最后用 `finish` 记录结果。
 
-## 后续可以加的功能
+两种方式共用同一个字段识别器（`browser/extract.js`）和答案规则（`browser/forms.py`）。它们适配了 Greenhouse 的 react-select、Ashby 的 Yes/No 按钮和每次加载都会变的 id、Lever 的卡片题、Workday 式弹出列表，并会识别每个字段当前是否已填好。
 
-- 为 Workday 写专用的适配器：自动注册账号，密码加密存进状态，用邮箱验证码完成注册。
-- 适配 TikTok / 字节招聘官网（需要登录）。
-- 根据回复率（面试邀请 / 投递数）自动调整打分阈值和关键词。
-- 每周汇总一次：哪些技能被要求得最多、简历该补什么。
+## 回答从哪来（优先级从高到低）
+
+1. `custom_answers`：你自己写的「问题正则 → 答案」，覆盖一切。
+2. 内置规则：根据资料作答，包括姓名、联系方式、学历、签证与担保、公民 / 绿卡 / 出口管制意义上的 "U.S. person"、受制裁国家国籍、事先声明（犯罪记录、背调、药检、竞业等）、EEO（默认选「不愿透露」）、服务条款 / 仲裁 / 隐私协议（自动同意）。
+3. 学到的回答：Claude 以前对同一问题的回答（`memory.py`），只记选择题和短答，不记个性化长文和提到公司名的回答。
+4. Claude 现场作答：只依据资料和 `about_me`；写申请短文时贴合 JD。
+5. 都答不了的必答题 → 转入手动清单，并写明是哪道题。
+
+事实性声明不会被当成「同意协议」自动勾选，比如「我是美国公民」，或者「我声明这些回答没有使用 AI」。
+
+## 简历定制：贴合 JD，但不编造
+
+Claude 输出的是一份计划（`plan.json`）：选哪些经历和 bullet、什么顺序、列哪些技能，并且可以把某条 bullet 或总结改写成更贴近 JD 的说法。`resume.py` 会校验这份计划：
+
+- 选的 id 必须来自你的资料；
+- 改写后不能出现原文没有的数字；
+- 不能出现资料里任何地方都没有的技术、产品或机构名（比如把「35%」改成「50%」，或者加上「at Meta」，都会被拒绝）；
+- 长度有上限。
+
+渲染成单栏、ATS 友好的一页 Letter PDF。
+
+## 安全
+
+- **提示注入**：JD 和申请页都是不可信数据。Claude 没有联网工具；个人信息只能填进招聘方自己的域名或已知招聘系统（`web.allowed`）；文件上传只能选生成的简历或求职信。
+- **密码**：`vault.py` 为每个网站生成 20 位强密码，用你的邮箱作为用户名，存在加密状态里，由程序直接输入，Claude 只能看到占位符。查看密码的命令在 CI 里会拒绝执行。
+- **演练模式**：设置 `JOBAGENT_DRY_RUN=1` 时，CLI 本身拒绝提交、拒绝点击「创建账号 / 提交」类按钮、不生成真实密码。即使 Claude 忘了加 `--dry-run` 也一样，第一次定时运行自动按演练处理。
+- **隐私**：资料只放在 Secrets 里。状态和材料用 Fernet 加密后存放在单独分支。公开仓库不打印 Claude 的对话记录，日报也不包含打分理由。
+- **不破解验证码**，遇到就转人工。
+
+## 额度和令牌问题
+
+`daily_run.sh` 会识别 Claude Code 的这几类报错：订阅额度上限、API 余额不足、令牌失效或过期。识别到后立即停止，把原因写到日报顶部，没完成的岗位保持「待投」，下次运行接着做。`tests/job_agent/test_daily_run.py` 用一个假的 `claude` 程序覆盖了这几种情况，包括投到一半额度用完。
+
+## 测试
+
+| 测试 | 内容 |
+|---|---|
+| `tests/job_agent/test_core.py` | 岗位解析、筛选、去重、状态加密、简历计划与改写校验、各类回答规则、学到的回答、CSV |
+| `tests/job_agent/test_browser.py` | 本地模拟表单：填表、提交、邮箱验证码、注册账号、强制演练 |
+| `tests/job_agent/test_web.py` | 本地模拟的 Workday 式多步流程：注册、验证码、两步表单、审核、提交；演练拦截；个人信息白名单 |
+| `tests/job_agent/test_daily_run.py` | 额度用完 / 余额不足 / 令牌过期，以及投到一半额度用完 |
+| `dev-probe` 工作流 | 在真实网站上只读探测（`probe_forms`）、填表演练（`dry_run_fill`）、全流程演练（`pipeline_smoke`）、浏览器流程只读探测（`web_smoke`），都不会提交 |
+
+开发过程中还用真实的 Claude 在模拟网站上跑过完整的 `daily_run.sh`：Greenhouse 式表单和 Workday 式多步流程都成功提交；要求公民身份的岗位和岗位描述里埋了提示注入的岗位都被正确跳过。
