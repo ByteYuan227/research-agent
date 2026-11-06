@@ -1,13 +1,177 @@
-# Job Agent · 求职 Agent
+# Job Agent
 
-**[中文](#中文) · [English](#english)**
+**[English](#english) · [中文说明](#中文)**
 
 A Claude-powered agent that finds US internship / new-grad jobs every day, tailors your resume to each job description, applies on any application site (Greenhouse, Lever, Ashby, Workday, iCIMS, SmartRecruiters, company portals...), reads verification emails, and sends you an evening report. It runs on GitHub Actions with **your own Claude subscription** — no API key needed.
 
+> This repository also contains a deep-research agent: see [docs/research-agent.md](docs/research-agent.md).
+
 每天自动找美国实习 / 应届岗位，按 JD 定制简历，在任何招聘网站上自动投递（Greenhouse、Lever、Ashby、Workday、iCIMS、SmartRecruiters、公司官网……），自动读取邮箱验证码，每晚发日报。运行在 GitHub Actions 上，用的是**你自己的 Claude 订阅额度**，不需要 API Key。
 
-> This repository also contains a deep-research agent: see [docs/research-agent.md](docs/research-agent.md).
 > 本仓库还有一个深度研究 Agent，见 [docs/research-agent.md](docs/research-agent.md)。
+
+---
+
+## English
+
+### What it does every day
+
+| Time (US Eastern) | What happens |
+|---|---|
+| 7:17 pm | Pulls every open role from the SimplifyJobs US internship / new-grad lists and the career pages of companies you follow; filters by job type, term, location, visa restrictions, recency and duplicates |
+| then | Claude reads each job description and scores it 0–100; hard blockers (citizenship, clearance, no sponsorship) are skipped |
+| then | For every job above your threshold: tailors a one-page resume to the JD → opens the application → signs up if needed (generated password, stored encrypted) → reads the email verification code → fills every step, uploads the resume, answers the questions → submits |
+| ~8 pm onward | Posts a daily report issue that @-mentions you (and optionally emails it): what was submitted, what needs you, interview invitations in your inbox |
+
+There is **no cap**, per day or per company (optional: `max_per_company: 3` limits applications to one company within 30 days to the 3 best matches). Fresh postings go first. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**. Postings that have closed, and ones the site says you already applied to, are recognised and kept off your list.
+
+### Quick start (3 steps)
+
+> You need: a Claude Pro / Max subscription, a GitHub account, and Python 3.10+, Node.js 18+ and [Claude Code](https://code.claude.com/docs) on your computer (already there if you use Claude Code in VS Code).
+
+**1. Make the repository private.** Repository → Settings → General → Change visibility → Make private. (Public works too, but the reports are visible to everyone.)
+
+**2. Let Claude build your profile.** Clone the repository, open Claude Code in it (VS Code or terminal) and say:
+
+> Set up my job agent profile from my resume at ~/Downloads/resume.pdf
+
+Claude reads your resume, asks what a resume does not say (visa status, sponsorship, background declarations, preferences), writes `~/.jobagent/profile.yaml` and validates it.
+
+**3. Store the configuration in GitHub with one command.** It needs the [GitHub CLI](https://cli.github.com) (run `gh auth login` first). The script validates the profile, creates the encryption key and asks you to paste the subscription token from `claude setup-token`:
+
+```bash
+bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
+```
+
+Done. Go to GitHub → Actions → **job-hunt** → Run workflow with **dry_run** checked to rehearse (prepares everything, submits nothing), then read the report under Issues. From then on it runs daily; **the first scheduled run is always a rehearsal**, so real submissions start the day after.
+
+### Detailed setup (manual)
+
+1. **Install**
+   ```bash
+   git clone https://github.com/<your-username>/research-agent.git
+   ```
+   ```bash
+   cd research-agent && python -m venv .venv && source .venv/bin/activate
+   ```
+   ```bash
+   pip install -e . && python -m playwright install chromium
+   ```
+2. **Profile**: `jobagent init` creates `~/.jobagent/profile.yaml`. Fill it in (every field is commented), then run `jobagent check` until it reports `"profile": "ok"`.
+3. **Subscription token**: run `claude setup-token`, approve in the browser, and copy the `sk-ant-oat…` token (valid for one year).
+4. **Encryption key**: run `python -m job_agent keygen` and copy the output.
+5. **(Recommended) Gmail app password**: Google Account (2-step verification on) → Security → App passwords. Used to read verification codes, track interview invitations and email you the report (with tailored resumes for the apply-by-hand list attached).
+6. **Secrets**: Repository → Settings → Secrets and variables → Actions → New repository secret:
+
+| Secret | Value | Required |
+|---|---|---|
+| `JOBAGENT_PROFILE_YAML` | the whole profile.yaml | ✅ |
+| `CLAUDE_CODE_OAUTH_TOKEN` | token from step 3 | ✅ (or `ANTHROPIC_API_KEY` for pay-as-you-go) |
+| `JOBAGENT_STATE_KEY` | key from step 4 (**keep a copy: without it the history cannot be read**) | ✅ |
+| `JOBAGENT_IMAP_USER` | your Gmail address | recommended |
+| `JOBAGENT_IMAP_PASSWORD` | the Gmail app password | recommended |
+
+7. **Rehearse**: Actions → job-hunt → Run workflow → check dry_run.
+
+### One switch for the run mode
+
+Repository → Settings → Secrets and variables → Actions → **Variables** tab → New repository variable named `JOBAGENT_MODE`:
+
+| Value | Effect |
+|---|---|
+| `apply` (or unset) | Normal: find, score, apply, report |
+| `rehearse` | Rehearsal: every application is prepared but nothing is submitted; the report still comes |
+| `off` | Paused: find jobs and report only |
+
+To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5`).
+
+### Your profile: how answers are tailored to you
+
+`profile.yaml` is the agent's only source of facts; it never invents experience, numbers or eligibility.
+
+| Section | Used for |
+|---|---|
+| `personal` | Name, contact details, links, address. Workday and similar portals require a mailing address: fill in `location.street` |
+| `education`, `experience`, `projects`, `skills` | Resume material. Every bullet has an id; the agent selects and orders them per job and may reword them in the JD's language — checked so that **no number or technology/company name absent from your profile can appear** |
+| `work_authorization` | Citizenship / permanent residency, citizenships, visa type, sponsorship. Non-citizens are never answered as citizens; citizenship-only jobs are filtered out |
+| `declarations` | Background questions answered in advance: criminal record, pending charges, background-check / drug-test consent, non-compete, relatives at the company, government official |
+| `custom_answers` | Your own answers: `{match: "<regex>", answer: "..."}`; they override every built-in rule |
+| `about_me` | Free-form facts Claude may use for other questions |
+| `answers` | Common answers (start date, relocation, salary, EEO…), plus automatic acceptance of terms / arbitration / privacy notices (`accept_agreements`) and AI-written answers (`write_answers`) |
+| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited), optional per-company cap over 30 days (`max_per_company`, default `null` = unlimited) |
+
+**Checked before submitting**: before pressing Submit, the program compares what the page shows with your profile (work authorization, sponsorship, citizenship, declarations such as criminal record, your `custom_answers`, name and email). On any contradiction it does not submit until the answer is fixed. Titles that limit a role to undergraduates / graduate students / another term, to one school or one career fair, and contract marketplaces such as Mercor are filtered out before scoring.
+
+Answers Claude gives to non-standard questions are remembered and reused for the same question later (listed in the report as learned answers). Sensitive questions (EEO, health, criminal record, salary, identity details) and essays are never remembered. If a learned answer is wrong, add the correct answer to `custom_answers`.
+
+### The report and the apply-by-hand checklist
+
+- One issue per day; older ones are closed. Jobs waiting for you form a **cumulative checklist** with links and reasons. **Tick a box once you have applied**: the next run records it as applied by you.
+- "⚠️ may already be submitted": the submit button was pressed but the run ended before the result was seen. The agent never applies twice on its own; check your email for a confirmation first.
+- "⚠️ no confirmation page" in the applied table: submitted, but the page showed no clear confirmation; watch for the confirmation email.
+- Applications cut short by a timeout or a browser error are retried once in the next run.
+- Tailored resumes and prepared answers:
+  - with email configured: today's resumes are attached to the email report;
+  - private repositories: the run's Artifacts (kept 14 days);
+  - any repository: encrypted on the `jobagent-data` branch. Unpack them on your computer:
+    ```bash
+    git fetch origin jobagent-data && git show FETCH_HEAD:materials.enc > materials.enc
+    ```
+    ```bash
+    JOBAGENT_STATE_KEY=<your key> jobagent materials open materials.enc
+    ```
+- All applications as a spreadsheet: fetch `state.enc` the same way, run `jobagent state import state.enc`, then `jobagent export applications.csv`.
+- Accounts the agent created: `jobagent account list`; a site's password: `jobagent account password --site <domain>` (your own computer only).
+
+### When Claude's quota or token runs out
+
+| Situation | What the agent does | What you do |
+|---|---|---|
+| Subscription limit reached (5-hour / weekly) | Stops at once, says so at the top of the report, keeps unfinished jobs for the next run | Usually nothing; upgrade the plan to apply to more per day |
+| API credit exhausted | Same | Top up in the Claude Console |
+| Token invalid or expired (valid one year) | Stops and says so in the report | Run `claude setup-token` again and update `CLAUDE_CODE_OAUTH_TOKEN` |
+| Run longer than 5 hours | Stops starting new applications; the rest continue tomorrow | Nothing |
+| CAPTCHA | Never solved; the job goes on your checklist | Apply by hand |
+| Site wants camera / video / ID photo / a fee / a download | Never done; the job goes on your checklist | Decide yourself |
+
+The subscription quota is shared with your own use of Claude, so on heavy days you may hit your limit sooner in the evening.
+
+### Running on your own computer (no GitHub)
+
+With Claude Code logged in and `~/.jobagent/profile.yaml` filled in:
+
+```bash
+JOBAGENT_DRY_RUN=1 bash scripts/daily_run.sh
+```
+
+Drop `JOBAGENT_DRY_RUN=1` to apply for real. See the results:
+
+```bash
+jobagent report
+```
+
+### What it will not do
+
+- Invent facts, or make false statements for you (such as certifying that no AI was used). Jobs that require one are prepared and handed to you.
+- Solve CAPTCHAs or evade bot detection.
+- Grant camera, microphone or location access; do video interviews, selfies or ID checks; sign up on contract / crowd-work marketplaces; pay anything; download or install anything.
+- Log in to LinkedIn / Indeed (account bans); they are not job sources either.
+- Type personal data anywhere but the employer's own site or a known applicant system. Text on job pages ("ignore previous instructions"…) is treated as data, never as instructions.
+- Show passwords to Claude: they are generated and typed by the program.
+
+### Command cheat sheet
+
+| Command | What it does |
+|---|---|
+| `jobagent init` / `jobagent check` | create the profile template / check the setup |
+| `jobagent discover` | fetch and filter jobs |
+| `jobagent status` / `jobagent report` | counts / today's report |
+| `jobagent materials open materials.enc` | unpack materials for the apply-by-hand list |
+| `jobagent export applications.csv` | all applications as CSV |
+| `jobagent memory` | learned answers |
+| `jobagent --help` | every command |
+
+Design and implementation notes: [docs/job-agent.md](docs/job-agent.md).
 
 ---
 
@@ -175,167 +339,6 @@ jobagent report
 设计和实现细节见 [docs/job-agent.md](docs/job-agent.md)。
 
 ---
-
-## English
-
-### What it does every day
-
-| Time (US Eastern) | What happens |
-|---|---|
-| 7:17 pm | Pulls every open role from the SimplifyJobs US internship / new-grad lists and the career pages of companies you follow; filters by job type, term, location, visa restrictions, recency and duplicates |
-| then | Claude reads each job description and scores it 0–100; hard blockers (citizenship, clearance, no sponsorship) are skipped |
-| then | For every job above your threshold: tailors a one-page resume to the JD → opens the application → signs up if needed (generated password, stored encrypted) → reads the email verification code → fills every step, uploads the resume, answers the questions → submits |
-| ~8 pm onward | Posts a daily report issue that @-mentions you (and optionally emails it): what was submitted, what needs you, interview invitations in your inbox |
-
-There is **no cap**, per day or per company (optional: `max_per_company: 3` limits applications to one company within 30 days to the 3 best matches). Fresh postings go first. Anything that cannot be submitted automatically (CAPTCHAs, documents only you have…) keeps its tailored resume and prepared answers and goes on the report's **apply-by-hand checklist**. Postings that have closed, and ones the site says you already applied to, are recognised and kept off your list.
-
-### Quick start (3 steps)
-
-> You need: a Claude Pro / Max subscription, a GitHub account, and Python 3.10+, Node.js 18+ and [Claude Code](https://code.claude.com/docs) on your computer (already there if you use Claude Code in VS Code).
-
-**1. Make the repository private.** Repository → Settings → General → Change visibility → Make private. (Public works too, but the reports are visible to everyone.)
-
-**2. Let Claude build your profile.** Clone the repository, open Claude Code in it (VS Code or terminal) and say:
-
-> Set up my job agent profile from my resume at ~/Downloads/resume.pdf
-
-Claude reads your resume, asks what a resume does not say (visa status, sponsorship, background declarations, preferences), writes `~/.jobagent/profile.yaml` and validates it.
-
-**3. Store the configuration in GitHub with one command.** It needs the [GitHub CLI](https://cli.github.com) (run `gh auth login` first). The script validates the profile, creates the encryption key and asks you to paste the subscription token from `claude setup-token`:
-
-```bash
-bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
-```
-
-Done. Go to GitHub → Actions → **job-hunt** → Run workflow with **dry_run** checked to rehearse (prepares everything, submits nothing), then read the report under Issues. From then on it runs daily; **the first scheduled run is always a rehearsal**, so real submissions start the day after.
-
-### Detailed setup (manual)
-
-1. **Install**
-   ```bash
-   git clone https://github.com/<your-username>/research-agent.git
-   ```
-   ```bash
-   cd research-agent && python -m venv .venv && source .venv/bin/activate
-   ```
-   ```bash
-   pip install -e . && python -m playwright install chromium
-   ```
-2. **Profile**: `jobagent init` creates `~/.jobagent/profile.yaml`. Fill it in (every field is commented), then run `jobagent check` until it reports `"profile": "ok"`.
-3. **Subscription token**: run `claude setup-token`, approve in the browser, and copy the `sk-ant-oat…` token (valid for one year).
-4. **Encryption key**: run `python -m job_agent keygen` and copy the output.
-5. **(Recommended) Gmail app password**: Google Account (2-step verification on) → Security → App passwords. Used to read verification codes, track interview invitations and email you the report (with tailored resumes for the apply-by-hand list attached).
-6. **Secrets**: Repository → Settings → Secrets and variables → Actions → New repository secret:
-
-| Secret | Value | Required |
-|---|---|---|
-| `JOBAGENT_PROFILE_YAML` | the whole profile.yaml | ✅ |
-| `CLAUDE_CODE_OAUTH_TOKEN` | token from step 3 | ✅ (or `ANTHROPIC_API_KEY` for pay-as-you-go) |
-| `JOBAGENT_STATE_KEY` | key from step 4 (**keep a copy: without it the history cannot be read**) | ✅ |
-| `JOBAGENT_IMAP_USER` | your Gmail address | recommended |
-| `JOBAGENT_IMAP_PASSWORD` | the Gmail app password | recommended |
-
-7. **Rehearse**: Actions → job-hunt → Run workflow → check dry_run.
-
-### One switch for the run mode
-
-Repository → Settings → Secrets and variables → Actions → **Variables** tab → New repository variable named `JOBAGENT_MODE`:
-
-| Value | Effect |
-|---|---|
-| `apply` (or unset) | Normal: find, score, apply, report |
-| `rehearse` | Rehearsal: every application is prepared but nothing is submitted; the report still comes |
-| `off` | Paused: find jobs and report only |
-
-To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5`).
-
-### Your profile: how answers are tailored to you
-
-`profile.yaml` is the agent's only source of facts; it never invents experience, numbers or eligibility.
-
-| Section | Used for |
-|---|---|
-| `personal` | Name, contact details, links, address. Workday and similar portals require a mailing address: fill in `location.street` |
-| `education`, `experience`, `projects`, `skills` | Resume material. Every bullet has an id; the agent selects and orders them per job and may reword them in the JD's language — checked so that **no number or technology/company name absent from your profile can appear** |
-| `work_authorization` | Citizenship / permanent residency, citizenships, visa type, sponsorship. Non-citizens are never answered as citizens; citizenship-only jobs are filtered out |
-| `declarations` | Background questions answered in advance: criminal record, pending charges, background-check / drug-test consent, non-compete, relatives at the company, government official |
-| `custom_answers` | Your own answers: `{match: "<regex>", answer: "..."}`; they override every built-in rule |
-| `about_me` | Free-form facts Claude may use for other questions |
-| `answers` | Common answers (start date, relocation, salary, EEO…), plus automatic acceptance of terms / arbitration / privacy notices (`accept_agreements`) and AI-written answers (`write_answers`) |
-| `preferences` | Job types, terms, keywords, locations, excluded companies, minimum score (`min_score`), daily cap (`max_applications_per_day: null` = unlimited), optional per-company cap over 30 days (`max_per_company`, default `null` = unlimited) |
-
-**Checked before submitting**: before pressing Submit, the program compares what the page shows with your profile (work authorization, sponsorship, citizenship, declarations such as criminal record, your `custom_answers`, name and email). On any contradiction it does not submit until the answer is fixed. Titles that limit a role to undergraduates / graduate students / another term, to one school or one career fair, and contract marketplaces such as Mercor are filtered out before scoring.
-
-Answers Claude gives to non-standard questions are remembered and reused for the same question later (listed in the report as learned answers). Sensitive questions (EEO, health, criminal record, salary, identity details) and essays are never remembered. If a learned answer is wrong, add the correct answer to `custom_answers`.
-
-### The report and the apply-by-hand checklist
-
-- One issue per day; older ones are closed. Jobs waiting for you form a **cumulative checklist** with links and reasons. **Tick a box once you have applied**: the next run records it as applied by you.
-- "⚠️ may already be submitted": the submit button was pressed but the run ended before the result was seen. The agent never applies twice on its own; check your email for a confirmation first.
-- "⚠️ no confirmation page" in the applied table: submitted, but the page showed no clear confirmation; watch for the confirmation email.
-- Applications cut short by a timeout or a browser error are retried once in the next run.
-- Tailored resumes and prepared answers:
-  - with email configured: today's resumes are attached to the email report;
-  - private repositories: the run's Artifacts (kept 14 days);
-  - any repository: encrypted on the `jobagent-data` branch. Unpack them on your computer:
-    ```bash
-    git fetch origin jobagent-data && git show FETCH_HEAD:materials.enc > materials.enc
-    ```
-    ```bash
-    JOBAGENT_STATE_KEY=<your key> jobagent materials open materials.enc
-    ```
-- All applications as a spreadsheet: fetch `state.enc` the same way, run `jobagent state import state.enc`, then `jobagent export applications.csv`.
-- Accounts the agent created: `jobagent account list`; a site's password: `jobagent account password --site <domain>` (your own computer only).
-
-### When Claude's quota or token runs out
-
-| Situation | What the agent does | What you do |
-|---|---|---|
-| Subscription limit reached (5-hour / weekly) | Stops at once, says so at the top of the report, keeps unfinished jobs for the next run | Usually nothing; upgrade the plan to apply to more per day |
-| API credit exhausted | Same | Top up in the Claude Console |
-| Token invalid or expired (valid one year) | Stops and says so in the report | Run `claude setup-token` again and update `CLAUDE_CODE_OAUTH_TOKEN` |
-| Run longer than 5 hours | Stops starting new applications; the rest continue tomorrow | Nothing |
-| CAPTCHA | Never solved; the job goes on your checklist | Apply by hand |
-| Site wants camera / video / ID photo / a fee / a download | Never done; the job goes on your checklist | Decide yourself |
-
-The subscription quota is shared with your own use of Claude, so on heavy days you may hit your limit sooner in the evening.
-
-### Running on your own computer (no GitHub)
-
-With Claude Code logged in and `~/.jobagent/profile.yaml` filled in:
-
-```bash
-JOBAGENT_DRY_RUN=1 bash scripts/daily_run.sh
-```
-
-Drop `JOBAGENT_DRY_RUN=1` to apply for real. See the results:
-
-```bash
-jobagent report
-```
-
-### What it will not do
-
-- Invent facts, or make false statements for you (such as certifying that no AI was used). Jobs that require one are prepared and handed to you.
-- Solve CAPTCHAs or evade bot detection.
-- Grant camera, microphone or location access; do video interviews, selfies or ID checks; sign up on contract / crowd-work marketplaces; pay anything; download or install anything.
-- Log in to LinkedIn / Indeed (account bans); they are not job sources either.
-- Type personal data anywhere but the employer's own site or a known applicant system. Text on job pages ("ignore previous instructions"…) is treated as data, never as instructions.
-- Show passwords to Claude: they are generated and typed by the program.
-
-### Command cheat sheet
-
-| Command | What it does |
-|---|---|
-| `jobagent init` / `jobagent check` | create the profile template / check the setup |
-| `jobagent discover` | fetch and filter jobs |
-| `jobagent status` / `jobagent report` | counts / today's report |
-| `jobagent materials open materials.enc` | unpack materials for the apply-by-hand list |
-| `jobagent export applications.csv` | all applications as CSV |
-| `jobagent memory` | learned answers |
-| `jobagent --help` | every command |
-
-Design and implementation notes (Chinese): [docs/job-agent.md](docs/job-agent.md).
 
 ## License
 
