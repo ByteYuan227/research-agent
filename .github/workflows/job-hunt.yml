@@ -18,6 +18,10 @@ on:
         description: Rehearsal - prepare everything but never submit
         type: boolean
         default: false
+      job_id:
+        description: Apply to this one job only (an id from the report or state); empty = the normal daily run
+        type: string
+        default: ""
 
 permissions:
   contents: write # encrypted state on the jobagent-data branch
@@ -105,6 +109,7 @@ jobs:
           SUBSCRIPTION_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DRY_RUN_INPUT: ${{ inputs.dry_run }}
+          JOBAGENT_ONLY_JOB: ${{ inputs.job_id }}
         run: |
           # Prefer the subscription token; an API key would take precedence if both were set.
           if [ -n "$SUBSCRIPTION_TOKEN" ]; then export CLAUDE_CODE_OAUTH_TOKEN="$SUBSCRIPTION_TOKEN";

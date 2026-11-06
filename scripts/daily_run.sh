@@ -72,6 +72,18 @@ run_claude() {  # run_claude <log name> <max turns> <timeout minutes> <model> <p
   return $status
 }
 
+if [ -n "${JOBAGENT_ONLY_JOB:-}" ]; then
+  # One job only (e.g. to try the agent out): no discovery, scoring or inbox.
+  score=$(jobagent queue --scores | awk -v id="$JOBAGENT_ONLY_JOB" '$1 == id {print $2}')
+  model="$BASE_MODEL"
+  if [ "${score:-0}" -ge "$TOP_SCORE" ]; then model="$TOP_MODEL"; fi
+  run_claude "apply-1" 150 "$APPLY_TIMEOUT" "$model" "Mode APPLY of the job-hunt skill ($SKILL) for job $JOBAGENT_ONLY_JOB: read the skill first, then tailor the resume and apply."
+  status=$?
+  jobagent settle "$JOBAGENT_ONLY_JOB" --stopped "$STOP" --exit "$status" > /dev/null
+  jobagent web close > /dev/null 2>&1 || true
+  exit 0
+fi
+
 jobagent sync-checklist > /dev/null || true
 jobagent discover > "$LOG_DIR/discover.json" || echo "::warning::discovery failed"
 if [ -n "${JOBAGENT_RUN_NOTE:-}" ]; then jobagent note "$JOBAGENT_RUN_NOTE" > /dev/null; fi

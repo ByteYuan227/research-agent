@@ -127,3 +127,18 @@ def test_one_model_for_everything(tmp_path, monkeypatch):
     calls = _models_fake(tmp_path)
     subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
     assert set(calls.read_text().split()) - {"score", "apply", "inbox"} == {"claude-opus-5-5"}
+
+
+def test_one_job_only(tmp_path, monkeypatch):
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    calls = _models_fake(tmp_path)
+    # Score both jobs first (as an earlier run would have), then apply to one of them only.
+    subprocess.run(["jobagent", "discover"], env=env, capture_output=True, text=True)
+    for jid, score in (("greenhouse:acme:1", "90"), ("greenhouse:acme:2", "80")):
+        subprocess.run(["jobagent", "score", jid, score, "--reason", "r", "--decision", "apply"], env=env, capture_output=True)
+    env["JOBAGENT_ONLY_JOB"] = "greenhouse:acme:2"
+    p = subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert p.returncode == 0, p.stderr
+    assert calls.read_text().split("\n")[:2] == ["apply sonnet", ""]  # no discovery, scoring or inbox session
+    state = json.loads((home / "state.json").read_text())
+    assert state["jobs"]["greenhouse:acme:2"]["status"] == "manual" and state["jobs"]["greenhouse:acme:1"]["status"] == "scored"
