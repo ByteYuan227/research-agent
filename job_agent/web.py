@@ -52,7 +52,7 @@ ATS_DOMAINS = (
     "bytedance.com", "ultipro.com", "ukg.com", "paylocity.com", "bamboohr.com", "rippling.com", "dayforcehcm.com",
     "applytojob.com", "breezy.hr", "recruitee.com", "teamtailor.com", "pinpointhq.com", "jazzhr.com", "adp.com",
     "avature.net", "phenompeople.com", "brassring.com", "kenexa.com", "amazon.jobs", "metacareers.com",
-    "careers.microsoft.com", "jobs.apple.com", "careers.google.com", "comeet.com", "gem.com", "dover.com",
+    "careers.microsoft.com", "jobs.apple.com", "careers.google.com", "idprism-auth.amazon.com", "amazon.jobs", "comeet.com", "gem.com", "dover.com",
     "wellfound.com", "ycombinator.com", "workatastartup.com", "hire.trakstar.com", "hrmdirect.com",
 )
 SIDE_EFFECT_RE = re.compile(

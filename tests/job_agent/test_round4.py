@@ -751,3 +751,23 @@ def test_want_rule_leaves_facts_alone(profile):
     s = forms.suggest({"key": "s", "kind": "radio", "options": ["Yes", "No"],
                        "label": "Will you now or in the future require sponsorship?"}, profile, "Acme", {})
     assert s.source.startswith("work_authorization")
+
+
+def test_own_site_password_is_used(monkeypatch):
+    from job_agent import vault
+
+    state = State()
+    monkeypatch.delenv("JOBAGENT_SITE_PASSWORD", raising=False)
+    generated = vault.get_or_create(state, "https://acme.wd5.myworkdayjobs.com/x", "me@example.com").password
+    monkeypatch.setenv("JOBAGENT_SITE_PASSWORD", "Example.Pass1")
+    assert vault.get_or_create(state, "https://acme.wd5.myworkdayjobs.com/y", "me@example.com").password == "Example.Pass1"
+    assert vault.get_or_create(state, "https://other.example.com", "me@example.com").password == "Example.Pass1"
+    assert generated != "Example.Pass1"
+
+
+def test_how_did_you_hear_falls_back_to_a_generic_option(profile):
+    f = {"key": "h", "kind": "select", "label": "How did you hear about this job?",
+         "options": ["LinkedIn", "Recruiter", "BrickFest", "Career fair", "Referral"]}
+    assert forms.suggest(f, profile, "Databricks", {}).value == "LinkedIn"
+    f["options"] = ["Referral", "Company website", "Other"]
+    assert forms.suggest(f, profile, "Acme", {}).value == "Company website"

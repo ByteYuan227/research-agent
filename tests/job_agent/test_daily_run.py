@@ -31,6 +31,7 @@ def _setup(tmp_path, monkeypatch, claude_output: str):
     env = dict(os.environ, JOBAGENT_HOME=str(home), JOBAGENT_PROFILE=str(tmp_path / "profile.yaml"),
                JOBAGENT_EXTRA_JOBS=str(tmp_path / "jobs.json"), PATH=f"{fake.parent}:{os.environ['PATH']}")
     env.pop("JOBAGENT_PROFILE_YAML", None)
+    env["JOBAGENT_SCORE"] = "1"  # these tests exercise the separate scoring pass
     return env, home
 
 
@@ -142,3 +143,13 @@ def test_one_job_only(tmp_path, monkeypatch):
     assert calls.read_text().split("\n")[:2] == ["apply sonnet", ""]  # no discovery, scoring or inbox session
     state = json.loads((home / "state.json").read_text())
     assert state["jobs"]["greenhouse:acme:2"]["status"] == "manual" and state["jobs"]["greenhouse:acme:1"]["status"] == "scored"
+
+
+def test_default_applies_without_a_scoring_pass(tmp_path, monkeypatch):
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    env.pop("JOBAGENT_SCORE")
+    calls = _models_fake(tmp_path)
+    p = subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert p.returncode == 0, p.stderr
+    kinds = calls.read_text().split("\n")
+    assert "score sonnet" not in kinds and kinds.count("apply sonnet") == 2  # both jobs, straight to applying

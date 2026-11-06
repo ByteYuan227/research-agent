@@ -334,7 +334,7 @@ RULES: list[Rule] = [
     Rule(r"graduat(ion|e) (date|year)|when (do|will) you graduate|expected graduation", TEXTY + CHOICE,
          lambda p, f, c: Suggestion(p.answers.graduation_date or _latest_school(p).end, "answers.graduation_date")),
     Rule(r"how did you (hear|find|learn)|where did you (hear|find)|referral source|source of application", TEXTY + CHOICE,
-         lambda p, f, c: Suggestion(p.answers.how_did_you_hear, "answers.how_did_you_hear")),
+         lambda p, f, c: _how_heard(p, f)),
     Rule(r"country of citizenship|citizenship country|what is your citizenship|countr(y|ies) of (citizenship|nationality)|nationality",
          TEXTY + CHOICE,
          lambda p, f, c: Suggestion(", ".join(p.work_authorization.citizenships) if f["kind"] in TEXTY
@@ -458,6 +458,18 @@ def withheld(field: dict[str, Any], profile: Profile) -> str | None:
         return "GPA is only given where a form requires it (answers.gpa_only_when_required)"
     if field.get("kind") == "file" and re.search(r"transcript", text, re.I):
         return "the transcript is only uploaded where a form requires it"
+    return None
+
+
+def _how_heard(p: Profile, f: dict) -> Suggestion | None:
+    """"How did you hear about us": your answer, or the closest generic option the list offers."""
+    opts = f.get("options") or []
+    if not opts or match_option(p.answers.how_did_you_hear, opts):
+        return Suggestion(p.answers.how_did_you_hear, "answers.how_did_you_hear")
+    for pattern in (r"job (board|site|posting)|online|internet|website|career(s)? (page|site)|^other\b", r"linkedin"):
+        pick = next((o for o in opts if re.search(pattern, o, re.I)), None)
+        if pick:
+            return Suggestion(pick, "answers.how_did_you_hear")
     return None
 
 

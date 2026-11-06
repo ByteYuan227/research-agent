@@ -93,7 +93,12 @@ if ! jobagent check | grep -q '"profile": "ok"'; then
   exit 0
 fi
 
-# Score in batches so each session's context stays small and progress is saved as it goes.
+# By default nothing is scored first (it costs tokens): every candidate goes straight to the
+# queue and its APPLY session checks the hard blockers while tailoring the resume.
+# Set the repository variable JOBAGENT_SCORE=1 to score candidates in a separate pass first.
+if [ "${JOBAGENT_SCORE:-0}" != "1" ]; then
+  jobagent enqueue > /dev/null
+fi
 BATCH="${JOBAGENT_SCORE_BATCH:-40}"
 for round in 1 2 3 4 5 6 7 8; do
   left=$(jobagent candidates | grep -c '"id"' || true)

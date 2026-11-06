@@ -179,6 +179,19 @@ def cmd_candidates(args) -> int:
     return 0
 
 
+def cmd_enqueue(args) -> int:
+    """Queue every candidate for applying without a scoring pass (the APPLY session checks blockers)."""
+    state = load_state()
+    n = 0
+    for j in list(state.jobs.values()):
+        if j.status == "candidate":
+            state.set_status(j, "scored", "queued without scoring")
+            n += 1
+    save_state(state)
+    out({"queued": n})
+    return 0
+
+
 def cmd_jd(args) -> int:
     from . import ats
 
@@ -781,6 +794,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--force", action="store_true",
                    help="click: press a submit button although an answer differs from the profile's (re-read it first)")
     s.set_defaults(fn=cmd_web)
+
+    sub.add_parser("enqueue", help="queue every candidate without scoring").set_defaults(fn=cmd_enqueue)
 
     s = sub.add_parser("queue", help="job ids to apply to, best first")
     s.add_argument("--scores", action="store_true", help="print '<id> <score>' per line")

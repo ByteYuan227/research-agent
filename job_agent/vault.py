@@ -31,13 +31,23 @@ def site_of(url: str) -> str:
     return host[4:] if host.startswith("www.") else host
 
 
+def own_password() -> str:
+    """The password you use for job-site accounts (secret JOBAGENT_SITE_PASSWORD), if you gave one:
+    then the agent can sign in where you already have an account, and you can sign in to the
+    accounts it creates."""
+    return os.environ.get("JOBAGENT_SITE_PASSWORD", "")
+
+
 def get_or_create(state: State, url: str, username: str) -> Account:
     site = site_of(url)
     acct = state.accounts.get(site)
+    mine = own_password()
     if acct is None:
-        acct = Account(site=site, username=username, password=generate_password())
+        acct = Account(site=site, username=username, password=mine or generate_password())
         state.accounts[site] = acct
         state.log(site, "account_created", f"username {username}")
+    elif mine and acct.password != mine:
+        acct.password = mine  # your own password works for accounts you created yourself, too
     return acct
 
 

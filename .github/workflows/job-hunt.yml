@@ -41,11 +41,14 @@ jobs:
       JOBAGENT_STATE_KEY: ${{ secrets.JOBAGENT_STATE_KEY }}
       JOBAGENT_IMAP_USER: ${{ secrets.JOBAGENT_IMAP_USER }}
       JOBAGENT_IMAP_PASSWORD: ${{ secrets.JOBAGENT_IMAP_PASSWORD }}
+      JOBAGENT_SITE_PASSWORD: ${{ secrets.JOBAGENT_SITE_PASSWORD }}
       # Repository variables (all optional): JOBAGENT_CLAUDE_MODEL = one model for everything;
       # otherwise Sonnet, with JOBAGENT_MODEL_TOP (default opus) for jobs scoring >= JOBAGENT_TOP_SCORE (85).
       JOBAGENT_CLAUDE_MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
       JOBAGENT_MODEL_TOP: ${{ vars.JOBAGENT_MODEL_TOP }}
       JOBAGENT_TOP_SCORE: ${{ vars.JOBAGENT_TOP_SCORE }}
+      # 1 = score candidates in a separate pass before applying (costs more tokens); default: no scoring
+      JOBAGENT_SCORE: ${{ vars.JOBAGENT_SCORE }}
       # Repository variable: apply (default) | rehearse (prepare, never submit) | off (find jobs + report only)
       JOBAGENT_MODE: ${{ vars.JOBAGENT_MODE }}
       # Repository variable: stop starting new applications after this many minutes (default 300).

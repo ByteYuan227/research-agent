@@ -62,6 +62,14 @@ says which. If it does not, do SCORE, then APPLY each job in `jobagent queue`, t
 
 ## Mode APPLY `<job_id>`
 
+**0. Blockers first** (jobs are usually queued without a scoring pass). Read the job description
+(`jobagent jd <id>`; `"status": "closed"` means stop). If a hard blocker from Mode SCORE applies
+(citizenship / permanent residency / clearance / U.S. person the profile lacks, explicitly no
+sponsorship while the profile needs it, graduation date or degree outside what it accepts, more
+than 2 years of full-time experience required, not the wanted kind of role), record
+`jobagent score <id> 0 --reason "<the blocker, quoted>" --decision skip` and stop. Weak but
+possible matches are applied to: the candidate is mass applying.
+
 **a. Tailor the resume to this job description.** `jobagent jd <id>` (re-read it),
 `jobagent workdir <id>` for the folder, then write `<work_dir>/plan.json`:
 
