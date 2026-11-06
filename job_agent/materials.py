@@ -141,6 +141,27 @@ def resumes_for_email(state: State, since: float, limit: int = 12) -> list[tuple
     return out[:limit]
 
 
+def applied_review(state: State, since: float) -> tuple[str, list[tuple[Path, str]]]:
+    """Markdown with every answer given in applications submitted since `since`, plus their resumes."""
+    from .apply import work_dir
+
+    jobs = sorted((j for j in state.jobs.values() if j.status == "applied" and (j.applied_at or 0) >= since),
+                  key=lambda j: j.applied_at or 0)
+    lines = [f"# Applications submitted ({len(jobs)})", ""]
+    files: list[tuple[Path, str]] = []
+    for j in jobs:
+        app = j.application or {}
+        lines += [f"## {j.company} - {j.title}", "", f"- Posting: {j.url}", ""]
+        answers = app.get("answers") or {}
+        lines += [f"- **{k}**: {v}" for k, v in answers.items()] or ["- (no answers recorded)"]
+        if app.get("cover_letter"):
+            lines += ["", "**Cover letter**", "", str(app["cover_letter"])]
+        lines.append("")
+        for f in work_dir(j).glob("*_Resume.pdf"):
+            files.append((f, f"{_folder_name(j)} - {f.name}"))
+    return "\n".join(lines), files
+
+
 def summary(state: State) -> list[dict[str, Any]]:
     return [{"id": j.id, "company": j.company, "title": j.title, "url": j.url} for j in pending_manual(state)]
 

@@ -348,7 +348,8 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
 
         remember(state, form["fields"], doc["answers"], job.company)
     job.attempts += 1
-    job.application = {"answers": given, "outcome": result, "at": time.time(), "dry_run": dry_run}
+    job.application = {"answers": given, "outcome": result, "at": time.time(), "dry_run": dry_run,
+                       "cover_letter": letter or None}
     if dry_run:
         state.jobs[job.id] = job
         state.log(job.id, "dry_run", result["status"])

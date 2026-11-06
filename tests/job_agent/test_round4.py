@@ -364,6 +364,7 @@ def test_submit_refused_while_the_page_contradicts_the_profile(site, profile, br
     web.finish(state, profile, "applied", "thank-you page")
     app = state.jobs[job.id].application
     assert state.jobs[job.id].status == "applied" and app["confirmed_by_page"] is True
+    assert app["answers"]["Email"] == profile.personal.email  # every value typed is kept for review
     with web.page() as pg:
         sent = json.loads(pg.evaluate("localStorage.getItem('final')"))
     assert sent == {"email": profile.personal.email, "spons": "yes"}
@@ -781,3 +782,16 @@ def test_previous_employer_named_in_the_question(profile_data):
     q = {"key": "q", "kind": "radio", "options": ["Yes", "No"], "label": "Have you previously worked for Amazon or any of its subsidiaries?"}
     assert forms.suggest(q, p, "Twitch", {}).value == "Yes"
     assert forms.suggest({**q, "label": "Have you previously worked for Twitch?"}, p, "Twitch", {}).value == "No"
+
+
+def test_applied_review_lists_every_answer(home):
+    from job_agent import materials
+
+    state = State()
+    j = _job(id="gh:r:1", company="Acme", applied_at=time.time(),
+             application={"answers": {"Email": "me@example.com", "Why Acme?": "Because..."}, "cover_letter": "Dear team"})
+    state.set_status(j, "applied", "ok")
+    old = _job(id="gh:r:2", company="Old", applied_at=time.time() - 5 * 86400, application={"answers": {"x": "y"}})
+    state.set_status(old, "applied", "ok")
+    review, files = materials.applied_review(state, time.time() - 3600)
+    assert "## Acme" in review and "**Why Acme?**: Because..." in review and "Dear team" in review and "Old" not in review

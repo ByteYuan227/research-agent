@@ -51,6 +51,7 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
     new_seen = sum(1 for t in state.seen.values() if start <= t < end)
     run = state.last_run or {}
 
+    by_email = bool(profile and not profile.notify.github_issue)
     lines = [f"# 求职日报 {day.isoformat()}", ""]
     if profile and profile.notify.github_username:
         lines += [f"@{profile.notify.github_username}", ""]
@@ -90,10 +91,11 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
             lines.append(f"| {_md(j.company)} | {_md(j.title)}{flag} | {j.score or '-'} | {_md(', '.join(j.locations[:2]))} "
                          f"| [链接]({j.url}) |")
         lines.append("")
+        if by_email:
+            lines += ["每份申请填写的全部内容（每道题的答案、求职信）见邮件附件 `applications_review.md`，所用的定制简历也一并附上。", ""]
         if full:
             lines += [f"- **{_md(j.company)}**：{_md(j.reason)}" for j in applied if j.reason] + [""]
 
-    by_email = bool(profile and not profile.notify.github_issue)
     if pending:
         how = ("**投完后回复这封邮件**，第一行写 done 加上编号（编号之间用空格隔开），下次运行会记为已投递。"
                if by_email else "**投完一个就在这里勾选**，下次运行会记为已投递。")

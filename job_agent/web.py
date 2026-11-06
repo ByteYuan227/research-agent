@@ -520,6 +520,15 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
                 else:
                     values[k] = str(path)
         report = forms.fill_and_verify(pg, [f for f in data["fields"] if f["key"] in values], values)
+        record = (job.application or {}).get("answers") or {}
+        for k in report.filled:  # what was entered, for your review (never passwords)
+            f = by_key.get(k) or {}
+            if f.get("kind") == "password" or k not in values:
+                continue
+            v = values[k]
+            record[(f.get("label") or k)[:150]] = Path(v).name if f.get("kind") == "file" else v
+        job.application = {**(job.application or {}), "answers": record}
+        state.jobs[job.id] = job
         if answers:
             from .memory import remember
 
@@ -616,8 +625,8 @@ def finish(state: State, profile: Profile, status: str, reason: str) -> dict[str
         job.result = "submitted"
         # Confirmed when the page says so; otherwise Claude's own reading of it (recorded as such).
         confirmed = bool(proof.get("confirmation_text"))
-        job.application = {"mode": "browser", "at": time.time(), "note": reason[:300], "proof": proof,
-                           "confirmed_by_page": confirmed, "submit_clicked": submit_clicked(job)}
+        job.application = {**(job.application or {}), "mode": "browser", "at": time.time(), "note": reason[:300],
+                           "proof": proof, "confirmed_by_page": confirmed, "submit_clicked": submit_clicked(job)}
         state.set_status(job, "applied", reason or job.apply_url)
     elif status == "dry_run":
         job.application = {"mode": "browser", "at": time.time(), "dry_run": True, "note": reason[:300]}

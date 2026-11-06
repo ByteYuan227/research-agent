@@ -392,8 +392,14 @@ def cmd_notify(args) -> int:
         from . import materials
 
         try:
-            since = load_state().last_run.get("started", time.time() - 86400)
-            files = materials.resumes_for_email(load_state(), since)
+            state_now = load_state()
+            since = state_now.last_run.get("started", time.time() - 86400)
+            files = materials.resumes_for_email(state_now, since)
+            review, applied_files = materials.applied_review(state_now, since)
+            if applied_files or "## " in review:
+                review_path = Path(args.report).with_name("applications_review.md")
+                review_path.write_text(review, encoding="utf-8")
+                files = [(review_path, "applications_review.md")] + applied_files[:25] + files
             result["email"] = notify.email_report(title, body, to, files)
             result["email_attachments"] = len(files)
         except Exception as exc:  # noqa: BLE001
