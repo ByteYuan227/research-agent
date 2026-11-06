@@ -22,6 +22,12 @@ Two agents live here:
   submitted (`forms.audit`), and a job whose submit button was pressed is never applied
   to again automatically (`apply.mark_submit_clicked`).
 
+## Commits
+
+- Commit as the repository owner (`ByteYuan227 <197693457+ByteYuan227@users.noreply.github.com>`).
+  Never add `Co-Authored-By`, `Claude-Session` or any other Claude attribution, in commits
+  or pull requests: Claude must not appear as a contributor.
+
 ## Running the job hunt yourself
 
 Ask: "run today's job hunt using the job-hunt skill". It needs a profile and a browser.
