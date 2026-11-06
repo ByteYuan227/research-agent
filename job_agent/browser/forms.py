@@ -173,6 +173,12 @@ def _salary(p: Profile, f: dict) -> Suggestion | None:
     return Suggestion("Open / negotiable", "default")
 
 
+def _named(f: dict, names: list[str]) -> bool:
+    """The question itself names one of these companies ("Have you worked for Amazon?")."""
+    text = _norm(f"{f.get('label', '')} {f.get('description', '')}")
+    return any(_norm(n) and re.search(rf"\b{re.escape(_norm(n))}\b", text) for n in names)
+
+
 def _in(company: str, names: list[str]) -> bool:
     c = _norm(company)
     return any(_norm(n) and (_norm(n) in c or c in _norm(n)) for n in names)
@@ -374,9 +380,11 @@ RULES: list[Rule] = [
          lambda p, f, c: _yes_no(p.answers.willing_to_relocate, "answers.willing_to_relocate")),
     Rule(r"(previously|ever|in the past) (been )?(employed|worked) (by|for|at)|have you (ever )?(previously )?worked (for|at)|"
          r"in the past worked for|former employee|current or former", CHOICE + ("checkbox",),
-         lambda p, f, c: _yes_no(_in(c, p.answers.previously_employed_at), "answers.previously_employed_at")),
+         lambda p, f, c: _yes_no(_in(c, p.answers.previously_employed_at) or _named(f, p.answers.previously_employed_at),
+                                 "answers.previously_employed_at")),
     Rule(r"(ever|previously) interviewed", CHOICE + ("checkbox",),
-         lambda p, f, c: _yes_no(_in(c, p.answers.previously_interviewed_at), "answers.previously_interviewed_at")),
+         lambda p, f, c: _yes_no(_in(c, p.answers.previously_interviewed_at) or _named(f, p.answers.previously_interviewed_at),
+                                 "answers.previously_interviewed_at")),
     Rule(r"earliest (start|available)|start date|when can you start|available to start", TEXTY,
          lambda p, f, c: Suggestion(p.answers.earliest_start_date, "answers.earliest_start_date") if p.answers.earliest_start_date else None),
     Rule(r"salary|compensation expectation|expected (pay|compensation)", None, lambda p, f, c: _salary(p, f)),

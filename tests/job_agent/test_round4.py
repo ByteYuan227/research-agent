@@ -771,3 +771,13 @@ def test_how_did_you_hear_falls_back_to_a_generic_option(profile):
     assert forms.suggest(f, profile, "Databricks", {}).value == "LinkedIn"
     f["options"] = ["Referral", "Company website", "Other"]
     assert forms.suggest(f, profile, "Acme", {}).value == "Company website"
+
+
+def test_previous_employer_named_in_the_question(profile_data):
+    from job_agent.profile import Profile
+
+    profile_data["answers"]["previously_employed_at"] = ["Amazon"]
+    p = Profile.model_validate(profile_data)
+    q = {"key": "q", "kind": "radio", "options": ["Yes", "No"], "label": "Have you previously worked for Amazon or any of its subsidiaries?"}
+    assert forms.suggest(q, p, "Twitch", {}).value == "Yes"
+    assert forms.suggest({**q, "label": "Have you previously worked for Twitch?"}, p, "Twitch", {}).value == "No"
