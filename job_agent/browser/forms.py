@@ -329,7 +329,9 @@ RULES: list[Rule] = [
          lambda p, f, c: Suggestion(", ".join(p.work_authorization.citizenships) if f["kind"] in TEXTY
                                     else p.work_authorization.citizenships[0], "work_authorization.citizenships")
          if p.work_authorization.citizenships else None),
-    Rule(r"visa (type|status)|immigration status|current (work )?(authorization|visa) status|type of (work )?(visa|authorization)",
+    # Not "...require sponsorship for employment visa status?": that one is a sponsorship question.
+    Rule(r"^(?!.*sponsor).*(visa (type|status)|immigration status|current (work )?(authorization|visa) status|"
+         r"type of (work )?(visa|authorization))",
          TEXTY + CHOICE,
          lambda p, f, c: Suggestion(p.work_authorization.visa_type or p.work_authorization.status, "work_authorization.visa_type")
          if (p.work_authorization.visa_type or p.work_authorization.status) else None),

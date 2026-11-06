@@ -26,7 +26,10 @@ SENSITIVE_RE = re.compile(
     re.I,
 )
 ESSAY_RE = re.compile(r"\bwhy\b|describe|tell us|explain|cover letter|anything else|additional information|"
-                      r"what (excit|interest|motivat)|how would you|share (a|an|your)", re.I)
+                      r"what (excit|interest|motivat)|how would you|share (a|an|your)|"
+                      # skills and fit are answered for each job description, never reused
+                      r"skill|technolog|tech stack|tools?\b|frameworks?|programming languages?|proficien|"
+                      r"experience (with|in)|familiar|\bfit\b|qualif|strength|interest(ed)? in", re.I)
 
 
 def question_key(label: str, company: str = "") -> str:

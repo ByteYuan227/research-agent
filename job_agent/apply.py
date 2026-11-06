@@ -54,12 +54,56 @@ def pay_posted(job: Job) -> bool:
     return desc.exists() and bool(PAY_RE.search(desc.read_text(encoding="utf-8", errors="replace")))
 
 
+_AMOUNT = r"\$\s?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)\s?([kK])?"
+# "$120,000 - $180,000", "$120K to $180K", Amazon's "$129,300/year in our lowest geographic
+# market up to $223,600/year": a few words may sit between the two figures.
+_RANGE_RE = re.compile(
+    _AMOUNT + r"(?:\s?/\s?(?:year|yr|hour|hr)|\s+(?:per|a|an)\s+(?:year|hour))?(?:[^$\n]{0,60}?\s)?"
+    r"(?:-|–|—|to|up to)\s*" + _AMOUNT.replace("\\$\\s?", "\\$?\\s?")
+)
+_SINGLE_RE = re.compile(_AMOUNT)
+
+
+def _dollars(num: str, k: str | None) -> float:
+    value = float(num.replace(",", ""))
+    return value * 1000 if k else value
+
+
+def _money(value: float) -> str:
+    if value >= 1000:  # a yearly salary, to the nearest thousand
+        return f"${round(value / 1000) * 1000:,.0f}"
+    return f"${value:,.2f}".replace(".00", "") + "/hour"
+
+
+def posted_pay_midpoint(text: str) -> str | None:
+    """The middle of the first pay range a job description states ("$120,000 - $180,000" ->
+    "$150,000"), or its single figure; yearly ranges are preferred over hourly ones."""
+    ranges = []
+    for m in _RANGE_RE.finditer(text):
+        lo, hi = _dollars(m.group(1), m.group(2)), _dollars(m.group(3), m.group(4) or m.group(2))
+        if 0 < lo <= hi:
+            ranges.append((lo, hi))
+    yearly = [r for r in ranges if r[0] >= 20000]
+    if yearly or ranges:
+        lo, hi = (yearly or ranges)[0]
+        return _money((lo + hi) / 2)
+    singles = [_dollars(m.group(1), m.group(2)) for m in _SINGLE_RE.finditer(text)]
+    singles = [v for v in singles if v >= 20000] or [v for v in singles if 10 <= v < 1000]
+    return _money(singles[0]) if singles else None
+
+
 def profile_for(job: Job, profile: Profile) -> Profile:
-    """The profile as it applies to this job: answers.salary_expectation_if_posted replaces the
-    salary expectation when the job description states its pay."""
+    """The profile as it applies to this job. When the job description states its pay,
+    answers.salary_expectation_if_posted replaces the salary expectation; "midpoint" means
+    the middle of the posted range."""
     alt = profile.answers.salary_expectation_if_posted
     if not alt or not pay_posted(job):
         return profile
+    if alt.strip().lower() == "midpoint":
+        desc = (work_dir(job) / "description.txt").read_text(encoding="utf-8", errors="replace")
+        alt = posted_pay_midpoint(desc) or ""
+        if not alt:
+            return profile
     answers = profile.answers.model_copy(update={"salary_expectation": alt})
     return profile.model_copy(update={"answers": answers})
 

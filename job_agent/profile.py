@@ -149,7 +149,8 @@ class Answers(_Model):
     open_to_remote: bool = True
     open_to_onsite: bool = True
     salary_expectation: str = ""  # leave empty to let the agent answer "negotiable"
-    # Optional: the answer to use instead when the job description states its pay (e.g. "$120,000").
+    # Optional: the answer to use instead when the job description states its pay: a figure
+    # (e.g. "$120,000") or "midpoint" (the middle of the posted range, e.g. $120K-$180K -> $150,000).
     salary_expectation_if_posted: str = ""
     over_18: bool = True
     previously_employed_at: list[str] = Field(default_factory=list)  # company names

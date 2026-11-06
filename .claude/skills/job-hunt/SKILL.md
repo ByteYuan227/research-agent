@@ -100,11 +100,24 @@ would do it for a software engineering role:
 `rewrites` and `summary_text` must keep the same facts: no new numbers, technologies,
 employers or claims (the CLI rejects text with numbers or technical terms not in the profile).
 
+**Questions written for this job** (Claude answers them, never reused from other jobs):
+- *Skills / technologies / "which languages do you know"*: list the profile's skills that the
+  posting asks for first, in the posting's order and wording, then a few closely related
+  ones the profile has; for checkbox lists tick exactly the profile's skills. Never one
+  generic list for every job, never a skill the profile lacks.
+- *"Why are you a good fit / why this role / why us"*: 60-150 words (or the limit given).
+  Name 2-3 of the posting's key requirements and prove each with a concrete fact from the
+  resume (role, what was built, the number); say what draws you to this company's product or
+  team using what the posting says about it. First person, no generic praise.
+- *Other short answers* ("describe a project", "a challenge you solved"): pick the profile
+  experience closest to the posting and tell it with its real numbers.
+
 **Writing** (summaries, answers, cover letters): plain and specific. Tie one or two facts
 from the profile to what the posting asks for; cover letters 150-250 words. No filler such as
 "I am excited to apply", "passionate", "leverage", "spearheaded", "synergy", "cutting-edge",
 and no em dashes. Salary questions: `answers.salary_expectation_if_posted` when the posting
-states its pay (the CLI already suggests it then), otherwise `answers.salary_expectation`. If a
+states its pay ("midpoint" = the middle of the posted range; the CLI already suggests the
+figure then), otherwise `answers.salary_expectation`. If a
 salary question needs a number and the profile gives none, use the lower end of the range the
 posting states; with no range in the posting, record `manual`.
 

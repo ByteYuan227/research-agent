@@ -578,3 +578,48 @@ def test_salary_answer_depends_on_posted_pay(home, profile_data):
     assert forms.suggest(field, apply_mod.profile_for(silent, p), "Acme", {}).value == "$100,000"
     assert apply_mod.PAY_RE.search("$45/hour") and apply_mod.PAY_RE.search("$95K base")
     assert not apply_mod.PAY_RE.search("We raised $2 billion")
+
+
+def test_sponsorship_question_mentioning_visa_status(profile):
+    """Greenhouse's standard wording mentions "visa status"; it is still a sponsorship question."""
+    f = {"key": "q", "kind": "radio", "options": ["Yes", "No"],
+         "label": "Will you now or in the future require sponsorship for employment visa status (e.g., H-1B visa status)?"}
+    s = forms.suggest(f, profile, "Acme", {})
+    assert s is not None and s.value == "Yes" and s.source.startswith("work_authorization.requires_sponsorship")
+    visa = {"key": "v", "kind": "text", "label": "What is your current visa status?"}
+    assert forms.suggest(visa, profile, "Acme", {}).value == "F-1"
+
+
+@pytest.mark.parametrize("text, want", [
+    ("The base pay range for this position is $120,000 - $180,000 per year.", "$150,000"),
+    ("Pay: $120K–$180K plus equity", "$150,000"),
+    ("$129,300/year in our lowest geographic market up to $223,600/year in our highest geographic market", "$176,000"),
+    ("Hourly rate: $45 - $55 per hour", "$50/hour"),
+    ("Base salary of $150,000.", "$150,000"),
+    ("We raised $2 billion. Competitive pay.", None),
+])
+def test_posted_pay_midpoint(text, want):
+    assert apply_mod.posted_pay_midpoint(text) == want
+
+
+def test_salary_midpoint_of_the_posted_range(home, profile_data):
+    from job_agent.profile import Profile
+
+    profile_data["answers"].update(salary_expectation="$100,000", salary_expectation_if_posted="midpoint")
+    p = Profile.model_validate(profile_data)
+    field = {"key": "salary", "kind": "text", "label": "Desired salary"}
+    posted, silent = _job(id="gh:mid:1"), _job(id="gh:mid:2")
+    (apply_mod.work_dir(posted) / "description.txt").write_text("Base pay: $120,000 - $180,000.")
+    (apply_mod.work_dir(silent) / "description.txt").write_text("Great team.")
+    assert forms.suggest(field, apply_mod.profile_for(posted, p), "Acme", {}).value == "$150,000"
+    assert forms.suggest(field, apply_mod.profile_for(silent, p), "Acme", {}).value == "$100,000"
+
+
+def test_skills_and_fit_answers_are_never_reused():
+    from job_agent.memory import rememberable
+
+    for label in ["What programming languages are you proficient in?", "List your technical skills",
+                  "Which tools and frameworks have you used?", "Why are you a good fit for this role?",
+                  "Describe your experience with distributed systems"]:
+        assert not rememberable({"kind": "text", "label": label}, "Java, Python", "Acme"), label
+    assert rememberable({"kind": "radio", "label": "Are you open to working in the office 3 days a week?"}, "Yes", "Acme")
