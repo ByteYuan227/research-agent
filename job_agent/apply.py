@@ -41,6 +41,29 @@ def resume_path(job: Job, profile: Profile) -> Path:
     return work_dir(job) / resume_filename(profile)
 
 
+# A pay figure in a job description: "$120,000", "$95K", "$45/hour", "$52.50 per hour".
+PAY_RE = re.compile(
+    r"\$\s?\d{1,3}(?:,\d{3})+|\$\s?\d{2,3}(?:\.\d+)?\s?[kK]\b|\$\s?\d{1,3}(?:\.\d{1,2})?\s?(?:/|per\s)\s?(?:hour|hr)\b",
+    re.I,
+)
+
+
+def pay_posted(job: Job) -> bool:
+    """Whether the job description (as read by `jobagent jd`) states the pay."""
+    desc = work_dir(job) / "description.txt"
+    return desc.exists() and bool(PAY_RE.search(desc.read_text(encoding="utf-8", errors="replace")))
+
+
+def profile_for(job: Job, profile: Profile) -> Profile:
+    """The profile as it applies to this job: answers.salary_expectation_if_posted replaces the
+    salary expectation when the job description states its pay."""
+    alt = profile.answers.salary_expectation_if_posted
+    if not alt or not pay_posted(job):
+        return profile
+    answers = profile.answers.model_copy(update={"salary_expectation": alt})
+    return profile.model_copy(update={"answers": answers})
+
+
 SUBMIT_MARKER = "submit_clicked.txt"
 
 

@@ -71,17 +71,42 @@ says which. If it does not, do SCORE, then APPLY each job in `jobagent queue`, t
  "rewrites": {"b1": "same fact, reworded to use the posting's terms"}}
 ```
 
-Pick the most relevant entries, bullets and skills, ordered by relevance; keep one page.
-`rewrites` may rephrase a bullet to mirror the posting's language, and `summary_text` may
-replace the summary, but they must keep the same facts: no new numbers, technologies,
-employers or claims (the CLI rejects text with numbers or technical terms not in the
-profile). Build it: `jobagent resume <id> --plan <work_dir>/plan.json`; if `pages` > 1, trim.
+Every application gets its own resume, tailored the way a recruiter-minded resume writer
+would do it for a software engineering role:
+
+1. **Read the posting like a screener.** List its must-haves (languages, frameworks, cloud,
+   data stores), its functional areas (backend, distributed systems, APIs, infrastructure,
+   full stack, data, ML) and level signals (new grad, years of experience). Note the exact
+   wording it uses ("microservices", "REST APIs", "large-scale distributed systems").
+2. **Pick and order for a 6-second scan.** The top third of the page decides: the most recent
+   relevant role first, its 3-5 bullets that best prove the must-haves, strongest first;
+   older roles 2-4 bullets; 1-2 projects that cover what the experience does not. Drop what
+   does not serve this posting. Education first for new grad roles.
+3. **Reword where it helps, never stretch.** In `rewrites`, a bullet may (a) lead with a strong
+   verb (Built, Designed, Architected, Reduced, Scaled, Migrated, Automated), (b) follow
+   "accomplished X, as measured by Y, by doing Z" with the original numbers, (c) use the
+   posting's term for the same thing (e.g. "service" → "microservice" only if it was one).
+   Same facts, same numbers, no new technologies or claims; usually 2-5 rewrites, not all.
+4. **Skills that match first.** List the posting's technologies the profile has first in
+   each group; leave out unrelated ones so the page stays focused.
+5. **Summary**: usually none for new grad roles. Use one (`summary_text`, 1-2 lines from
+   profile facts) only when it adds something the bullets do not show.
+6. **Build and check**: `jobagent resume <id> --plan <work_dir>/plan.json`. The output lists
+   `jd_terms_in_profile_but_not_in_resume`: posting technologies the profile supports that
+   this resume does not show. Work each one in where a selected bullet or the skills line
+   truthfully supports it, then rebuild. The layout tightens itself to fit one page; if
+   `pages` is still > 1, drop the least relevant bullet.
+
+`rewrites` and `summary_text` must keep the same facts: no new numbers, technologies,
+employers or claims (the CLI rejects text with numbers or technical terms not in the profile).
 
 **Writing** (summaries, answers, cover letters): plain and specific. Tie one or two facts
 from the profile to what the posting asks for; cover letters 150-250 words. No filler such as
 "I am excited to apply", "passionate", "leverage", "spearheaded", "synergy", "cutting-edge",
-and no em dashes. If a salary question needs a number and the profile gives none, use the
-lower end of the range the posting states; with no range in the posting, record `manual`.
+and no em dashes. Salary questions: `answers.salary_expectation_if_posted` when the posting
+states its pay (the CLI already suggests it then), otherwise `answers.salary_expectation`. If a
+salary question needs a number and the profile gives none, use the lower end of the range the
+posting states; with no range in the posting, record `manual`.
 
 **b. Apply.**
 - If the job's `auto_apply` is true (Greenhouse/Lever/Ashby): `jobagent prepare <id>`;

@@ -24,11 +24,15 @@ have, and no technology/organisation names that appear nowhere in the profile.
 
 from __future__ import annotations
 
+import base64
+import functools
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, select_autoescape
+from markupsafe import Markup
 
 from .profile import Profile
 
@@ -208,32 +212,35 @@ def resume_context(profile: Profile, plan: dict[str, Any]) -> dict[str, Any]:
 TEMPLATE = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>{{ p.first_name }} {{ p.last_name }} - Resume</title>
 <style>
-  @page { size: Letter; margin: 0.5in 0.55in; }
-  body { font-family: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif; font-size: 10.2pt;
-         line-height: 1.32; color: #111; margin: 0; }
-  h1 { font-size: 19pt; margin: 0; letter-spacing: 0.3px; }
-  .contact { margin-top: 2px; font-size: 9.6pt; color: #333; }
-  .contact span + span::before { content: "  |  "; color: #888; }
-  h2 { font-size: 10.6pt; text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid #222;
-       margin: 11px 0 5px; padding-bottom: 1px; }
-  .row { display: flex; justify-content: space-between; gap: 12px; }
-  .row b { font-weight: 700; }
-  .sub { font-style: italic; }
-  .entry { margin-bottom: 6px; page-break-inside: avoid; }
-  ul { margin: 2px 0 0 0; padding-left: 15px; }
-  li { margin: 1px 0; }
-  .summary { margin: 6px 0 0; }
-  .skills div { margin: 1px 0; }
-  a { color: inherit; text-decoration: none; }
-</style></head><body>
-<h1>{{ p.first_name }} {{ p.last_name }}</h1>
+  {{ font_faces }}
+  @page { size: Letter; margin: {{ fit.margin_v }}in {{ fit.margin_h }}in; }
+  body { font-family: "CMU Serif", "Latin Modern Roman", "Times New Roman", serif; font-size: {{ fit.font }}pt;
+         line-height: {{ fit.line }}; color: #000; margin: 0; }
+  .name { text-align: center; font-size: 2.35em; font-weight: 700; line-height: 1.1; }
+  .contact { text-align: center; margin-top: 2px; }
+  .contact span + span::before { content: " | "; }
+  .contact a { color: inherit; text-decoration: underline; }
+  h2 { font-size: 1.24em; font-weight: 700; border-bottom: 0.8px solid #000; margin: {{ fit.gap }}px 0 3px;
+       padding-bottom: 1px; line-height: 1.15; }
+  .row { display: flex; justify-content: space-between; gap: 14px; }
+  .row > span:last-child { white-space: nowrap; }
+  .it { font-style: italic; }
+  .entry { margin: 0 0 {{ fit.entry }}px 0.15in; page-break-inside: avoid; }
+  ul { margin: 1px 0 0 0; padding-left: 0.2in; }
+  li { margin: 0; padding-left: 1px; }
+  .summary { margin: 4px 0 0; }
+  .skills { margin-left: 0.15in; }
+  .skills div { margin: 0; }
+  a { color: inherit; }
+</style></head><body data-fit="{{ fit.index }}">
+<div class="name">{{ p.first_name }} {{ p.last_name }}</div>
 <div class="contact">
-  {% if p.location.city %}<span>{{ p.location.display() }}</span>{% endif %}
+  {% if p.location.city and show_location %}<span>{{ p.location.display() }}</span>{% endif %}
   {% if p.phone %}<span>{{ p.phone }}</span>{% endif %}
-  <span>{{ p.email }}</span>
-  {% if p.linkedin %}<span>{{ p.linkedin | shorturl }}</span>{% endif %}
-  {% if p.github %}<span>{{ p.github | shorturl }}</span>{% endif %}
-  {% if p.website %}<span>{{ p.website | shorturl }}</span>{% endif %}
+  <span><a href="mailto:{{ p.email }}">{{ p.email }}</a></span>
+  {% if p.linkedin %}<span><a href="{{ p.linkedin }}">{{ p.linkedin | shorturl }}</a></span>{% endif %}
+  {% if p.github %}<span><a href="{{ p.github }}">{{ p.github | shorturl }}</a></span>{% endif %}
+  {% if p.website %}<span><a href="{{ p.website }}">{{ p.website | shorturl }}</a></span>{% endif %}
 </div>
 {% if summary %}<p class="summary">{{ summary }}</p>{% endif %}
 {% for section in sections %}
@@ -241,28 +248,30 @@ TEMPLATE = """<!doctype html>
 <h2>Education</h2>
 {% for e in education %}<div class="entry">
   <div class="row"><b>{{ e.school }}</b><span>{{ e.location }}</span></div>
-  <div class="row"><span class="sub">{{ e.degree }} in {{ e.field }}{% if e.gpa %}; GPA {{ e.gpa }}{% endif %}</span>
+  <div class="row it"><span>{{ e.degree }} in {{ e.field }}{% if e.gpa %}; GPA: {{ e.gpa }}{% endif %}</span>
     <span>{{ e.start }}{% if e.start and e.end %} – {% endif %}{{ e.end }}</span></div>
-  {% if e.coursework %}<div>Coursework: {{ e.coursework | join(", ") }}</div>{% endif %}
-  {% if e.bullets %}<ul>{% for b in e.bullets %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+  {% if e.coursework or e.bullets %}<ul>
+    {% for b in e.bullets %}<li>{{ b | label }}</li>{% endfor %}
+    {% if e.coursework %}<li><b>Coursework:</b> {{ e.coursework | join(", ") }}</li>{% endif %}
+  </ul>{% endif %}
 </div>{% endfor %}
 {% elif section == "experience" and experience %}
 <h2>Experience</h2>
 {% for e in experience %}<div class="entry">
-  <div class="row"><b>{{ e.title }}, {{ e.company }}</b><span>{{ e.start }}{% if e.start and e.end %} – {% endif %}{{ e.end }}</span></div>
-  {% if e.location %}<div class="sub">{{ e.location }}</div>{% endif %}
-  {% if e.bullets %}<ul>{% for b in e.bullets %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+  <div class="row"><b>{{ e.company }}</b><span>{{ e.location }}</span></div>
+  <div class="row it"><span>{{ e.title }}</span><span>{{ e.start }}{% if e.start and e.end %} – {% endif %}{{ e.end }}</span></div>
+  {% if e.bullets %}<ul>{% for b in e.bullets %}<li>{{ b | ts }}</li>{% endfor %}</ul>{% endif %}
 </div>{% endfor %}
 {% elif section == "projects" and projects %}
 <h2>Projects</h2>
 {% for e in projects %}<div class="entry">
-  <div class="row"><b>{{ e.name }}{% if e.tech %}<span style="font-weight:400"> | {{ e.tech | join(", ") }}</span>{% endif %}</b>
-    <span>{% if e.link %}{{ e.link | shorturl }}{% else %}{{ e.date }}{% endif %}</span></div>
-  {% if e.bullets %}<ul>{% for b in e.bullets %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+  <div class="row"><span><b>{{ e.name }}</b>{% if e.tech %} | <i>{{ e.tech | join(", ") }}</i>{% endif %}</span>
+    <span>{% if e.link %}<a href="{{ e.link }}">{{ e.link | shorturl }}</a>{% else %}{{ e.date }}{% endif %}</span></div>
+  {% if e.bullets %}<ul>{% for b in e.bullets %}<li>{{ b | ts }}</li>{% endfor %}</ul>{% endif %}
 </div>{% endfor %}
 {% elif section == "skills" and skills %}
-<h2>Skills</h2>
-<div class="skills">{% for group, items in skills.items() %}<div><b>{{ group }}:</b> {{ items | join(", ") }}</div>{% endfor %}</div>
+<h2>Technical Skills</h2>
+<div class="skills">{% for group, items in skills.items() %}<div><b>{{ group }}</b>: {{ items | join(", ") }}</div>{% endfor %}</div>
 {% endif %}
 {% endfor %}
 </body></html>
@@ -273,10 +282,67 @@ def _shorturl(url: str) -> str:
     return re.sub(r"^https?://(www\.)?", "", url or "").rstrip("/")
 
 
-def render_html(profile: Profile, plan: dict[str, Any] | None = None) -> str:
+FONT_DIR = Path(__file__).with_name("resume_fonts")
+
+
+@functools.lru_cache(maxsize=1)
+def _font_faces() -> str:
+    """CMU Serif (Computer Modern, as in LaTeX resumes) embedded in the page, so the PDF looks
+    the same on any machine. Falls back to system serif fonts if the files are missing."""
+    rules = []
+    for weight, style, name in ((400, "normal", "500-roman"), (400, "italic", "500-italic"),
+                                (700, "normal", "700-roman"), (700, "italic", "700-italic")):
+        f = FONT_DIR / f"cmu-serif-{name}.woff2"
+        if f.exists():
+            data = base64.b64encode(f.read_bytes()).decode()
+            rules.append(f'@font-face {{ font-family: "CMU Serif"; font-weight: {weight}; font-style: {style}; '
+                         f'src: url(data:font/woff2;base64,{data}) format("woff2"); }}')
+    return "\n  ".join(rules)
+
+
+def _typeset(text: str) -> str:
+    """'~2s' -> '∼2s': in Computer Modern the ASCII tilde is a raised accent, as in LaTeX."""
+    return re.sub(r"~(?=\s?[\d$])", "∼", text)
+
+
+def _label(text: str) -> Markup:
+    """'Honors: Dean's List' -> '<b>Honors:</b> Dean's List' (a short label before a colon is bold)."""
+    text = _typeset(text)
+    m = re.match(r"^([A-Z][A-Za-z&/ ]{1,30}):\s+(.*)$", text)
+    if not m:
+        return Markup.escape(text)
+    return Markup("<b>{}:</b> {}").format(m.group(1), m.group(2))
+
+
+@dataclass(frozen=True)
+class Fit:
+    index: int
+    font: float  # pt
+    line: float
+    margin_v: float  # in
+    margin_h: float
+    gap: int  # px above section headings
+    entry: int  # px below entries
+
+
+# Tighter settings tried in turn when the resume runs past one page, before anything is cut.
+FIT_STEPS = [
+    Fit(0, 10.5, 1.2, 0.5, 0.5, 8, 5),
+    Fit(1, 10.2, 1.16, 0.45, 0.5, 6, 4),
+    Fit(2, 9.9, 1.13, 0.4, 0.45, 5, 3),
+    Fit(3, 9.6, 1.1, 0.35, 0.42, 4, 2),
+    Fit(4, 9.3, 1.08, 0.33, 0.4, 3, 2),
+]
+
+
+def render_html(profile: Profile, plan: dict[str, Any] | None = None, fit: Fit | None = None) -> str:
     env = Environment(autoescape=select_autoescape(["html"]), trim_blocks=True, lstrip_blocks=True)
     env.filters["shorturl"] = _shorturl
-    return env.from_string(TEMPLATE).render(**resume_context(profile, plan or {}))
+    env.filters["label"] = _label
+    env.filters["ts"] = _typeset
+    ctx = resume_context(profile, plan or {})
+    return env.from_string(TEMPLATE).render(**ctx, fit=fit or FIT_STEPS[0], font_faces=Markup(_font_faces()),
+                                            show_location=not profile.personal.phone)
 
 
 def render_text(profile: Profile, plan: dict[str, Any] | None = None) -> str:
@@ -325,12 +391,66 @@ def resume_filename(profile: Profile) -> str:
     return f"{name}_Resume.pdf"
 
 
+# Skill names that are also everyday English words: matched only with the profile's own capitalisation.
+_COMMON_WORDS = {"go", "react", "rest", "spring", "flask", "rust", "ruby", "express", "swift", "dart", "agile", "git"}
+
+
+def _skill_terms(profile: Profile) -> list[str]:
+    """Technologies and concepts the profile can back up: skills, project tech, coursework.
+    "AWS (EC2, ECS, S3)" also yields AWS, EC2, ECS, S3; "Go (Golang)" yields Go and Golang."""
+    raw: list[str] = []
+    for items in profile.skills.values():
+        raw += items
+    for pr in profile.projects:
+        raw += pr.tech
+    for e in profile.education:
+        raw += e.coursework
+    terms: list[str] = []
+    for item in raw:
+        m = re.match(r"^(.*?)\s*\((.*)\)\s*$", item)
+        parts = [m.group(1)] + [x.strip() for x in m.group(2).split(",")] if m else [item]
+        for t in parts:
+            t = t.strip()
+            if len(t) >= 2 and t.lower() not in {x.lower() for x in terms}:
+                terms.append(t)
+    return terms
+
+
+def _term_re(term: str) -> re.Pattern:
+    flags = 0 if term.lower() in _COMMON_WORDS or (term.isupper() and len(term) <= 4) else re.I
+    return re.compile(r"(?<![A-Za-z0-9])" + re.escape(term) + r"(?![A-Za-z0-9+#])", flags)
+
+
+def keyword_coverage(profile: Profile, jd_text: str, resume_text: str) -> dict[str, list[str]]:
+    """Terms the job description asks for that the profile supports, split by whether this
+    resume already shows them. Only the profile's own terms are considered: nothing is invented."""
+    covered, missing = [], []
+    for term in _skill_terms(profile):
+        rx = _term_re(term)
+        if rx.search(jd_text):
+            (covered if rx.search(resume_text) else missing).append(term)
+    return {"jd_terms_in_resume": covered, "jd_terms_in_profile_but_not_in_resume": missing}
+
+
+def pdf_pages(pdf: Path) -> int:
+    data = pdf.read_bytes()
+    return data.count(b"/Type /Page") - data.count(b"/Type /Pages")
+
+
 def build_resume(profile: Profile, plan: dict[str, Any] | None, out_dir: Path) -> Path:
-    html = render_html(profile, plan)
+    """Render the resume PDF. If it runs past one page, tighten the layout step by step
+    (down to 9.3pt) before giving up; the caller still sees the page count."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "resume.html").write_text(html, encoding="utf-8")
     (out_dir / "resume.txt").write_text(render_text(profile, plan), encoding="utf-8")
-    return html_to_pdf(html, out_dir / resume_filename(profile))
+    pdf = out_dir / resume_filename(profile)
+    html = ""
+    for fit in FIT_STEPS:
+        html = render_html(profile, plan, fit)
+        html_to_pdf(html, pdf)
+        if pdf_pages(pdf) <= 1:
+            break
+    (out_dir / "resume.html").write_text(html, encoding="utf-8")
+    return pdf
 
 
 def render_letter_html(profile: Profile, text: str) -> str:

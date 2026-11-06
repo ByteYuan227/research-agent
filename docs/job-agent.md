@@ -83,7 +83,11 @@ Claude produces a plan (`plan.json`): which experiences and bullets, in what ord
 - nor technologies, products or organisations that appear nowhere in the profile (turning "35%" into "50%", or adding "at Meta", is rejected);
 - lengths are capped.
 
-It renders a single-column, ATS-friendly one-page Letter PDF.
+Every application gets its own resume. The job-hunt skill walks Claude through it like a resume writer for software roles: read the posting's must-haves and wording, pick and order the bullets that prove them (the top third of the page matters most), reword with strong verbs and the posting's terms without changing facts, list matching skills first. After each build, `jobagent resume` reports `jd_terms_in_profile_but_not_in_resume`: technologies the posting asks for that the profile supports but this resume does not show yet.
+
+It renders a single-column, ATS-friendly one-page Letter PDF in the style of the LaTeX "Jake's Resume" template, with the Computer Modern font (CMU Serif, OFL, embedded from `job_agent/resume_fonts/`). If the content runs past one page, the layout tightens step by step (font size, line height, margins; down to 9.3pt) before any bullet has to go.
+
+Salary questions use `answers.salary_expectation`, or `answers.salary_expectation_if_posted` when the job description states its pay.
 
 ### Safety
 
@@ -213,7 +217,11 @@ Claude 输出的是一份计划（`plan.json`）：选哪些经历和 bullet、�
 - 不能出现资料里任何地方都没有的技术、产品或机构名（比如把「35%」改成「50%」，或者加上「at Meta」，都会被拒绝）；
 - 长度有上限。
 
-渲染成单栏、ATS 友好的一页 Letter PDF。
+每个申请都单独定制简历。job-hunt 手册让 Claude 像专业的 SDE 简历顾问一样做：先读出 JD 的硬性要求和用词，再挑选、排序最能证明这些要求的 bullet（页面上方三分之一最关键），用有力的动词和 JD 的术语改写但不改事实，技能里匹配的排在前面。每次生成后，`jobagent resume` 会报告 `jd_terms_in_profile_but_not_in_resume`：JD 要求、你资料里也有、但这份简历还没体现的技术。
+
+渲染成单栏、ATS 友好的一页 Letter PDF，版式仿 LaTeX 的 "Jake's Resume" 模板，字体是 Computer Modern（CMU Serif，OFL 开源许可，内嵌自 `job_agent/resume_fonts/`）。内容超过一页时，先逐级收紧字号、行距和页边距（最小 9.3pt），还放不下才删 bullet。
+
+薪资题用 `answers.salary_expectation`；JD 写明薪资时改用 `answers.salary_expectation_if_posted`。
 
 ### 安全
 

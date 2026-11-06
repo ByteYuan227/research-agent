@@ -33,6 +33,7 @@ packages = ["research_agent", "job_agent", "job_agent.browser"]
 
 [tool.setuptools.package-data]
 "job_agent.browser" = ["*.js"]
+"job_agent" = ["resume_fonts/*.woff2", "resume_fonts/OFL.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

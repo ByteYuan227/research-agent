@@ -363,3 +363,41 @@ def test_materials_survive_across_runs(tmp_path, home, monkeypatch, profile):
     assert (work_dir(j) / "Alex_Chen_Resume.pdf").read_bytes() == b"%PDF-old"
     out = materials.unpack(bundle, tmp_path / "out")
     assert out["jobs"] == ["Old Co - Intern"] and not (tmp_path / "out" / "manifest.json").exists()
+
+
+def test_long_resume_is_tightened_to_one_page(profile, tmp_path):
+    from job_agent.profile import Bullet
+    from job_agent.resume import build_resume, pdf_pages
+
+    from .test_browser import _browser_available
+
+    if not _browser_available():
+        import pytest
+
+        pytest.skip("Chromium not available")
+    text = ("Built and operated a distributed streaming pipeline in Java and Flink that processed tens of millions "
+            "of events per day with exactly-once guarantees")
+    dense = profile.model_copy(deep=True)  # 14 long bullets: two pages at the default size
+    dense.experience[0].bullets = [Bullet(id=f"d{i}", text=text) for i in range(14)]
+    pdf = build_resume(dense, None, tmp_path)
+    assert pdf_pages(pdf) == 1 and 'data-fit="0"' not in (tmp_path / "resume.html").read_text()
+
+    huge = profile.model_copy(deep=True)  # far too long: still reported as more than one page
+    huge.experience[0].bullets = [Bullet(id=f"h{i}", text=text) for i in range(40)]
+    assert pdf_pages(build_resume(huge, None, tmp_path / "huge")) > 1
+
+
+def test_keyword_coverage_only_uses_profile_terms(profile_data):
+    from job_agent.profile import Profile
+    from job_agent.resume import keyword_coverage
+
+    profile_data["skills"] = {"Languages": ["Java", "Go (Golang)", "C++", "SQL"],
+                              "Cloud": ["AWS (EC2, S3, CDK)", "Kubernetes", "React"]}
+    p = Profile.model_validate(profile_data)
+    jd = ("We use Java, C++ and AWS S3 with Kubernetes. Experience with Scala is a plus. "
+          "You will go above and beyond and react quickly to incidents.")
+    resume = "Built services in Java on AWS."
+    cov = keyword_coverage(p, jd, resume)
+    assert set(cov["jd_terms_in_resume"]) == {"Java", "AWS"}
+    assert set(cov["jd_terms_in_profile_but_not_in_resume"]) == {"C++", "S3", "Kubernetes"}
+    assert "Scala" not in str(cov)  # not in the profile: never suggested

@@ -563,3 +563,18 @@ def test_public_actions_log_names_no_jobs(tmp_path, monkeypatch):
     )
     p = sp.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
     assert "[apply-1]" in p.stdout and "acme" not in p.stdout.lower(), p.stdout
+
+
+def test_salary_answer_depends_on_posted_pay(home, profile_data):
+    from job_agent.profile import Profile
+
+    profile_data["answers"].update(salary_expectation="$100,000", salary_expectation_if_posted="$120,000")
+    p = Profile.model_validate(profile_data)
+    field = {"key": "salary", "kind": "text", "label": "What are your salary expectations?"}
+    posted, silent = _job(id="gh:pay:1"), _job(id="gh:pay:2")
+    (apply_mod.work_dir(posted) / "description.txt").write_text("The base pay range is $110,000 - $150,000 per year.")
+    (apply_mod.work_dir(silent) / "description.txt").write_text("Competitive pay and great benefits.")
+    assert forms.suggest(field, apply_mod.profile_for(posted, p), "Acme", {}).value == "$120,000"
+    assert forms.suggest(field, apply_mod.profile_for(silent, p), "Acme", {}).value == "$100,000"
+    assert apply_mod.PAY_RE.search("$45/hour") and apply_mod.PAY_RE.search("$95K base")
+    assert not apply_mod.PAY_RE.search("We raised $2 billion")

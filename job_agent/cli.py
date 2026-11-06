@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any
 
 from . import inbox, notify, prefilter, sources, vault
-from .apply import ApplyError, applied_today, prepare, submit, work_dir
+from .apply import ApplyError, applied_today, prepare, profile_for, submit, work_dir
 from .profile import Preferences, ProfileError, has_profile, jobagent_home, load_profile
 from .report import build_report
-from .resume import PlanError, build_resume, validate_plan
+from .resume import PlanError, build_resume, keyword_coverage, pdf_pages, validate_plan
 from .store import (
     Job,
     State,
@@ -251,11 +251,16 @@ def cmd_resume(args) -> int:
     except PlanError as exc:
         return fail(f"plan rejected: {exc}")
     pdf = build_resume(profile, plan, work_dir(job))
-    pages = pdf.read_bytes().count(b"/Type /Page") - pdf.read_bytes().count(b"/Type /Pages")
+    pages = pdf_pages(pdf)
     job.resume_plan = plan
     state.jobs[job.id] = job
     save_state(state)
-    out({"pdf": str(pdf), "pages": pages, "warning": "longer than one page" if pages > 1 else None})
+    result: dict[str, Any] = {"pdf": str(pdf), "pages": pages, "warning": "longer than one page" if pages > 1 else None}
+    desc = work_dir(job) / "description.txt"
+    if desc.exists():  # which of the posting's technologies this resume shows (run `jobagent jd` first)
+        result.update(keyword_coverage(profile, desc.read_text(encoding="utf-8"),
+                                       (work_dir(job) / "resume.txt").read_text(encoding="utf-8")))
+    out(result)
     return 0
 
 
@@ -263,7 +268,7 @@ def cmd_prepare(args) -> int:
     state = load_state()
     job = _job(state, args.job_id)
     try:
-        result = prepare(job, load_profile(), state.memory)
+        result = prepare(job, profile_for(job, load_profile()), state.memory)
     except ApplyError as exc:
         return fail(str(exc))
     except Exception as exc:  # noqa: BLE001
@@ -282,7 +287,8 @@ def cmd_submit(args) -> int:
     # JOBAGENT_DRY_RUN=1 makes rehearsals safe even if the --dry-run flag is forgotten.
     dry_run = args.dry_run or os.environ.get("JOBAGENT_DRY_RUN") == "1"
     try:
-        result = submit(job, load_profile(), state, Path(args.answers), dry_run=dry_run, force=args.force)
+        result = submit(job, profile_for(job, load_profile()), state, Path(args.answers), dry_run=dry_run,
+                        force=args.force)
     except ApplyError as exc:
         return fail(str(exc))
     save_state(state)
@@ -432,6 +438,9 @@ def cmd_web(args) -> int:
     state = load_state()
     try:
         profile = load_profile()
+        job_id = args.arg if args.action == "open" else web._session().get("job_id")
+        if job_id in state.jobs:
+            profile = profile_for(state.jobs[job_id], profile)
         if args.action == "open":
             if not args.arg:
                 return fail("usage: jobagent web open <job_id>")
