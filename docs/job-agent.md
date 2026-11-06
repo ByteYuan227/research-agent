@@ -40,6 +40,8 @@ With no application cap, a day can mean dozens of applications, each with dozens
 - in a rehearsal (`JOBAGENT_DRY_RUN=1`), prepared jobs go back to the queue for the first real run;
 - anything else without a result goes on the apply-by-hand list.
 
+Models: Sonnet for scoring, the inbox and most applications; Opus for jobs scoring at least `JOBAGENT_TOP_SCORE` (85), where tailoring and written answers matter most. If an Opus session stops on a usage limit, the same job is retried on Sonnet at once and the rest of the day stays on Sonnet; only when Sonnet is out of quota too does the run stop. `JOBAGENT_CLAUDE_MODEL` overrides all of this with one model.
+
 The queue (`jobagent queue`) is ordered by score plus a freshness bonus (+8 if posted within 24 hours, +4 within 3 days). There is no per-company limit by default; with `max_per_company` set, at most that many applications go to one company within 30 days, and the rest are recorded as skipped with the reason.
 
 #### Two ways to apply
@@ -173,6 +175,8 @@ flowchart TD
 - 超时或崩溃（退出码非 0）的，下次运行再试一次（`Job.retries`，最多 1 次）；
 - 演练模式（`JOBAGENT_DRY_RUN=1`）下准备好的岗位放回队列，等第一次正式运行再投；
 - 其余没给出结果的，转入手动清单。
+
+模型：打分、读邮箱和大部分投递用 Sonnet；匹配度达到 `JOBAGENT_TOP_SCORE`（85）的岗位用 Opus，因为这些岗位的简历定制和开放题回答最值得投入。Opus 会话撞上额度上限时，同一个岗位立刻改用 Sonnet 重做，当天剩下的也都用 Sonnet；Sonnet 也没额度了才停止。设置 `JOBAGENT_CLAUDE_MODEL` 则所有环节都用这一个模型。
 
 投递队列（`jobagent queue`）按「匹配分 + 新鲜度加成」排序（24 小时内发布 +8，3 天内 +4），默认不限制同一家公司的投递数；设了 `max_per_company` 的话，同一家公司 30 天内最多投这么多个，超出的记为跳过并写明原因。
 

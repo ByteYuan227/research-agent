@@ -75,3 +75,55 @@ def test_quota_during_applications_requeues_the_job(tmp_path, monkeypatch):
     assert [j["status"] for j in state["jobs"].values()] == ["scored", "scored"]
     queue = subprocess.run(["jobagent", "queue"], env=env, capture_output=True, text=True).stdout.split()
     assert queue == ["greenhouse:acme:1", "greenhouse:acme:2"]
+
+
+def _models_fake(tmp_path, opus_out_of_quota=False):
+    """A stand-in claude that records the model of each session and scores two jobs (90 and 80)."""
+    calls = tmp_path / "calls.txt"
+    quota = 'if [[ "$model" == "opus" ]]; then echo "Claude AI usage limit reached|1793900000"; exit 1; fi\n' \
+        if opus_out_of_quota else ""
+    (tmp_path / "bin" / "claude").write_text(
+        "#!/usr/bin/env bash\n"
+        'model=""; prev=""; for a in "$@"; do if [[ "$prev" == "--model" ]]; then model="$a"; fi; prev="$a"; done\n'
+        'kind="other"; if [[ "$2" == *"Mode SCORE"* ]]; then kind=score; elif [[ "$2" == *"Mode APPLY"* ]]; then kind=apply; '
+        'elif [[ "$2" == *"Mode INBOX"* ]]; then kind=inbox; fi\n'
+        f'echo "$kind $model" >> {calls}\n'
+        'if [[ "$kind" == score ]]; then\n'
+        "  jobagent score greenhouse:acme:1 90 --reason r --decision apply > /dev/null\n"
+        "  jobagent score greenhouse:acme:2 80 --reason r --decision apply > /dev/null\n"
+        "fi\n"
+        + quota +
+        'if [[ "$kind" == apply ]]; then id=$(echo "$2" | grep -oE "greenhouse:acme:[0-9]+"); '
+        'jobagent mark "$id" --status manual --reason "test" > /dev/null; fi\n'
+        "echo ok; exit 0\n"
+    )
+    return calls
+
+
+def test_models_sonnet_for_most_opus_for_best_matches(tmp_path, monkeypatch):
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    calls = _models_fake(tmp_path)
+    p = subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert p.returncode == 0, p.stderr
+    assert calls.read_text().split("\n")[:4] == ["score sonnet", "apply opus", "apply sonnet", "inbox sonnet"]
+
+
+def test_opus_out_of_quota_continues_on_sonnet(tmp_path, monkeypatch):
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    calls = _models_fake(tmp_path, opus_out_of_quota=True)
+    p = subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert p.returncode == 0, p.stderr
+    # The 90-point job was retried on Sonnet right away; the rest of the day ran on Sonnet.
+    assert calls.read_text().split("\n")[:5] == ["score sonnet", "apply opus", "apply sonnet", "apply sonnet", "inbox sonnet"]
+    state = json.loads((home / "state.json").read_text())
+    assert not state["last_run"].get("quota_exhausted")
+    assert any("额度用完" in n for n in state["last_run"].get("notes", []))
+    assert {j["status"] for j in state["jobs"].values()} == {"manual"}
+
+
+def test_one_model_for_everything(tmp_path, monkeypatch):
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    env["JOBAGENT_CLAUDE_MODEL"] = "claude-opus-5-5"
+    calls = _models_fake(tmp_path)
+    subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert set(calls.read_text().split()) - {"score", "apply", "inbox"} == {"claude-opus-5-5"}

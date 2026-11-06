@@ -519,7 +519,7 @@ def cmd_queue(args) -> int:
             changed = True
             continue
         per_company[key] = per_company.get(key, 0) + 1
-        print(j.id)
+        print(f"{j.id} {j.score or 0}" if args.scores else j.id)
     if changed:
         save_state(state)
     return 0
@@ -763,7 +763,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="click: press a submit button although an answer differs from the profile's (re-read it first)")
     s.set_defaults(fn=cmd_web)
 
-    sub.add_parser("queue", help="job ids to apply to, best first").set_defaults(fn=cmd_queue)
+    s = sub.add_parser("queue", help="job ids to apply to, best first")
+    s.add_argument("--scores", action="store_true", help="print '<id> <score>' per line")
+    s.set_defaults(fn=cmd_queue)
 
     s = sub.add_parser("settle", help="(used by daily_run.sh) make sure a job got an outcome")
     s.add_argument("job_id")

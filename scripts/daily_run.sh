@@ -24,7 +24,14 @@ cd "$(dirname "$0")/.."
 
 ARGS=(--permission-mode dontAsk --tools "Bash,Read,Write,Edit,Glob,Grep"
       --allowedTools "Bash(jobagent *)" Read Write Edit Glob Grep)
-if [ -n "${JOBAGENT_CLAUDE_MODEL:-}" ]; then ARGS+=(--model "$JOBAGENT_CLAUDE_MODEL"); fi
+
+# Models: Sonnet for scoring, the inbox and most applications; Opus for the best matches
+# (score >= JOBAGENT_TOP_SCORE), where the writing matters most. If Opus runs out of quota,
+# the rest of the day continues on Sonnet. JOBAGENT_CLAUDE_MODEL, if set, is used for everything.
+BASE_MODEL="${JOBAGENT_CLAUDE_MODEL:-sonnet}"
+TOP_MODEL="${JOBAGENT_CLAUDE_MODEL:-${JOBAGENT_MODEL_TOP:-opus}}"
+TOP_SCORE="${JOBAGENT_TOP_SCORE:-85}"
+TOP_OFF=""
 DRY=""
 if [ "${JOBAGENT_DRY_RUN:-}" = "1" ]; then
   DRY=" This is a DRY RUN: nothing may be submitted (use --dry-run with submit; finish browser applications with 'jobagent web finish dry_run')."
@@ -41,12 +48,12 @@ classify() {  # quota | auth | "" from a failed Claude run's output
 
 TIMEOUT_BIN="$(command -v timeout || command -v gtimeout || true)"  # gtimeout: macOS with coreutils
 
-run_claude() {  # run_claude <log name> <max turns> <timeout minutes> <prompt>
+run_claude() {  # run_claude <log name> <max turns> <timeout minutes> <model> <prompt>
   local log="$LOG_DIR/$1.log"
   if [ -n "$TIMEOUT_BIN" ]; then
-    "$TIMEOUT_BIN" "${3}m" claude -p "$4$DRY" --max-turns "$2" "${ARGS[@]}" < /dev/null > "$log" 2>&1
+    "$TIMEOUT_BIN" "${3}m" claude -p "$5$DRY" --max-turns "$2" --model "$4" "${ARGS[@]}" < /dev/null > "$log" 2>&1
   else
-    claude -p "$4$DRY" --max-turns "$2" "${ARGS[@]}" < /dev/null > "$log" 2>&1
+    claude -p "$5$DRY" --max-turns "$2" --model "$4" "${ARGS[@]}" < /dev/null > "$log" 2>&1
   fi
   local status=$?
   if [ $status -ne 0 ]; then
@@ -61,7 +68,7 @@ run_claude() {  # run_claude <log name> <max turns> <timeout minutes> <prompt>
         ;;
     esac
   fi
-  echo "[$1] exit $status ${STOP:+($STOP)}"
+  echo "[$1] $4: exit $status ${STOP:+($STOP)}"
   return $status
 }
 
@@ -79,13 +86,13 @@ BATCH="${JOBAGENT_SCORE_BATCH:-40}"
 for round in 1 2 3 4 5 6 7 8; do
   left=$(jobagent candidates | grep -c '"id"' || true)
   if [ "$left" -eq 0 ] || [ -n "$STOP" ]; then break; fi
-  run_claude "score-$round" $((BATCH * 3 + 20)) 60 "Mode SCORE of the job-hunt skill ($SKILL): read the skill first, then score at most $BATCH of the remaining candidates (best-ranked first) and stop."
+  run_claude "score-$round" $((BATCH * 3 + 20)) 60 "$BASE_MODEL" "Mode SCORE of the job-hunt skill ($SKILL): read the skill first, then score at most $BATCH of the remaining candidates (best-ranked first) and stop."
   if [ "$(jobagent candidates | grep -c '"id"' || true)" -ge "$left" ]; then break; fi  # no progress: do not loop
 done
 
 if [ -z "$STOP" ]; then
   n=0
-  for id in $(jobagent queue); do
+  while read -r id score; do
     n=$((n + 1))
     elapsed=$(( ($(date +%s) - START) / 60 ))
     if [ "$elapsed" -ge "$MAX_MINUTES" ]; then
@@ -93,15 +100,30 @@ if [ -z "$STOP" ]; then
       break
     fi
     name="apply-$n"  # numbered, not named: Actions logs of public repositories are public
-    run_claude "$name" 150 "$APPLY_TIMEOUT" "Mode APPLY of the job-hunt skill ($SKILL) for job $id: read the skill first, then tailor the resume and apply."
+    prompt="Mode APPLY of the job-hunt skill ($SKILL) for job $id: read the skill first, then tailor the resume and apply."
+    model="$BASE_MODEL"
+    if [ -z "$TOP_OFF" ] && [ "${score:-0}" -ge "$TOP_SCORE" ]; then model="$TOP_MODEL"; fi
+    run_claude "$name" 150 "$APPLY_TIMEOUT" "$model" "$prompt"
     status=$?
+    if [ "$STOP" = quota ] && [ "$model" != "$BASE_MODEL" ]; then
+      # The stronger model's limit ran out: the rest of the day continues on the base model.
+      TOP_OFF=1
+      STOP=""
+      jobagent set-run quota_exhausted "" > /dev/null
+      jobagent note "⚡ $model 的额度用完了，之后的岗位改用 $BASE_MODEL 继续投递。" > /dev/null
+      jobagent web close > /dev/null 2>&1 || true
+      if jobagent settle "$id" --stopped quota --exit "$status" | grep -q '"status": "scored"'; then
+        run_claude "$name-retry" 150 "$APPLY_TIMEOUT" "$BASE_MODEL" "$prompt"
+        status=$?
+      fi
+    fi
     jobagent settle "$id" --stopped "$STOP" --exit "$status" > /dev/null
     jobagent web close > /dev/null 2>&1 || true
     if [ -n "$STOP" ]; then break; fi
-  done
+  done < <(jobagent queue --scores)
 fi
 
 if [ -z "$STOP" ]; then
-  run_claude inbox 60 15 "Mode INBOX of the job-hunt skill ($SKILL): read the skill first, then check the inbox and add notes."
+  run_claude inbox 60 15 "$BASE_MODEL" "Mode INBOX of the job-hunt skill ($SKILL): read the skill first, then check the inbox and add notes."
 fi
 exit 0
