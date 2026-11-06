@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import html
 import json
 import os
 import re
@@ -46,7 +47,9 @@ def job_type_from_title(title: str) -> str:
     t = title.lower()
     if re.search(r"\bintern(ship)?\b|\bco-?op\b", t):
         return "internship"
-    if re.search(r"new ?grad|university grad|recent grad|early career|entry[- ]level|graduate (program|engineer)", t):
+    if re.search(r"new ?grad|university grad|recent grad|early career|entry[- ]level|graduate (program|engineer)|"
+                 r"\b(engineer|developer|swe|sde)\s*(i|1)\b|\bassociate (software|engineer|developer)|\bjunior\b|\bjr\.? ",
+                 t):
         return "new_grad"
     return "full_time"
 
@@ -204,6 +207,62 @@ def company_jobs(board: CompanyBoard, client: httpx.Client) -> list[Job]:
     return jobs
 
 
+SPEEDYAPPLY_NEW_GRAD = "https://raw.githubusercontent.com/speedyapply/2027-SWE-College-Jobs/main/NEW_GRAD_USA.md"
+_TAG = re.compile(r"<[^>]+>")
+_HREF = re.compile(r'href="([^"]+)"')
+
+
+def _cell(text: str) -> str:
+    return html.unescape(_TAG.sub("", text)).replace("**", "").strip()
+
+
+def speedyapply_jobs(client: httpx.Client, url: str = SPEEDYAPPLY_NEW_GRAD, now: float | None = None) -> list[Job]:
+    """The SpeedyApply new grad list: Markdown tables of Company | Position | Location | [Salary] | Posting | Age."""
+    now = now or time.time()
+    r = client.get(url)
+    r.raise_for_status()
+    jobs: list[Job] = []
+    header: list[str] | None = None
+    for line in r.text.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            if line.startswith("#"):
+                header = None
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if cells and cells[0] == "Company":
+            header = cells
+            continue
+        if not header or len(cells) != len(header) or set(line) <= set("|-: "):
+            continue
+        row = dict(zip(header, cells))
+        href = _HREF.search(row.get("Posting", ""))
+        if not href:
+            continue
+        age = re.match(r"(\d+)\s*d", _cell(row.get("Age", "")))
+        location = _cell(row.get("Location", ""))
+        jobs.append(_from_url(
+            html.unescape(href.group(1)), source="speedyapply_new_grad", company=_cell(row.get("Company", "")),
+            title=_cell(row.get("Position", "")), locations=[location] if location else [],
+            posted_at=now - int(age.group(1)) * 86400 if age else None, category="Software", job_type="new_grad",
+        ))
+    return jobs
+
+
+# Career boards of companies that hire new grad software engineers (checked to exist). Only
+# entry-level titles survive the job-type filter, so the rest of each board costs nothing.
+POPULAR_BOARDS = (
+    [("greenhouse", t) for t in (
+        "stripe databricks airbnb pinterest robinhood discord figma coinbase cloudflare datadog mongodb roblox lyft "
+        "instacart reddit twitch dropbox asana gitlab duolingo affirm brex samsara verkada scaleai anthropic okta "
+        "twilio squarespace janestreet imc point72 chime gusto nuro waymo applovin nextdoor toast elastic pagerduty "
+        "newrelic zscaler ziprecruiter rubrik akunacapital sofi").split()]
+    + [("lever", t) for t in "palantir spotify zoox".split()]
+    + [("ashby", t) for t in ("openai ramp notion linear replit perplexity cursor elevenlabs supabase cohere "
+                              "character harvey sierra decagon").split()]
+)
+
+
 def discover(prefs: Preferences, client: httpx.Client | None = None) -> tuple[list[Job], list[str]]:
     """All currently open jobs from every enabled source, de-duplicated. Returns (jobs, errors)."""
     client = client or httpx.Client(timeout=60, follow_redirects=True, headers={"User-Agent": ats.USER_AGENT})
@@ -220,7 +279,16 @@ def discover(prefs: Preferences, client: httpx.Client | None = None) -> tuple[li
             batches.append(simplify_jobs("new_grad", client))
         except httpx.HTTPError as exc:
             errors.append(f"simplify new grad: {exc}")
-    for board in src.companies:
+    if src.speedyapply_new_grad and "new_grad" in prefs.job_types:
+        try:
+            batches.append(speedyapply_jobs(client))
+        except httpx.HTTPError as exc:
+            errors.append(f"speedyapply new grad: {exc}")
+    boards = list(src.companies)
+    if src.popular_boards:
+        own = {(b.ats, b.token) for b in boards}
+        boards += [CompanyBoard(name=tok.title(), ats=kind, token=tok) for kind, tok in POPULAR_BOARDS if (kind, tok) not in own]
+    for board in boards:
         try:
             batches.append(company_jobs(board, client))
         except (httpx.HTTPError, KeyError, ValueError) as exc:

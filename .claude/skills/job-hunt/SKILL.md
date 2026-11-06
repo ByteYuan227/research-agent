@@ -51,7 +51,8 @@ says which. If it does not, do SCORE, then APPLY each job in `jobagent queue`, t
    Hard blockers make it a skip: requires U.S. citizenship / permanent residency /
    clearance / export-control "U.S. person" status the profile does not have; explicitly
    no sponsorship (or no CPT/OPT) while the profile needs it; graduation date or degree
-   outside what the posting accepts; not the wanted kind of role. Not blockers: generic
+   outside what the posting accepts; not the wanted kind of role (for a new grad profile:
+   a role that requires more than 2 years of full-time experience). Not blockers: generic
    boilerplate such as "offers are subject to export-control laws" without an explicit
    citizenship / U.S.-person requirement, and essay questions on the form.
 3. `jobagent score <id> <score> --reason "<one sentence: strongest match, main gap>" --decision apply|skip`

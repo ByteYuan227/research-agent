@@ -675,3 +675,61 @@ def test_transcript_only_where_required(home, profile_data, tmp_path, monkeypatc
     assert documents.export(bundle) == {"documents": 1} and b"transcript" not in bundle.read_bytes()
     documents.path("transcript").unlink()
     assert documents.restore(bundle) == {"documents": 1} and documents.path("transcript").read_bytes().startswith(b"%PDF")
+
+
+# ---------------------------------------------------------------------------
+# More new grad sources
+# ---------------------------------------------------------------------------
+
+SPEEDY_MD = """## 2027 USA SWE New Graduate Positions
+### FAANG+
+| Company | Position | Location | Salary | Posting | Age |
+|---|---|---|---|---|---|
+| <a href="https://www.twitch.tv"><strong>Twitch</strong></a> | Software Dev Engineer I - Security Platform | San Francisco, CA | $193k/yr | <a href="https://job-boards.greenhouse.io/twitch/jobs/8929545002"><img src="x.png" alt="Apply"/></a> | 3d |
+### Other
+| Company | Position | Location | Posting | Age |
+|---|---|---|---|---|
+| <a href="https://acme.example"><strong>Acme &amp; Co</strong></a> | Software Engineer, New Grad | Remote in USA | <a href="https://jobs.lever.co/acme/123abc"><img src="x.png"/></a> | 0d |
+| broken row without a link | x | y | z | 1d |
+"""
+
+
+def test_speedyapply_new_grad_list():
+    from job_agent import sources
+
+    client = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, text=SPEEDY_MD)))
+    now = 1_800_000_000.0
+    jobs = sources.speedyapply_jobs(client, now=now)
+    assert [(j.id, j.company, j.title) for j in jobs] == [
+        ("greenhouse:twitch:8929545002", "Twitch", "Software Dev Engineer I - Security Platform"),
+        ("lever:acme:123abc", "Acme & Co", "Software Engineer, New Grad"),
+    ]
+    assert jobs[0].posted_at == now - 3 * 86400 and jobs[1].job_type == "new_grad" and jobs[1].locations == ["Remote in USA"]
+
+
+@pytest.mark.parametrize("title, kind", [
+    ("Software Engineer I", "new_grad"), ("Software Dev Engineer I - Security", "new_grad"),
+    ("Associate Software Engineer", "new_grad"), ("Engineer 1 - Automation", "new_grad"),
+    ("Software Engineer II", "full_time"), ("Senior Software Engineer", "full_time"),
+    ("Software Engineer Intern", "internship"),
+])
+def test_entry_level_titles(title, kind):
+    from job_agent.sources import job_type_from_title
+
+    assert job_type_from_title(title) == kind
+
+
+def test_popular_boards_are_added_once(profile_data, monkeypatch):
+    from job_agent import sources
+    from job_agent.profile import Profile
+
+    profile_data["preferences"]["job_types"] = ["new_grad"]
+    profile_data["preferences"]["sources"] = {"simplify_internships": False, "simplify_new_grad": False,
+                                              "speedyapply_new_grad": False, "popular_boards": True,
+                                              "companies": [{"name": "Stripe", "ats": "greenhouse", "token": "stripe"}]}
+    p = Profile.model_validate(profile_data)
+    seen = []
+    monkeypatch.setattr(sources, "company_jobs", lambda board, client: seen.append((board.ats, board.token)) or [])
+    monkeypatch.setattr(sources.time, "sleep", lambda s: None)
+    sources.discover(p.preferences, client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500))))
+    assert seen.count(("greenhouse", "stripe")) == 1 and ("lever", "palantir") in seen and len(seen) == len(sources.POPULAR_BOARDS)

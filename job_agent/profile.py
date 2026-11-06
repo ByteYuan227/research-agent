@@ -194,6 +194,8 @@ class CompanyBoard(_Model):
 class Sources(_Model):
     simplify_internships: bool = True
     simplify_new_grad: bool = True
+    speedyapply_new_grad: bool = True  # github.com/speedyapply/2027-SWE-College-Jobs (new grad, USA)
+    popular_boards: bool = False  # ~60 company career boards (Stripe, Databricks, Palantir...): entry-level roles
     companies: list[CompanyBoard] = Field(default_factory=list)
     extra_urls: list[str] = Field(default_factory=list)  # specific postings you want considered
 
