@@ -623,3 +623,55 @@ def test_skills_and_fit_answers_are_never_reused():
                   "Describe your experience with distributed systems"]:
         assert not rememberable({"kind": "text", "label": label}, "Java, Python", "Acme"), label
     assert rememberable({"kind": "radio", "label": "Are you open to working in the office 3 days a week?"}, "Yes", "Acme")
+
+
+# ---------------------------------------------------------------------------
+# GPA and transcript only where a form requires them
+# ---------------------------------------------------------------------------
+
+
+def _gpa_profile(profile_data):
+    from job_agent.profile import Profile
+
+    profile_data["education"][0]["gpa"] = "3.28"
+    profile_data["answers"]["gpa_only_when_required"] = True
+    return Profile.model_validate(profile_data)
+
+
+def test_gpa_only_where_required(profile_data, tmp_path):
+    from job_agent.resume import render_html
+
+    p = _gpa_profile(profile_data)
+    req = {"key": "g", "kind": "text", "label": "GPA", "required": True}
+    assert forms.suggest(req, p, "Acme", {}).value == "3.28"
+    assert forms.suggest({**req, "required": False}, p, "Acme", {}) is None
+    assert forms.withheld({**req, "required": False}, p)
+    band = {"key": "b", "kind": "select", "label": "Cumulative GPA", "required": True,
+            "options": ["Below 3.0", "3.0 - 3.49", "3.5 - 3.79", "3.8+"]}
+    assert forms.suggest(band, p, "Acme", {}).value == "3.0 - 3.49"
+    assert forms.gpa_band(3.9, band["options"]) == "3.8+" and forms.gpa_band(2.5, band["options"]) == "Below 3.0"
+    assert "3.28" not in render_html(p)  # never on the resume
+
+
+def test_transcript_only_where_required(home, profile_data, tmp_path, monkeypatch):
+    from job_agent import documents
+
+    p = _gpa_profile(profile_data)
+    pdf = tmp_path / "t.pdf"
+    pdf.write_bytes(b"%PDF-1.4 transcript")
+    documents.add("transcript", pdf)
+    files = {"resume": tmp_path / "r.pdf", **documents.available()}
+    req = {"key": "t", "kind": "file", "label": "Unofficial Transcript", "required": True}
+    assert forms.suggest(req, p, "Acme", files).value.endswith("transcript.pdf")
+    assert forms.suggest({**req, "required": False}, p, "Acme", files) is None
+
+    fields = [req, {**req, "key": "t2", "required": False}, {"key": "g", "kind": "text", "label": "GPA", "required": False}]
+    merged, problems = apply_mod.merge_answers(fields, {"answers": {"t": "transcript", "t2": "transcript", "g": "3.28"}},
+                                               files, p)
+    assert merged["t"].endswith("transcript.pdf") and "t2" not in merged and "g" not in merged and not problems
+
+    monkeypatch.setenv("JOBAGENT_STATE_KEY", __import__("cryptography.fernet", fromlist=["Fernet"]).Fernet.generate_key().decode())
+    bundle = tmp_path / "documents.enc"
+    assert documents.export(bundle) == {"documents": 1} and b"transcript" not in bundle.read_bytes()
+    documents.path("transcript").unlink()
+    assert documents.restore(bundle) == {"documents": 1} and documents.path("transcript").read_bytes().startswith(b"%PDF")

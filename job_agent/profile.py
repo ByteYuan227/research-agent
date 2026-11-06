@@ -152,6 +152,8 @@ class Answers(_Model):
     # Optional: the answer to use instead when the job description states its pay: a figure
     # (e.g. "$120,000") or "midpoint" (the middle of the posted range, e.g. $120K-$180K -> $150,000).
     salary_expectation_if_posted: str = ""
+    # GPA only where a form requires it (never on the resume, optional GPA questions left blank).
+    gpa_only_when_required: bool = False
     over_18: bool = True
     previously_employed_at: list[str] = Field(default_factory=list)  # company names
     previously_interviewed_at: list[str] = Field(default_factory=list)  # company names

@@ -295,6 +295,9 @@ def _files(job: Job, profile: Profile) -> dict[str, Path]:
     cl = work_dir(job) / "Cover_Letter.pdf"
     if cl.exists():
         files["cover_letter"] = cl
+    from . import documents
+
+    files.update(documents.available())
     return files
 
 
@@ -498,6 +501,12 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
                     values[f["key"]] = s.value
         for k, v in list(values.items()):
             f = by_key[k]
+            why = forms.withheld(f, profile)
+            if why:  # optional GPA / transcript: left empty
+                values.pop(k)
+                if k in answers:
+                    unknown.append(f"{k}: left empty - {why}")
+                continue
             if f["kind"] == "password" or v == forms.SITE_PASSWORD:
                 # Rehearsals must not create accounts: never generate or type a real password.
                 values[k] = ("DryRun-Not-A-Real-Password-1!" if dry_run()
@@ -507,7 +516,7 @@ def fill(state: State, profile: Profile, answers: dict[str, Any] | None, overwri
                 path = files.get(token) or next((p for p in files.values() if p.name == Path(token).name), None)
                 if path is None:
                     values.pop(k)
-                    unknown.append(f"{k}: files can only be 'resume' or 'cover_letter' (build them first)")
+                    unknown.append(f"{k}: files can only be 'resume', 'cover_letter' or 'transcript' (if you supplied one)")
                 else:
                     values[k] = str(path)
         report = forms.fill_and_verify(pg, [f for f in data["fields"] if f["key"] in values], values)

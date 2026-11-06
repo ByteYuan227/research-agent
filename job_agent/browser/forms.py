@@ -273,6 +273,7 @@ def _sponsorship(p: Profile, f: dict) -> Suggestion:
     return _yes_no(needs != flip, "work_authorization.requires_sponsorship_*")
 
 
+GPA_RE = re.compile(r"\bgpa\b|grade point average", re.I)
 TEXTY = ("text", "email", "tel", "url", "textarea")
 AGREEMENT_KINDS = ("checkbox", "radio", "button_group", "select", "combobox", "listbox")
 CHOICE = ("select", "combobox", "radio", "button_group", "listbox")
@@ -307,6 +308,7 @@ RULES: list[Rule] = [
     Rule(r"github", TEXTY, lambda p, f, c: Suggestion(p.personal.github, "personal.github") if p.personal.github else None),
     Rule(r"^(personal )?(website|portfolio)( url| link)?$|portfolio (url|link)|personal (website|site)", TEXTY,
          lambda p, f, c: Suggestion(p.personal.website or p.personal.github, "personal.website") if (p.personal.website or p.personal.github) else None),
+    Rule(GPA_RE.pattern, TEXTY + CHOICE + ("number",), lambda p, f, c: _gpa(p, f)),
     Rule(r"^(school|university|college)( name)?$|which (school|university)", TEXTY + ("combobox", "select"),
          lambda p, f, c: Suggestion(_latest_school(p).school, "education[0].school")),
     Rule(r"^degree$|degree (type|level)|highest degree", TEXTY + CHOICE, lambda p, f, c: _degree(p, f)),
@@ -403,6 +405,50 @@ def _agree(enabled: bool, f: dict, src: str) -> Suggestion | None:
     return Suggestion(True if f["kind"] == "checkbox" else ACK, src)
 
 
+def _gpa_value(p: Profile) -> float | None:
+    m = re.search(r"\d+(?:\.\d+)?", _latest_school(p).gpa or "")
+    return float(m.group(0)) if m else None
+
+
+def gpa_band(value: float, options: list[str]) -> str | None:
+    """The option of a GPA range question that contains ``value`` ("3.0 - 3.49", "3.5+", "Below 3.0")."""
+    for o in options:
+        nums = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", o) if float(n) <= 5]
+        if len(nums) >= 2 and min(nums[:2]) <= value <= max(nums[:2]):
+            return o
+        if len(nums) == 1:
+            n = nums[0]
+            if re.search(r"above|higher|or more|over|greater|\+|>", o, re.I) and value >= n:
+                return o
+            if re.search(r"below|lower|less|under|<", o, re.I) and value < n:
+                return o
+    return None
+
+
+def _gpa(p: Profile, f: dict) -> Suggestion | None:
+    value = _gpa_value(p)
+    if value is None or withheld(f, p):
+        return None
+    if f["kind"] in CHOICE and f.get("options"):
+        band = gpa_band(value, f["options"])
+        return Suggestion(band, "education[0].gpa") if band else None
+    return Suggestion(f"{value:.2f}".rstrip("0").rstrip(".") if value != int(value) else f"{value:.1f}",
+                      "education[0].gpa")
+
+
+def withheld(field: dict[str, Any], profile: Profile) -> str | None:
+    """Why this field must stay empty: GPA questions that are optional (when the profile says
+    GPA only where required) and optional transcript uploads."""
+    text = f"{field.get('label', '')} {field.get('key', '')}"
+    if field.get("required"):
+        return None
+    if profile.answers.gpa_only_when_required and GPA_RE.search(text):
+        return "GPA is only given where a form requires it (answers.gpa_only_when_required)"
+    if field.get("kind") == "file" and re.search(r"transcript", text, re.I):
+        return "the transcript is only uploaded where a form requires it"
+    return None
+
+
 def _eeo(choice: str, f: dict, src: str) -> Suggestion | None:
     if len(f.get("label") or "") > 90:
         return None
@@ -420,6 +466,10 @@ def suggest(field: dict[str, Any], profile: Profile, company: str, files: dict[s
         return Suggestion(SITE_PASSWORD, "vault")
     if kind == "file":
         text = f"{label} {field['key']}".lower()
+        if re.search(r"transcript", text) and not re.search(r"resume|\bcv\b", text):
+            if "transcript" in files and field.get("required"):
+                return Suggestion(str(files["transcript"]), "transcript")
+            return None
         if re.search(r"resume|\bcv\b", text) and "resume" in files:
             return Suggestion(str(files["resume"]), "resume")
         if re.search(r"cover", text) and "cover_letter" in files:

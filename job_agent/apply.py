@@ -16,14 +16,14 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from . import inbox, vault
+from . import documents, inbox, vault
 from .browser import forms
 from .browser.launch import launch, new_context
 from .profile import Profile, jobagent_home
 from .resume import html_to_pdf, render_letter_html, resume_filename
 from .store import Job, State
 
-FILE_TOKENS = ("resume", "cover_letter")
+FILE_TOKENS = ("resume", "cover_letter", "transcript")
 
 
 class ApplyError(RuntimeError):
@@ -157,7 +157,7 @@ def prepare(job: Job, profile: Profile, memory: dict[str, Any] | None = None) ->
     if not job.auto_apply:
         raise ApplyError(f"{job.ats} applications are not automated; handle this one manually")
     wd = work_dir(job)
-    files = {"resume": resume_path(job, profile)}
+    files = {"resume": resume_path(job, profile), **documents.available()}
     if not files["resume"].exists():
         raise ApplyError("build the tailored resume first: jobagent resume <job_id> --plan plan.json")
     with sync_playwright() as pw:
@@ -211,7 +211,8 @@ def _load_answers(path: Path) -> dict[str, Any]:
     return doc
 
 
-def merge_answers(fields: list[dict[str, Any]], doc: dict[str, Any], files: dict[str, Path]) -> tuple[dict[str, Any], list[str]]:
+def merge_answers(fields: list[dict[str, Any]], doc: dict[str, Any], files: dict[str, Path],
+                  profile: Profile | None = None) -> tuple[dict[str, Any], list[str]]:
     """Suggestions overlaid with Claude's answers. Returns (answers by key, problems)."""
     by_key = {f["key"]: f for f in fields}
     problems = [f"unknown field key {k!r}" for k in doc["answers"] if k not in by_key]
@@ -219,13 +220,16 @@ def merge_answers(fields: list[dict[str, Any]], doc: dict[str, Any], files: dict
     for k, v in doc["answers"].items():
         if k in by_key:
             merged[k] = v
+    for f in fields:  # GPA / transcript where the form does not require them: left empty
+        if f["key"] in merged and profile is not None and forms.withheld(f, profile):
+            merged.pop(f["key"])
     for f in fields:
         if f["kind"] != "file" or f["key"] not in merged or merged[f["key"]] is None:
             continue
         v = str(merged[f["key"]])
         token = next((t for t in FILE_TOKENS if v == t or Path(v).name == files.get(t, Path("~")).name), None)
         if token is None or token not in files:
-            problems.append(f"{f['key']}: files can only be 'resume' or 'cover_letter' (got {Path(v).name!r})")
+            problems.append(f"{f['key']}: files can only be 'resume', 'cover_letter' or 'transcript' (got {Path(v).name!r})")
             merged.pop(f["key"])
         else:
             merged[f["key"]] = str(files[token])
@@ -257,14 +261,14 @@ def submit(job: Job, profile: Profile, state: State, answers_file: Path, dry_run
     form = json.loads(form_path.read_text(encoding="utf-8"))
     doc = _load_answers(answers_file)
 
-    files = {"resume": resume_path(job, profile)}
+    files = {"resume": resume_path(job, profile), **documents.available()}
     if not files["resume"].exists():
         raise ApplyError("resume PDF missing; run `jobagent resume` first")
     letter = (doc.get("cover_letter") or "").strip()
     if letter:
         files["cover_letter"] = html_to_pdf(render_letter_html(profile, letter), wd / "Cover_Letter.pdf")
 
-    merged, problems = merge_answers(form["fields"], doc, files)
+    merged, problems = merge_answers(form["fields"], doc, files, profile)
     known = {f["key"] for f in form["fields"]}
     conflicts = forms.audit(form["fields"], profile, job.company, {k: v for k, v in doc["answers"].items() if k in known})
     if conflicts and not force:

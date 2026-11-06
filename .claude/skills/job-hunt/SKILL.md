@@ -111,6 +111,9 @@ employers or claims (the CLI rejects text with numbers or technical terms not in
   team using what the posting says about it. First person, no generic praise.
 - *Other short answers* ("describe a project", "a challenge you solved"): pick the profile
   experience closest to the posting and tell it with its real numbers.
+- *GPA and transcript*: with `answers.gpa_only_when_required`, leave optional GPA questions
+  empty; give the GPA only where the form requires it. A transcript is uploaded (file token
+  `"transcript"`) only to a required transcript field; the CLI enforces both.
 
 **Writing** (summaries, answers, cover letters): plain and specific. Tie one or two facts
 from the profile to what the posting asks for; cover letters 150-250 words. No filler such as

@@ -101,6 +101,10 @@ jobs:
             if git show FETCH_HEAD:materials.enc > "$RUNNER_TEMP/materials.enc" 2>/dev/null; then
               jobagent materials restore "$RUNNER_TEMP/materials.enc" > /dev/null || true
             fi
+            # Documents you supplied (e.g. a transcript), uploaded only where a form requires them.
+            if git show FETCH_HEAD:documents.enc > "$RUNNER_TEMP/documents.enc" 2>/dev/null; then
+              jobagent documents restore "$RUNNER_TEMP/documents.enc" > /dev/null || true
+            fi
           fi
 
       - name: Job hunt
@@ -148,11 +152,13 @@ jobs:
           mkdir -p "$RUNNER_TEMP/data"
           jobagent state export "$RUNNER_TEMP/data/state.enc"
           jobagent materials export "$RUNNER_TEMP/data/materials.enc"
+          jobagent documents export "$RUNNER_TEMP/data/documents.enc"
           cd "$RUNNER_TEMP/data"
           git init -q -b jobagent-data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add state.enc materials.enc
+          if [ -f documents.enc ]; then git add documents.enc; fi
           git commit -qm "job agent state $(date -u +%FT%TZ)"
           git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" jobagent-data
 

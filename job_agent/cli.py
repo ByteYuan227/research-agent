@@ -606,6 +606,25 @@ def cmd_materials(args) -> int:
     return 0
 
 
+def cmd_documents(args) -> int:
+    """Documents you supply (an unofficial transcript), uploaded only where a form requires them."""
+    from . import documents
+
+    try:
+        if args.action == "add":
+            if not args.file:
+                return fail("usage: jobagent documents add transcript <file.pdf>")
+            out({"added": str(documents.add(args.kind, Path(args.file)))})
+        elif args.action in ("export", "restore"):  # `jobagent documents export documents.enc`
+            bundle = Path(args.file or (args.kind if args.kind != "transcript" else "documents.enc"))
+            out(documents.export(bundle) if args.action == "export" else documents.restore(bundle))
+        else:
+            out({k: str(v) for k, v in documents.available().items()})
+    except (ValueError, RuntimeError, OSError) as exc:
+        return fail(str(exc))
+    return 0
+
+
 def cmd_memory(args) -> int:
     """Answers learned from earlier applications (forget one if it is wrong)."""
     state = load_state()
@@ -781,6 +800,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("file", help="bundle path (materials.enc)")
     s.add_argument("--out", default="jobagent-materials", help="open: folder to unpack into")
     s.set_defaults(fn=cmd_materials)
+
+    s = sub.add_parser("documents", help="documents you supply (transcript), uploaded only where required")
+    s.add_argument("action", choices=["add", "list", "export", "restore"])
+    s.add_argument("kind", nargs="?", default="transcript", help="add: the document kind (transcript)")
+    s.add_argument("file", nargs="?", help="add: the PDF; export/restore: the encrypted bundle (documents.enc)")
+    s.set_defaults(fn=cmd_documents)
 
     s = sub.add_parser("memory", help="answers learned from earlier applications")
     s.add_argument("--forget", help="question key to forget")

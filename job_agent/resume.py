@@ -248,7 +248,7 @@ TEMPLATE = """<!doctype html>
 <h2>Education</h2>
 {% for e in education %}<div class="entry">
   <div class="row"><b>{{ e.school }}</b><span>{{ e.location }}</span></div>
-  <div class="row it"><span>{{ e.degree }} in {{ e.field }}{% if e.gpa %}; GPA: {{ e.gpa }}{% endif %}</span>
+  <div class="row it"><span>{{ e.degree }} in {{ e.field }}{% if e.gpa and show_gpa %}; GPA: {{ e.gpa }}{% endif %}</span>
     <span>{{ e.start }}{% if e.start and e.end %} – {% endif %}{{ e.end }}</span></div>
   {% if e.coursework or e.bullets %}<ul>
     {% for b in e.bullets %}<li>{{ b | label }}</li>{% endfor %}
@@ -342,7 +342,8 @@ def render_html(profile: Profile, plan: dict[str, Any] | None = None, fit: Fit |
     env.filters["ts"] = _typeset
     ctx = resume_context(profile, plan or {})
     return env.from_string(TEMPLATE).render(**ctx, fit=fit or FIT_STEPS[0], font_faces=Markup(_font_faces()),
-                                            show_location=not profile.personal.phone)
+                                            show_location=not profile.personal.phone,
+                                            show_gpa=not profile.answers.gpa_only_when_required)
 
 
 def render_text(profile: Profile, plan: dict[str, Any] | None = None) -> str:
