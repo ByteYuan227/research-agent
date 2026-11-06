@@ -274,6 +274,15 @@ def _sponsorship(p: Profile, f: dict) -> Suggestion:
 
 
 GPA_RE = re.compile(r"\bgpa\b|grade point average", re.I)
+# Questions that only ask whether you want something: answered "yes".
+OPT_IN_RE = re.compile(
+    r"consider(ed)? (me |you )?for (other|future|additional|similar) (roles|positions|opportunities|openings|jobs)|"
+    r"(join|be added to) (our|the) (talent|candidate) (community|pool|network)|job alerts?|"
+    r"(would you like|do you want|like) to (receive|get|be (contacted|notified|kept))|keep me (informed|updated|posted)|"
+    r"receive (text|sms|email)? ?(updates|messages|notifications|news|communications)|\bopt[- ]?in\b|"
+    r"subscribe to|sign me up",
+    re.I,
+)
 TEXTY = ("text", "email", "tel", "url", "textarea")
 AGREEMENT_KINDS = ("checkbox", "radio", "button_group", "select", "combobox", "listbox")
 CHOICE = ("select", "combobox", "radio", "button_group", "listbox")
@@ -383,6 +392,9 @@ RULES: list[Rule] = [
          lambda p, f, c: _eeo(p.answers.eeo.veteran, f, "answers.eeo.veteran")),
     Rule(r"^disability|disability status", CHOICE,
          lambda p, f, c: _eeo(p.answers.eeo.disability, f, "answers.eeo.disability")),
+    Rule(OPT_IN_RE.pattern, AGREEMENT_KINDS,
+         lambda p, f, c: Suggestion(True if f["kind"] == "checkbox" else "Yes", "answers.accept_opt_ins")
+         if p.answers.accept_opt_ins else None),
     Rule(r"privacy (notice|policy|statement)|i have read|i acknowledge|acknowledg", AGREEMENT_KINDS,
          lambda p, f, c: _agree(p.answers.acknowledge_privacy_notices, f, "answers.acknowledge_privacy_notices")),
     Rule(r"arbitrat|terms (of|and) (use|service|conditions)|terms & conditions|i agree|agree to|consent|"

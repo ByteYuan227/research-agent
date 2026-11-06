@@ -160,6 +160,9 @@ class Answers(_Model):
     # Consent questions: privacy notices, terms, arbitration and other agreements are
     # accepted automatically. Factual statements ("I am a U.S. citizen") are never
     # auto-accepted; they are answered from the profile.
+    # "Would you like to be considered for other roles / join our talent community / get job
+    # alerts / receive text updates?" -> yes.
+    accept_opt_ins: bool = True
     acknowledge_privacy_notices: bool = True
     accept_agreements: bool = True
     # Free-text answers ("Why us?", cover letters) written by Claude from the profile and

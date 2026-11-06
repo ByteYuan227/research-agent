@@ -733,3 +733,21 @@ def test_popular_boards_are_added_once(profile_data, monkeypatch):
     monkeypatch.setattr(sources.time, "sleep", lambda s: None)
     sources.discover(p.preferences, client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(500))))
     assert seen.count(("greenhouse", "stripe")) == 1 and ("lever", "palantir") in seen and len(seen) == len(sources.POPULAR_BOARDS)
+
+
+@pytest.mark.parametrize("label", [
+    "Would you like to be considered for other roles at Acme?",
+    "Join our talent community", "Would you like to receive job alerts?",
+    "Do you want to receive text message updates about your application?", "Opt-in to SMS notifications",
+])
+def test_want_questions_are_answered_yes(profile, label):
+    s = forms.suggest({"key": "o", "kind": "radio", "label": label, "options": ["Yes", "No"]}, profile, "Acme", {})
+    assert s is not None and s.value == "Yes"
+    box = forms.suggest({"key": "b", "kind": "checkbox", "label": label}, profile, "Acme", {})
+    assert box is not None and box.value is True
+
+
+def test_want_rule_leaves_facts_alone(profile):
+    s = forms.suggest({"key": "s", "kind": "radio", "options": ["Yes", "No"],
+                       "label": "Will you now or in the future require sponsorship?"}, profile, "Acme", {})
+    assert s.source.startswith("work_authorization")
