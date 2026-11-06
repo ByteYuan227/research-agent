@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from job_agent import apply as apply_mod
-from job_agent import ats, cli, prefilter, web
+from job_agent import ats, cli, notify, prefilter, web
 from job_agent.browser import forms
 from job_agent.report import build_report
 from job_agent.resume import build_resume
@@ -442,3 +442,124 @@ def test_report_counts_only_claude_scores(profile):
     report = build_report(state, profile, detail="full")
     assert "Claude 打分：2 个" in report
     assert "Gamma - Software Engineer Intern：already applied elsewhere" in report
+
+
+# ---------------------------------------------------------------------------
+# Report by email only (public repositories)
+# ---------------------------------------------------------------------------
+
+
+def _email_profile(profile_data, tmp_path, monkeypatch):
+    import yaml
+
+    from job_agent.profile import Profile
+
+    profile_data["notify"].update(github_issue=False, email_to="me@example.com")
+    path = tmp_path / "p.yaml"
+    path.write_text(yaml.safe_dump(profile_data))
+    monkeypatch.setenv("JOBAGENT_PROFILE", str(path))
+    return Profile.model_validate(profile_data)
+
+
+def test_manual_jobs_get_stable_numbers():
+    state = State()
+    a, b = _job(id="a"), _job(id="b")
+    state.set_status(a, "manual", "captcha")
+    state.set_status(b, "manual", "captcha")
+    state.set_status(a, "scored", "retry")
+    state.set_status(a, "manual", "captcha again")
+    assert (a.manual_no, b.manual_no, state.manual_seq) == (1, 2, 2)
+
+
+def test_done_replies_are_parsed_from_your_own_text_only():
+    reply = """done 3 7
+已投 #12、15
+
+On Thu, Nov 6, 2026 at 8:00 PM Me <me@example.com> wrote:
+> 投完后回复这封邮件，第一行写 done 加上编号
+> done 99
+"""
+    assert notify.done_numbers(reply) == {3, 7, 12, 15}
+    assert notify.done_numbers("> done 4\nthanks") == set()
+    assert notify.done_numbers("I am done with 3 of them") == set()  # only "done <numbers>" lines
+
+
+def test_done_replies_only_from_your_address(monkeypatch):
+    from job_agent import inbox
+
+    msgs = [
+        inbox.Message("1", "Me <me@example.com>", "Re: 求职日报 2026-11-06", time.time(), "done 1 2"),
+        inbox.Message("2", "Someone <x@evil.example>", "Re: 求职日报 2026-11-06", time.time(), "done 3"),
+        inbox.Message("3", "me@example.com", "Unrelated", time.time(), "done 4"),
+    ]
+    monkeypatch.setattr(inbox, "fetch_since", lambda since, limit=60: msgs)
+    assert notify.done_numbers_from_inbox({"me@example.com"}, 0) == {1, 2}
+
+
+def test_email_only_report_and_sync(home, tmp_path, profile_data, monkeypatch, capsys):
+    profile = _email_profile(profile_data, tmp_path, monkeypatch)
+    state = State()
+    a, b = _job(id="gh:a:1", company="Alpha"), _job(id="gh:b:2", company="Beta")
+    state.set_status(a, "manual", "CAPTCHA")
+    state.set_status(b, "manual", "CAPTCHA")
+    save_state(state)
+
+    report = build_report(load_state(), profile)
+    assert "**#1**" in report and "**#2**" in report and "回复这封邮件" in report and "在这里勾选" not in report
+
+    sent = {}
+    monkeypatch.setattr(notify, "github_issue", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no issue")))
+    monkeypatch.setattr(notify, "close_reports", lambda: 1)
+    monkeypatch.setattr(notify, "email_report", lambda subject, body, to, files: sent.update(body=body, to=to) or True)
+    path = tmp_path / "report.md"
+    path.write_text(report)
+    capsys.readouterr()
+    cli.main(["notify", "--report", str(path)])
+    result = json.loads(capsys.readouterr().out)
+    assert result["closed_old_report_issues"] == 1 and result["email"] is True and sent["to"] == "me@example.com"
+
+    monkeypatch.setenv("JOBAGENT_IMAP_USER", "me@example.com")
+    monkeypatch.setenv("JOBAGENT_IMAP_PASSWORD", "x")
+    monkeypatch.setattr(notify, "checked_jobs_in_reports", lambda: [])
+    monkeypatch.setattr(notify, "done_numbers_from_inbox", lambda own, since: {2} if "me@example.com" in own else set())
+    cli.main(["sync-checklist"])
+    s = load_state()
+    assert s.jobs["gh:b:2"].status == "applied_manual" and s.jobs["gh:a:1"].status == "manual"
+
+
+def test_email_body_has_no_job_ids(monkeypatch):
+    import smtplib
+
+    captured = {}
+
+    class FakeSMTP:
+        def __init__(self, *a, **k): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def starttls(self): pass
+        def login(self, *a): pass
+        def send_message(self, msg): captured["body"] = msg.get_content()
+
+    monkeypatch.setattr(smtplib, "SMTP", FakeSMTP)
+    monkeypatch.setenv("JOBAGENT_IMAP_USER", "me@example.com")
+    monkeypatch.setenv("JOBAGENT_IMAP_PASSWORD", "x")
+    assert notify.email_report("求职日报", "- [ ] **#1** Acme <!-- job:gh:acme:1 -->\n", "me@example.com")
+    assert "job:" not in captured["body"] and "**#1** Acme" in captured["body"]
+
+
+def test_public_actions_log_names_no_jobs(tmp_path, monkeypatch):
+    import subprocess as sp
+
+    from .test_daily_run import ROOT, _setup
+
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    (tmp_path / "bin" / "claude").write_text(
+        "#!/usr/bin/env bash\n"
+        'if [[ "$2" == *"Mode SCORE"* ]]; then\n'
+        "  jobagent score greenhouse:acme:1 90 --reason r --decision apply > /dev/null\n"
+        "  jobagent score greenhouse:acme:2 85 --reason r --decision skip > /dev/null\n"
+        "fi\n"
+        "echo ok; exit 0\n"
+    )
+    p = sp.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert "[apply-1]" in p.stdout and "acme" not in p.stdout.lower(), p.stdout

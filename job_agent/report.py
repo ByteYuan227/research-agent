@@ -93,16 +93,20 @@ def build_report(state: State, profile: Profile | None, day: dt.date | None = No
         if full:
             lines += [f"- **{_md(j.company)}**：{_md(j.reason)}" for j in applied if j.reason] + [""]
 
+    by_email = bool(profile and not profile.notify.github_issue)
     if pending:
+        how = ("**投完后回复这封邮件**，第一行写 done 加上编号（编号之间用空格隔开），下次运行会记为已投递。"
+               if by_email else "**投完一个就在这里勾选**，下次运行会记为已投递。")
         lines += [
             "## ✋ 待你手动投递",
             "",
-            "这些岗位匹配度够，但没能自动提交（原因写在后面）。定制好的简历和准备好的回答都已保存，见下方「材料在哪」。"
-            "**投完一个就在这里勾选**，下次运行会记为已投递。",
+            "这些岗位匹配度够，但没能自动提交（原因写在后面）。定制好的简历和准备好的回答都已保存，见下方「材料在哪」。" + how,
             "",
         ]
         for j in pending[:MANUAL_LIMIT]:
             new = "🆕 " if j.id in new_manual else ""
+            if j.manual_no is not None:
+                new = f"**#{j.manual_no}** " + new
             score = f" · {j.score} 分" if j.score is not None else ""
             reason = _reason(state, j)
             maybe = "⚠️ **可能已经提交，先查邮件再决定要不要重投** · " if "submit button was pressed" in reason else ""

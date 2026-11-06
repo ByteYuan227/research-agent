@@ -55,6 +55,7 @@ class Job(BaseModel):
     attempts: int = 0
     retries: int = 0  # apply sessions that died without an outcome (timeout, crash) and were retried
     result: str = ""
+    manual_no: int | None = None  # short number on the apply-by-hand list ("done 12" in an email reply)
     resume_plan: dict[str, Any] | None = None
     application: dict[str, Any] | None = None  # answers given and the outcome; private
 
@@ -92,6 +93,7 @@ class State(BaseModel):
     # the same question appears. Your custom_answers always take priority.
     memory: dict[str, dict[str, Any]] = Field(default_factory=dict)
     last_run: dict[str, Any] = Field(default_factory=dict)
+    manual_seq: int = 0  # last number given to a job on the apply-by-hand list
 
     # -- helpers -------------------------------------------------------------
 
@@ -99,6 +101,9 @@ class State(BaseModel):
         self.events.append(Event(ts=time.time(), job_id=job_id, type=type_, detail=detail[:500]))
 
     def set_status(self, job: Job, status: str, detail: str = "") -> None:
+        if status == "manual" and job.manual_no is None:
+            self.manual_seq += 1
+            job.manual_no = self.manual_seq
         job.status = status
         job.updated_at = time.time()
         self.jobs[job.id] = job

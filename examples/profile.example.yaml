@@ -188,5 +188,6 @@ preferences:
 
 notify:
   github_username: ByteYuan227       # 每日报告 issue 里 @ 你，GitHub 会推送通知
-  email_to: ""                      # 可选：同时发邮件（需要配置 SMTP）
+  email_to: ""                      # 可选：同时发邮件（需要配置 Gmail 应用专用密码）
+  github_issue: true                # false = 不发 GitHub issue，日报只发邮件（公开仓库也看不到你投了哪里）
   language: zh

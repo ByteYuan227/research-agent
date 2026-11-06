@@ -84,13 +84,15 @@ for round in 1 2 3 4 5 6 7 8; do
 done
 
 if [ -z "$STOP" ]; then
+  n=0
   for id in $(jobagent queue); do
+    n=$((n + 1))
     elapsed=$(( ($(date +%s) - START) / 60 ))
     if [ "$elapsed" -ge "$MAX_MINUTES" ]; then
       jobagent note "⏱️ 今天的运行时间用完了，剩下的岗位下次继续。" > /dev/null
       break
     fi
-    name="apply-$(printf '%s' "$id" | tr -c 'A-Za-z0-9' '_' | cut -c1-60)"
+    name="apply-$n"  # numbered, not named: Actions logs of public repositories are public
     run_claude "$name" 150 "$APPLY_TIMEOUT" "Mode APPLY of the job-hunt skill ($SKILL) for job $id: read the skill first, then tailor the resume and apply."
     status=$?
     jobagent settle "$id" --stopped "$STOP" --exit "$status" > /dev/null

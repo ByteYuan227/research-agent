@@ -357,14 +357,18 @@ def cmd_notify(args) -> int:
     title = args.title or body.splitlines()[0].lstrip("# ").strip()
     result: dict[str, Any] = {}
     try:
-        result["issue"] = notify.github_issue(title, body)
+        profile = load_profile()
+        to, use_issue = profile.notify.email_to, profile.notify.github_issue
+    except ProfileError:
+        to, use_issue = "", True
+    try:
+        if use_issue:
+            result["issue"] = notify.github_issue(title, body)
+        else:  # email only: nothing about your applications is posted in the repository
+            result["issue"] = "off (notify.github_issue: false)"
+            result["closed_old_report_issues"] = notify.close_reports()
     except Exception as exc:  # noqa: BLE001
         result["issue_error"] = str(exc)[:300]
-    try:
-        profile = load_profile()
-        to = profile.notify.email_to
-    except ProfileError:
-        to = ""
     if to:
         from . import materials
 
@@ -549,22 +553,34 @@ def cmd_settle(args) -> int:
 
 
 def cmd_sync_checklist(args) -> int:
-    """Mark jobs you ticked in earlier daily-report issues as applied by you."""
+    """Mark jobs you applied to by hand as applied: boxes ticked in report issues, or
+    "done <numbers>" replies to the emailed report."""
+    import os
+
+    state = load_state()
+    notes: list[str] = []
+    checked: list[str] = []
     try:
         checked = notify.checked_jobs_in_reports()
     except Exception as exc:  # noqa: BLE001 - not on GitHub, or no token
-        out({"synced": 0, "note": str(exc)[:200]})
-        return 0
-    state = load_state()
+        notes.append(str(exc)[:200])
+    if inbox.configured():
+        try:
+            profile = load_profile()
+            own = {os.environ.get("JOBAGENT_IMAP_USER", ""), profile.personal.email, profile.notify.email_to}
+            numbers = notify.done_numbers_from_inbox(own, time.time() - 21 * 86400)
+            checked += [j.id for j in state.jobs.values() if j.manual_no in numbers]
+        except Exception as exc:  # noqa: BLE001
+            notes.append(f"inbox: {str(exc)[:200]}")
     n = 0
-    for jid in checked:
+    for jid in dict.fromkeys(checked):
         job = state.jobs.get(jid)
         if job and job.status == "manual":
             job.applied_at = job.applied_at or time.time()
-            state.set_status(job, "applied_manual", "ticked in the daily report")
+            state.set_status(job, "applied_manual", "marked as applied by you in the daily report")
             n += 1
     save_state(state)
-    out({"synced": n})
+    out({"synced": n, **({"note": "; ".join(notes)} if notes else {})})
     return 0
 
 

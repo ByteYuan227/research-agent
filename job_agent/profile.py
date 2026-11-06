@@ -226,6 +226,9 @@ class Preferences(_Model):
 class Notify(_Model):
     github_username: str = ""  # @-mentioned in the daily report issue
     email_to: str = ""  # optional: also email the report (needs SMTP secrets)
+    # false = no GitHub issue, the report only goes by email (keeps where you apply private in a
+    # public repository); jobs you applied to by hand are then marked by replying "done <numbers>".
+    github_issue: bool = True
     language: Literal["zh", "en"] = "zh"
     timezone: str = "America/New_York"  # what "today" means for daily limits and reports
 

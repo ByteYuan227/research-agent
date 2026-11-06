@@ -31,7 +31,9 @@ never invent anything. Talk to the user in the language they use.
    - standard answers: earliest start date, graduation date, willing to relocate, salary
      expectation, how they usually hear about jobs, pronouns, languages;
    - voluntary EEO answers (default: decline to self-identify);
-   - their GitHub username (for report @mentions) and whether they want email reports.
+   - their GitHub username (for report @mentions) and whether they want email reports; with a
+     public repository, offer email-only reports (`notify.github_issue: false`) so the issue
+     does not show where they apply.
    Put recurring answers that have no dedicated field into `custom_answers`
    (`{match: "<regex>", answer: ...}`) and free-form facts into `about_me`.
 

@@ -109,6 +109,10 @@ Besides job type, term, location, visa restrictions, posting age and duplicates,
 - one school's students ("University of X students"), one career fair (Grace Hopper, AfroTech...), talent pools ("Talent Community");
 - contract / crowd-work marketplaces (Mercor, Toptal, Upwork, Outlier...): signing up there is not applying for a job.
 
+### The daily report
+
+By default the report is a GitHub issue that @-mentions you (and optionally an email); boxes ticked in it mark jobs you applied to by hand. With `notify.github_issue: false` it goes by email only: no issue (old report issues are closed), numbered jobs on the apply-by-hand list, and replies such as `done 3 7` from your own address mark them (`jobagent sync-checklist` reads them over IMAP; quoted text from the original email is ignored). `daily_run.sh` numbers its sessions (`apply-1`, `apply-2`...) instead of printing job ids, because Actions logs of public repositories are public.
+
 ### Quota and token problems
 
 `daily_run.sh` recognises these Claude Code errors: subscription limit reached, API credit exhausted, token invalid or expired. It stops at once, says so at the top of the report, keeps unfinished jobs queued and continues in the next run. `tests/job_agent/test_daily_run.py` covers each case with a stand-in `claude`, including running out halfway through applications.
@@ -234,6 +238,10 @@ Claude 输出的是一份计划（`plan.json`）：选哪些经历和 bullet、�
 - 只招本科生 / 只招研究生 / 只招 PhD（按你最近一个学位判断，「MS/PhD」不算只招 PhD）；
 - 只面向某个学校（「University of X students」）或某个招聘会（Grace Hopper、AfroTech 等）、人才库（Talent Community）；
 - 外包 / 众包平台（Mercor、Toptal、Upwork、Outlier 等），注册它们不是在投递工作。
+
+### 日报
+
+默认日报是 GitHub issue 并 @ 你（可同时发邮件），在 issue 里勾选表示你已手动投递。设 `notify.github_issue: false` 后只发邮件：不发 issue（旧的日报 issue 会关闭），手动清单里的岗位带编号，你从自己的邮箱回复 `done 3 7` 这样的内容即可标记（`jobagent sync-checklist` 通过 IMAP 读取，原邮件的引用部分会被忽略）。`daily_run.sh` 打印会话时只用编号（`apply-1`、`apply-2`……），不打印岗位 id，因为公开仓库的运行日志所有人可见。
 
 ### 额度和令牌问题
 

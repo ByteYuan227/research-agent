@@ -35,7 +35,7 @@ There is **no cap**, per day or per company (optional: `max_per_company: 3` limi
 |---|---|---|
 | GitHub Actions minutes | free and unlimited | GitHub Free: 2,000 a month ([billing docs](https://docs.github.com/billing/managing-billing-for-your-products/managing-billing-for-github-actions)), so set the repository variable `JOBAGENT_MAX_MINUTES` to `60` (about 10 applications a day) |
 | Your profile, passwords, resumes | never visible: Secrets and encrypted state | same |
-| Daily report issue | visible to everyone (companies and roles you applied to, without score reasons) | only you |
+| Daily report issue | visible to everyone (companies and roles you applied to, without score reasons), unless you choose email-only reports (below) | only you |
 
 To go private: Repository → Settings → General → Change visibility → Make private.
 
@@ -115,6 +115,7 @@ Answers Claude gives to non-standard questions are remembered and reused for the
 ### The report and the apply-by-hand checklist
 
 - One issue per day; older ones are closed. Jobs waiting for you form a **cumulative checklist** with links and reasons. **Tick a box once you have applied**: the next run records it as applied by you.
+- **Email-only reports** (keep a public repository without showing where you apply): set `notify.email_to` to your address and `notify.github_issue: false` in the profile (needs the Gmail app password). No issue is posted, old report issues are closed, and the Actions log shows no company names. Each job on the list has a number: **reply to the report email** with a line such as `done 3 7` once you have applied, and the next run records them.
 - "⚠️ may already be submitted": the submit button was pressed but the run ended before the result was seen. The agent never applies twice on its own; check your email for a confirmation first.
 - "⚠️ no confirmation page" in the applied table: submitted, but the page showed no clear confirmation; watch for the confirmation email.
 - Applications cut short by a timeout or a browser error are retried once in the next run.
@@ -206,7 +207,7 @@ Design and implementation notes: [docs/job-agent.md](docs/job-agent.md).
 |---|---|---|
 | GitHub Actions 运行时长 | 免费、不限 | 免费账号每月 2000 分钟（[官方说明](https://docs.github.com/billing/managing-billing-for-your-products/managing-billing-for-github-actions)），需要把仓库变量 `JOBAGENT_MAX_MINUTES` 设为 `60`（每天约 10 个申请） |
 | 你的资料、密码、简历 | 都不会公开：存在 Secrets 和加密状态里 | 同左 |
-| 每日日报 issue | 所有人可见（投了哪些公司和岗位，不含打分理由） | 只有你能看 |
+| 每日日报 issue | 所有人可见（投了哪些公司和岗位，不含打分理由），除非选「日报只发邮件」（见下文） | 只有你能看 |
 
 改成私有：GitHub 仓库页 → Settings → General → 最下方 Change visibility → Make private。
 
@@ -288,6 +289,7 @@ Claude 回答过的非标准问题会被记住（「学到的回答」），下�
 ### 日报和「待你手动投递」清单
 
 - 每天一个 issue，旧的自动关闭。待手动投递的岗位是**累计清单**，每项带申请链接和原因；**投完在 issue 里勾选**，下次运行记为「你已手动投递」。
+- **日报只发邮件**（仓库保持公开，又不让别人看到你投了哪里）：在资料里把 `notify.email_to` 填成你的邮箱，并设 `notify.github_issue: false`（需要配置 Gmail 应用专用密码）。这样不会发 issue，旧的日报 issue 会自动关闭，运行日志里也不出现公司名。清单里每个岗位都有编号，**投完后回复日报邮件**，写一行比如 `done 3 7`，下次运行就会记为已投递。
 - 标着「⚠️ 可能已经提交」的岗位：提交按钮已经按下，但运行在确认之前中断了。程序不会再自动投第二次，请先查邮箱有没有确认信。
 - 投递表格里标着「⚠️ 未看到确认页」的：提交了但页面没有出现明确的确认文字，留意确认邮件。
 - 中途超时或浏览器出错的岗位，下次运行会自动重试一次。
