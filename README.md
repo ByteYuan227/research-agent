@@ -29,7 +29,15 @@ There is **no cap**, per day or per company (optional: `max_per_company: 3` limi
 
 > You need: a Claude Pro / Max subscription, a GitHub account, and Python 3.10+, Node.js 18+ and [Claude Code](https://code.claude.com/docs) on your computer (already there if you use Claude Code in VS Code).
 
-**1. Make the repository private.** Repository → Settings → General → Change visibility → Make private. (Public works too, but the reports are visible to everyone.)
+**1. Public or private repository?** Choose before you start:
+
+| | Public | Private |
+|---|---|---|
+| GitHub Actions minutes | free and unlimited | GitHub Free: 2,000 a month ([billing docs](https://docs.github.com/billing/managing-billing-for-your-products/managing-billing-for-github-actions)), so set the repository variable `JOBAGENT_MAX_MINUTES` to `60` (about 10 applications a day) |
+| Your profile, passwords, resumes | never visible: Secrets and encrypted state | same |
+| Daily report issue | visible to everyone (companies and roles you applied to, without score reasons) | only you |
+
+To go private: Repository → Settings → General → Change visibility → Make private.
 
 **2. Let Claude build your profile.** Clone the repository, open Claude Code in it (VS Code or terminal) and say:
 
@@ -83,7 +91,7 @@ Repository → Settings → Secrets and variables → Actions → **Variables** 
 | `rehearse` | Rehearsal: every application is prepared but nothing is submitted; the report still comes |
 | `off` | Paused: find jobs and report only |
 
-To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5`).
+To pick a model, add the variable `JOBAGENT_CLAUDE_MODEL` (e.g. `claude-opus-5-5`). To limit the daily run time (private repositories), add `JOBAGENT_MAX_MINUTES` (default `300`).
 
 ### Your profile: how answers are tailored to you
 
@@ -192,7 +200,15 @@ Design and implementation notes: [docs/job-agent.md](docs/job-agent.md).
 
 > 前提：Claude Pro / Max 订阅；GitHub 账号；电脑上装了 Python 3.10+、Node.js 18+ 和 [Claude Code](https://code.claude.com/docs)（在 VS Code 里用过 Claude Code 就已经有了）。
 
-**第 1 步：仓库设为私有。** GitHub 仓库页 → Settings → General → 最下方 Change visibility → Make private。（公开也能用，但日报所有人可见。）
+**第 1 步：仓库用公开还是私有？** 开始前先选：
+
+| | 公开 | 私有 |
+|---|---|---|
+| GitHub Actions 运行时长 | 免费、不限 | 免费账号每月 2000 分钟（[官方说明](https://docs.github.com/billing/managing-billing-for-your-products/managing-billing-for-github-actions)），需要把仓库变量 `JOBAGENT_MAX_MINUTES` 设为 `60`（每天约 10 个申请） |
+| 你的资料、密码、简历 | 都不会公开：存在 Secrets 和加密状态里 | 同左 |
+| 每日日报 issue | 所有人可见（投了哪些公司和岗位，不含打分理由） | 只有你能看 |
+
+改成私有：GitHub 仓库页 → Settings → General → 最下方 Change visibility → Make private。
 
 **第 2 步：让 Claude 帮你生成个人资料。** 克隆仓库，在仓库目录里打开 Claude Code（VS Code 或终端都行），然后说：
 
@@ -248,7 +264,7 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 | `rehearse` | 演练：所有申请都准备好但不提交，日报照发 |
 | `off` | 暂停投递：只找岗位、发日报 |
 
-想换模型的话，再加一个变量 `JOBAGENT_CLAUDE_MODEL`（例如 `claude-opus-5-5`）。
+想换模型的话，再加一个变量 `JOBAGENT_CLAUDE_MODEL`（例如 `claude-opus-5-5`）。想限制每天运行时长（私有仓库），加变量 `JOBAGENT_MAX_MINUTES`（默认 `300`）。
 
 ### 个人资料：怎么让 Agent 按你的情况回答
 

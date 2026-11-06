@@ -40,7 +40,9 @@ jobs:
       JOBAGENT_CLAUDE_MODEL: ${{ vars.JOBAGENT_CLAUDE_MODEL }}
       # Repository variable: apply (default) | rehearse (prepare, never submit) | off (find jobs + report only)
       JOBAGENT_MODE: ${{ vars.JOBAGENT_MODE }}
-      JOBAGENT_MAX_MINUTES: "300"
+      # Repository variable: stop starting new applications after this many minutes (default 300).
+      # Private repositories on GitHub Free get 2,000 Actions minutes a month: use about 60.
+      JOBAGENT_MAX_MINUTES: ${{ vars.JOBAGENT_MAX_MINUTES || '300' }}
       HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
       GITHUB_TOKEN: ${{ github.token }}
     steps:
