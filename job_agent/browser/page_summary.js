@@ -24,8 +24,12 @@
     text = text.slice(0, 90);
     const href = el.tagName === "A" ? el.getAttribute("href") || "" : "";
     const dedupe = text + "|" + href;
-    if (seen.has(dedupe)) continue;
+    // Links to the same place are listed once; buttons with the same text are all kept (Workday has a
+    // "Sign In" link in the header and the "Sign In" button that submits the form).
+    if (el.tagName === "A" && seen.has(dedupe)) continue;
+    if (seen.has(dedupe)) text = (text + " (" + (el.closest("form, [role=dialog], [data-automation-id*='form' i]") ? "form" : "another") + ")").slice(0, 100);
     seen.add(dedupe);
+    const automation = el.getAttribute("data-automation-id") || "";
     const ref = "r" + ++n;
     el.setAttribute("data-ja-ref", ref);
     clickables.push({
@@ -34,6 +38,7 @@
       kind: el.tagName === "A" ? "link" : "button",
       href: /^javascript:/i.test(href) ? "" : href.slice(0, 140),
       disabled: !!el.disabled || el.getAttribute("aria-disabled") === "true",
+      ...(automation ? { id: automation.slice(0, 60) } : {}),
     });
     if (n >= 150) break;
   }

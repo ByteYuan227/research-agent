@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sign In</title></head>
+<body>
+<header><button data-automation-id="utilityButtonSignIn" onclick="document.getElementById('view').textContent='sign in view'">Sign In</button></header>
+<h2 id="view">Sign In</h2>
+<form id="f" data-automation-id="signInForm" onsubmit="event.preventDefault(); document.body.innerHTML='<h1>My Information</h1>'">
+  <label for="email">Email Address</label><input id="email" type="email">
+  <label for="pw">Password</label><input id="pw" type="password">
+  <label for="ext">Phone Extension</label><input id="ext" type="text">
+  <button type="submit" data-automation-id="signInSubmitButton">Sign In</button>
+</form>
+</body></html>

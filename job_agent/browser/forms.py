@@ -301,6 +301,7 @@ RULES: list[Rule] = [
     Rule(r"^(full )?name$|full (legal )?name|legal name|^your name", TEXTY,
          lambda p, f, c: Suggestion(p.personal.full_name, "personal.full_name")),
     Rule(r"e-?mail", ("text", "email"), lambda p, f, c: Suggestion(p.personal.email, "personal.email")),
+    Rule(r"extension|\bext\b", ("text", "tel", "number"), lambda p, f, c: None),  # phone extension: left empty
     Rule(r"phone|mobile", ("text", "tel"), lambda p, f, c: Suggestion(p.personal.phone, "personal.phone") if p.personal.phone else None),
     Rule(r"address line ?1|street address|^address$|^street$", ("text",),
          lambda p, f, c: Suggestion(p.personal.location.street, "personal.location.street") if p.personal.location.street else None),

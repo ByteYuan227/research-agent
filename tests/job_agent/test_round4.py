@@ -795,3 +795,16 @@ def test_applied_review_lists_every_answer(home):
     state.set_status(old, "applied", "ok")
     review, files = materials.applied_review(state, time.time() - 3600)
     assert "## Acme" in review and "**Why Acme?**: Because..." in review and "Dear team" in review and "Old" not in review
+
+
+@needs_browser
+def test_same_label_buttons_are_both_listed(site, profile, browser):  # noqa: F811
+    job = _wd_job(site, "signin.html")
+    state = State()
+    state.jobs[job.id] = job
+    v = web.open_job(state, job, profile)
+    signins = [b for b in v["buttons"] if b["text"].startswith("Sign In")]
+    assert [b["text"] for b in signins] == ["Sign In", "Sign In (form)"]
+    assert signins[1]["id"] == "signInSubmitButton"
+    ext = next(f for f in v["fields"] if f["label"] == "Phone Extension")
+    assert ext.get("suggested") is None  # never the whole phone number

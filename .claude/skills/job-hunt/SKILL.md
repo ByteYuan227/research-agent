@@ -120,6 +120,12 @@ employers or claims (the CLI rejects text with numbers or technical terms not in
   team using what the posting says about it. First person, no generic praise.
 - *Other short answers* ("describe a project", "a challenge you solved"): pick the profile
   experience closest to the posting and tell it with its real numbers.
+- *Personal questions* ("what are you most proud of outside software", "something you built
+  with AI coding tools", "a time you failed"): answer from the closest real facts in the
+  profile (coursework, the business minor, Dean's List, hackathon, internships, tools listed
+  in skills, about_me) rather than sending the job to manual. Never invent an event, number,
+  product use or achievement the profile does not state; only if nothing in the profile
+  relates, record `manual` naming the question.
 - *GPA and transcript*: with `answers.gpa_only_when_required`, leave optional GPA questions
   empty; give the GPA only where the form requires it. A transcript is uploaded (file token
   `"transcript"`) only to a required transcript field; the CLI enforces both.
@@ -165,7 +171,11 @@ posting states; with no range in the posting, record `manual`.
   takes applications), `jobagent web finish duplicate` (`already_applied`: the site says you
   applied before), or in a dry run `jobagent web finish dry_run --reason "<how far>"`.
   `saved_account_for_this_site: true` means the vault has a login here: use "Sign in", not
-  "Create account"; the vault fills the saved password.
+  "Create account"; the vault fills the saved password. If an account already exists for the
+  e-mail ("account already exists", "email in use"), sign in: the vault holds your own password.
+  When two buttons share a label (Workday: a "Sign In" link in the header and the "Sign In"
+  button of the form), the second is listed as "Sign In (form)"; buttons may also carry their
+  Workday `id` (e.g. `signInSubmitButton`, `createAccountSubmitButton`) to tell them apart.
   Workday usually goes: Apply → Apply Manually → Create Account (or Sign In) → maybe a
   verification e-mail (`jobagent web link --match myworkdayjobs`) → My Information →
   My Experience (upload the resume; add work/education entries only if required, from the
