@@ -46,9 +46,7 @@ def get_or_create(state: State, url: str, username: str) -> Account:
         acct = Account(site=site, username=username, password=mine or generate_password())
         state.accounts[site] = acct
         state.log(site, "account_created", f"username {username}")
-    elif mine and acct.password != mine:
-        acct.password = mine  # your own password works for accounts you created yourself, too
-    return acct
+    return acct  # an existing account keeps the password it was created with
 
 
 def can_reveal() -> bool:

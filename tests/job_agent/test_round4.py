@@ -761,7 +761,8 @@ def test_own_site_password_is_used(monkeypatch):
     monkeypatch.delenv("JOBAGENT_SITE_PASSWORD", raising=False)
     generated = vault.get_or_create(state, "https://acme.wd5.myworkdayjobs.com/x", "me@example.com").password
     monkeypatch.setenv("JOBAGENT_SITE_PASSWORD", "Example.Pass1")
-    assert vault.get_or_create(state, "https://acme.wd5.myworkdayjobs.com/y", "me@example.com").password == "Example.Pass1"
+    # an account the agent already created keeps its password; new accounts use yours
+    assert vault.get_or_create(state, "https://acme.wd5.myworkdayjobs.com/y", "me@example.com").password == generated
     assert vault.get_or_create(state, "https://other.example.com", "me@example.com").password == "Example.Pass1"
     assert generated != "Example.Pass1"
 
@@ -808,3 +809,18 @@ def test_same_label_buttons_are_both_listed(site, profile, browser):  # noqa: F8
     assert signins[1]["id"] == "signInSubmitButton"
     ext = next(f for f in v["fields"] if f["label"] == "Phone Extension")
     assert ext.get("suggested") is None  # never the whole phone number
+
+
+def test_queue_puts_one_step_forms_first_and_google_to_you(home, capsys):
+    now = time.time()
+    state = State()
+    for j in (_job(id="wd:1", ats="workday", score=95, url="https://x.wd5.myworkdayjobs.com/1", apply_url="https://x.wd5.myworkdayjobs.com/1"),
+              _job(id="gh:1", ats="greenhouse", score=60),
+              _job(id="g:1", company="Google", ats="other", url="https://www.google.com/about/careers/applications/jobs/results/1",
+                   apply_url="https://www.google.com/about/careers/applications/jobs/results/1")):
+        state.jobs[j.id] = j
+    save_state(state)
+    capsys.readouterr()
+    cli.main(["queue"])
+    assert capsys.readouterr().out.split() == ["gh:1", "wd:1"]
+    assert load_state().jobs["g:1"].status == "manual"

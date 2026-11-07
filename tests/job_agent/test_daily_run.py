@@ -103,6 +103,7 @@ def _models_fake(tmp_path, opus_out_of_quota=False):
 
 def test_models_sonnet_for_most_opus_for_best_matches(tmp_path, monkeypatch):
     env, home = _setup(tmp_path, monkeypatch, "unused")
+    env["JOBAGENT_MODEL_TOP"] = "opus"
     calls = _models_fake(tmp_path)
     p = subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
     assert p.returncode == 0, p.stderr
@@ -111,6 +112,7 @@ def test_models_sonnet_for_most_opus_for_best_matches(tmp_path, monkeypatch):
 
 def test_opus_out_of_quota_continues_on_sonnet(tmp_path, monkeypatch):
     env, home = _setup(tmp_path, monkeypatch, "unused")
+    env["JOBAGENT_MODEL_TOP"] = "opus"
     calls = _models_fake(tmp_path, opus_out_of_quota=True)
     p = subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
     assert p.returncode == 0, p.stderr
@@ -153,3 +155,10 @@ def test_default_applies_without_a_scoring_pass(tmp_path, monkeypatch):
     assert p.returncode == 0, p.stderr
     kinds = calls.read_text().split("\n")
     assert "score sonnet" not in kinds and kinds.count("apply sonnet") == 2  # both jobs, straight to applying
+
+
+def test_sonnet_everywhere_by_default(tmp_path, monkeypatch):
+    env, home = _setup(tmp_path, monkeypatch, "unused")
+    calls = _models_fake(tmp_path)
+    subprocess.run(["bash", str(ROOT / "scripts" / "daily_run.sh")], env=env, capture_output=True, text=True, timeout=300)
+    assert set(calls.read_text().split()) - {"score", "apply", "inbox"} == {"sonnet"}

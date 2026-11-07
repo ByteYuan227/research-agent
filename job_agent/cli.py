@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -504,10 +505,19 @@ def cmd_web(args) -> int:
 COMPANY_WINDOW_DAYS = 30
 
 
-def queue_order(job: Job, now: float) -> float:
-    """Best match first, with a head start for fresh postings (early applicants are read first)."""
+# Cheapest and most likely to succeed first: one-step forms, then other sites, Workday last.
+ATS_TIER = {"greenhouse": 0, "lever": 0, "ashby": 0, "workable": 1, "smartrecruiters": 1, "other": 1, "tiktok": 1,
+            "workday": 2}
+
+
+def queue_order(job: Job, now: float) -> tuple[int, float]:
+    """Applicant systems that usually succeed first, then best match, with a head start for fresh postings."""
     age = (now - job.posted_at) / 86400 if job.posted_at else 99
-    return -((job.score or 0) + (8 if age < 1 else 4 if age < 3 else 0))
+    return ATS_TIER.get(job.ats, 1), -((job.score or 0) + (8 if age < 1 else 4 if age < 3 else 0))
+
+
+# Postings whose application needs something only you can do (sign in with your own Google account).
+NEEDS_YOU = re.compile(r"(^|\.)google\.com/about/careers|careers\.google\.com", re.I)
 
 
 def cmd_queue(args) -> int:
@@ -531,6 +541,10 @@ def cmd_queue(args) -> int:
             per_company[company_key(j.company)] = per_company.get(company_key(j.company), 0) + 1
     changed = False
     for j in sorted((j for j in state.jobs.values() if j.status == "scored"), key=lambda j: queue_order(j, now)):
+        if NEEDS_YOU.search(j.apply_url or j.url):
+            state.set_status(j, "manual", "Google Careers needs you to sign in with your own Google account")
+            changed = True
+            continue
         key = company_key(j.company)
         if cap is not None and per_company.get(key, 0) >= cap:
             state.set_status(j, "skipped", f"already {per_company[key]} applications to {j.company} in the last "

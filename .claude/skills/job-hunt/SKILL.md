@@ -173,6 +173,10 @@ posting states; with no range in the posting, record `manual`.
   `saved_account_for_this_site: true` means the vault has a login here: use "Sign in", not
   "Create account"; the vault fills the saved password. If an account already exists for the
   e-mail ("account already exists", "email in use"), sign in: the vault holds your own password.
+  If signing in is rejected once, do not keep guessing: use "Forgot password", get the reset
+  link with `jobagent web link --match <site>`, and set the new password (the vault fills it).
+  If that fails too, record `manual`. Don't spend many steps on one stuck field either: after
+  two failed attempts on the same field, record `manual` naming it.
   When two buttons share a label (Workday: a "Sign In" link in the header and the "Sign In"
   button of the form), the second is listed as "Sign In (form)"; buttons may also carry their
   Workday `id` (e.g. `signInSubmitButton`, `createAccountSubmitButton`) to tell them apart.

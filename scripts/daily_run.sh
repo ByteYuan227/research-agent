@@ -15,7 +15,8 @@
 set -uo pipefail
 
 MAX_MINUTES="${JOBAGENT_MAX_MINUTES:-300}"      # stop starting new applications after this
-APPLY_TIMEOUT="${JOBAGENT_APPLY_TIMEOUT:-25}"   # minutes allowed per application
+APPLY_TIMEOUT="${JOBAGENT_APPLY_TIMEOUT:-15}"   # minutes allowed per application
+APPLY_TURNS="${JOBAGENT_APPLY_TURNS:-80}"       # Claude turns allowed per application (a stuck form stops costing tokens)
 LOG_DIR="${JOBAGENT_HOME:-$HOME/.jobagent}/logs"
 mkdir -p "$LOG_DIR"
 START=$(date +%s)
@@ -29,7 +30,7 @@ ARGS=(--permission-mode dontAsk --tools "Bash,Read,Write,Edit,Glob,Grep"
 # (score >= JOBAGENT_TOP_SCORE), where the writing matters most. If Opus runs out of quota,
 # the rest of the day continues on Sonnet. JOBAGENT_CLAUDE_MODEL, if set, is used for everything.
 BASE_MODEL="${JOBAGENT_CLAUDE_MODEL:-sonnet}"
-TOP_MODEL="${JOBAGENT_CLAUDE_MODEL:-${JOBAGENT_MODEL_TOP:-opus}}"
+TOP_MODEL="${JOBAGENT_CLAUDE_MODEL:-${JOBAGENT_MODEL_TOP:-sonnet}}"  # set JOBAGENT_MODEL_TOP=opus for the best matches
 TOP_SCORE="${JOBAGENT_TOP_SCORE:-85}"
 TOP_OFF=""
 DRY=""
@@ -77,7 +78,7 @@ if [ -n "${JOBAGENT_ONLY_JOB:-}" ]; then
   score=$(jobagent queue --scores | awk -v id="$JOBAGENT_ONLY_JOB" '$1 == id {print $2}')
   model="$BASE_MODEL"
   if [ "${score:-0}" -ge "$TOP_SCORE" ]; then model="$TOP_MODEL"; fi
-  run_claude "apply-1" 150 "$APPLY_TIMEOUT" "$model" "Mode APPLY of the job-hunt skill ($SKILL) for job $JOBAGENT_ONLY_JOB: read the skill first, then tailor the resume and apply."
+  run_claude "apply-1" "$APPLY_TURNS" "$APPLY_TIMEOUT" "$model" "Mode APPLY of the job-hunt skill ($SKILL) for job $JOBAGENT_ONLY_JOB: read the skill first, then tailor the resume and apply."
   status=$?
   jobagent settle "$JOBAGENT_ONLY_JOB" --stopped "$STOP" --exit "$status" > /dev/null
   jobagent web close > /dev/null 2>&1 || true
@@ -120,7 +121,7 @@ if [ -z "$STOP" ]; then
     prompt="Mode APPLY of the job-hunt skill ($SKILL) for job $id: read the skill first, then tailor the resume and apply."
     model="$BASE_MODEL"
     if [ -z "$TOP_OFF" ] && [ "${score:-0}" -ge "$TOP_SCORE" ]; then model="$TOP_MODEL"; fi
-    run_claude "$name" 150 "$APPLY_TIMEOUT" "$model" "$prompt"
+    run_claude "$name" "$APPLY_TURNS" "$APPLY_TIMEOUT" "$model" "$prompt"
     status=$?
     if [ "$STOP" = quota ] && [ "$model" != "$BASE_MODEL" ]; then
       # The stronger model's limit ran out: the rest of the day continues on the base model.
@@ -130,7 +131,7 @@ if [ -z "$STOP" ]; then
       jobagent note "⚡ $model 的额度用完了，之后的岗位改用 $BASE_MODEL 继续投递。" > /dev/null
       jobagent web close > /dev/null 2>&1 || true
       if jobagent settle "$id" --stopped quota --exit "$status" | grep -q '"status": "scored"'; then
-        run_claude "$name-retry" 150 "$APPLY_TIMEOUT" "$BASE_MODEL" "$prompt"
+        run_claude "$name-retry" "$APPLY_TURNS" "$APPLY_TIMEOUT" "$BASE_MODEL" "$prompt"
         status=$?
       fi
     fi
