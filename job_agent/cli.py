@@ -519,6 +519,29 @@ def queue_order(job: Job, now: float) -> tuple[int, float]:
 # Postings whose application needs something only you can do (sign in with your own Google account).
 NEEDS_YOU = re.compile(r"(^|\.)google\.com/about/careers|careers\.google\.com", re.I)
 
+# Sites where every automated attempt so far ended in the manual list: they go there straight away,
+# without spending a Claude session. JOBAGENT_TRY_ALL_SITES=1 tries them anyway.
+LEFT_TO_YOU = (
+    (re.compile(r"icims\.com", re.I), "iCIMS: hCaptcha at sign-in and the posting sits in an unreadable frame"),
+    (re.compile(r"smartrecruiters\.com", re.I), "SmartRecruiters: the application page renders blank in the automated browser"),
+    (re.compile(r"amazon\.jobs", re.I), "amazon.jobs: Apply needs your own Amazon jobs account"),
+    (re.compile(r"lifeattiktok\.com|jobs\.bytedance\.com", re.I), "TikTok/ByteDance: Apply needs your own account"),
+    (re.compile(r"dayforcehcm\.com", re.I), "Dayforce: the Confirm Email field rejects automated input"),
+)
+
+# Workday takes the longest and has not completed an application yet: only a few per run.
+WORKDAY_PER_RUN = 3
+
+
+def left_to_you(url: str) -> str | None:
+    import os
+
+    if os.environ.get("JOBAGENT_TRY_ALL_SITES") == "1":
+        return None
+    if NEEDS_YOU.search(url):
+        return "Google Careers needs you to sign in with your own Google account"
+    return next((why for pattern, why in LEFT_TO_YOU if pattern.search(url)), None)
+
 
 def cmd_queue(args) -> int:
     """Job ids waiting to be applied to, best first (one per line, for scripts).
@@ -539,12 +562,20 @@ def cmd_queue(args) -> int:
             j.status == "manual" and j.updated_at >= since
         if recent:
             per_company[company_key(j.company)] = per_company.get(company_key(j.company), 0) + 1
+    import os
+
+    workday_left = int(os.environ.get("JOBAGENT_WORKDAY_PER_RUN") or WORKDAY_PER_RUN)
     changed = False
     for j in sorted((j for j in state.jobs.values() if j.status == "scored"), key=lambda j: queue_order(j, now)):
-        if NEEDS_YOU.search(j.apply_url or j.url):
-            state.set_status(j, "manual", "Google Careers needs you to sign in with your own Google account")
+        why = left_to_you(j.apply_url or j.url)
+        if why:
+            state.set_status(j, "manual", why)
             changed = True
             continue
+        if j.ats == "workday":
+            if workday_left <= 0:
+                continue  # stays in the queue for a later run
+            workday_left -= 1
         key = company_key(j.company)
         if cap is not None and per_company.get(key, 0) >= cap:
             state.set_status(j, "skipped", f"already {per_company[key]} applications to {j.company} in the last "

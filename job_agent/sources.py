@@ -256,7 +256,8 @@ POPULAR_BOARDS = (
         "stripe databricks airbnb pinterest robinhood discord figma coinbase cloudflare datadog mongodb roblox lyft "
         "instacart reddit twitch dropbox asana gitlab duolingo affirm brex samsara verkada scaleai anthropic okta "
         "twilio squarespace janestreet imc point72 chime gusto nuro waymo applovin nextdoor toast elastic pagerduty "
-        "newrelic zscaler ziprecruiter rubrik akunacapital sofi").split()]
+        "newrelic zscaler ziprecruiter rubrik akunacapital sofi braze virtu towerresearchcapital singlestore "
+        "purestorage tanium riotgames gemini flexport faire appian").split()]
     + [("lever", t) for t in "palantir spotify zoox".split()]
     + [("ashby", t) for t in ("openai ramp notion linear replit perplexity cursor elevenlabs supabase cohere "
                               "character harvey sierra decagon").split()]

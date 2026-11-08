@@ -91,7 +91,9 @@ Repository → Settings → Secrets and variables → Actions → **Variables** 
 | `rehearse` | Rehearsal: every application is prepared but nothing is submitted; the report still comes |
 | `off` | Paused: find jobs and report only |
 
-Models: by default Sonnet scores jobs, reads the inbox and handles most applications, and Opus handles the best matches (score 85 and above), where the writing matters most; if Opus runs out of quota, the rest of the day continues on Sonnet. Optional variables: `JOBAGENT_TOP_SCORE` (default `85`), `JOBAGENT_MODEL_TOP` (default `opus`; `sonnet` turns Opus off), or `JOBAGENT_CLAUDE_MODEL` to use one model for everything (e.g. `claude-opus-5-5`). To limit the daily run time (private repositories), add `JOBAGENT_MAX_MINUTES` (default `300`).
+Models: Sonnet does everything by default (no scoring pass: each job gets a JD-tailored resume and goes straight to the application). Optional variables: `JOBAGENT_SCORE=1` to score jobs first, `JOBAGENT_MODEL_TOP=opus` with `JOBAGENT_TOP_SCORE` (default `85`) to use Opus for the best matches, or `JOBAGENT_CLAUDE_MODEL` to use one model for everything. To limit the daily run time (private repositories), add `JOBAGENT_MAX_MINUTES` (default `300`).
+
+Order and token savings: one-step forms (Greenhouse, Lever, Ashby) go first; Workday gets 3 jobs a run (`JOBAGENT_WORKDAY_PER_RUN`). Sites where automated attempts have never completed (iCIMS, SmartRecruiters, amazon.jobs, TikTok/ByteDance, Dayforce, Google Careers) go straight to your apply-by-hand list without spending a Claude session; `JOBAGENT_TRY_ALL_SITES=1` tries them anyway.
 
 ### Your profile: how answers are tailored to you
 
@@ -265,7 +267,9 @@ bash scripts/setup_secrets.sh ~/.jobagent/profile.yaml
 | `rehearse` | 演练：所有申请都准备好但不提交，日报照发 |
 | `off` | 暂停投递：只找岗位、发日报 |
 
-模型：默认打分、读邮箱和大部分投递用 Sonnet，匹配度 85 分以上的好岗位用 Opus（这些岗位最值得把回答写好）；Opus 额度用完后，当天剩下的岗位自动改用 Sonnet 继续。可选变量：`JOBAGENT_TOP_SCORE`（默认 `85`）、`JOBAGENT_MODEL_TOP`（默认 `opus`，设成 `sonnet` 就不用 Opus），或者用 `JOBAGENT_CLAUDE_MODEL` 让所有环节都用同一个模型（例如 `claude-opus-5-5`）。想限制每天运行时长（私有仓库），加变量 `JOBAGENT_MAX_MINUTES`（默认 `300`）。
+模型：默认全部用 Sonnet（不再单独打分：每个岗位按 JD 改好简历后直接投递）。可选变量：`JOBAGENT_SCORE=1` 先打分；`JOBAGENT_MODEL_TOP=opus` 配合 `JOBAGENT_TOP_SCORE`（默认 `85`）让高分岗位用 Opus；或者用 `JOBAGENT_CLAUDE_MODEL` 让所有环节都用同一个模型。想限制每天运行时长（私有仓库），加变量 `JOBAGENT_MAX_MINUTES`（默认 `300`）。
+
+投递顺序和省额度：一步提交的表单（Greenhouse、Lever、Ashby）优先；Workday 每轮只试 3 个（`JOBAGENT_WORKDAY_PER_RUN`）。自动投递从没成功过的网站（iCIMS、SmartRecruiters、amazon.jobs、TikTok/字节、Dayforce、Google Careers）直接进手动投递清单，不消耗 Claude 额度；设 `JOBAGENT_TRY_ALL_SITES=1` 可以照样尝试。
 
 ### 个人资料：怎么让 Agent 按你的情况回答
 

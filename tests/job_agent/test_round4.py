@@ -824,3 +824,28 @@ def test_queue_puts_one_step_forms_first_and_google_to_you(home, capsys):
     cli.main(["queue"])
     assert capsys.readouterr().out.split() == ["gh:1", "wd:1"]
     assert load_state().jobs["g:1"].status == "manual"
+
+
+def test_queue_sends_sites_that_never_complete_to_you_and_caps_workday(home, capsys, monkeypatch):
+    state = State()
+    jobs = [_job(id=f"wd:{i}", ats="workday", score=90 - i, url=f"https://x.wd5.myworkdayjobs.com/{i}",
+                 apply_url=f"https://x.wd5.myworkdayjobs.com/{i}") for i in range(5)]
+    jobs += [_job(id="ic:1", ats="other", url="https://careers-acme.icims.com/jobs/1/job", apply_url="https://careers-acme.icims.com/jobs/1/job"),
+             _job(id="sr:1", ats="smartrecruiters", url="https://jobs.smartrecruiters.com/Acme/1", apply_url="https://jobs.smartrecruiters.com/Acme/1"),
+             _job(id="az:1", ats="other", url="https://www.amazon.jobs/en/jobs/1", apply_url="https://www.amazon.jobs/en/jobs/1"),
+             _job(id="gh:1", ats="greenhouse", score=50)]
+    for j in jobs:
+        state.jobs[j.id] = j
+    save_state(state)
+    capsys.readouterr()
+    cli.main(["queue"])
+    assert capsys.readouterr().out.split() == ["gh:1", "wd:0", "wd:1", "wd:2"]
+    after = load_state().jobs
+    assert {after[i].status for i in ("ic:1", "sr:1", "az:1")} == {"manual"}
+    assert after["wd:4"].status == "scored"  # waits for a later run
+
+    monkeypatch.setenv("JOBAGENT_TRY_ALL_SITES", "1")
+    monkeypatch.setenv("JOBAGENT_WORKDAY_PER_RUN", "10")
+    capsys.readouterr()
+    cli.main(["queue"])
+    assert capsys.readouterr().out.split() == ["gh:1", "wd:0", "wd:1", "wd:2", "wd:3", "wd:4"]
