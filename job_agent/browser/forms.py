@@ -738,6 +738,30 @@ def _click_option(page, key: str, wanted: str, scroll: bool = False) -> bool:
         return False
 
 
+CHOSEN_JS = """(key) => {
+  const el = document.querySelector(`[data-ja-key="${CSS.escape(key)}"]`);
+  const box = el && el.closest("[data-automation-id^='formField']");
+  return !!(box && box.querySelector("[data-automation-id='selectedItem']"));
+}"""
+
+
+def _pick_leaf(page, key: str, wanted: str) -> None:
+    """Workday search-selects nest options ("Job Board" -> "LinkedIn"): clicking a category opens its
+    list instead of choosing it. Go down until something is chosen."""
+    for _ in range(3):
+        page.wait_for_timeout(600)
+        if page.evaluate(CHOSEN_JS, key):
+            return
+        opts = page.evaluate(OPTIONS_JS, key) or []
+        if not opts:
+            return
+        choice = match_option(wanted, opts) or opts[0]
+        try:
+            page.locator(f'[data-ja-opt="{opts.index(choice)}"]').first.click(timeout=3000)
+        except Exception:  # noqa: BLE001
+            return
+
+
 def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
     """Fill one field. Returns an error message, or None on success."""
     kind = field["kind"]
@@ -784,11 +808,19 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
                         # Workday's search-select lists matches only after Enter; it sends no form.
                         el.press("Enter")
                         page.wait_for_timeout(1500)
+                    if field.get("search_on_enter") and not _click_option(page, key, wanted):
+                        # Nothing matched the search: pick from the full list instead (Workday shows
+                        # categories such as "Job Board" after the search is cleared).
+                        el.fill("", timeout=3000)
+                        el.press("Enter")
+                        page.wait_for_timeout(1200)
                     if not _click_option(page, key, wanted) and not (is_place and _click_option(page, key, query)):
                         # Enter picks the highlighted suggestion. With no suggestion showing, Enter in a
                         # form field submits the whole form, so close the menu instead.
                         page.keyboard.press("Enter" if _option_showing(page) else "Escape")
                 page.wait_for_timeout(300)
+                if field.get("search_on_enter"):
+                    _pick_leaf(page, key, wanted)
         elif kind == "listbox":
             wanted = str(value)
             if value in (DECLINE, ACK):

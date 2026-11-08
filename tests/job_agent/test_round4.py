@@ -878,8 +878,9 @@ def test_workday_dropdowns_behind_click_filter_long_lists_and_search(site, profi
     v = web.open_job(state, job, profile)
     keys = {f["label"]: f["key"] for f in v["fields"]}
     r = web.fill(state, profile, {keys["State"]: "Maryland", keys["Phone Device Type"]: "Mobile",
-                                  keys["Field of Study"]: "Computer Science"})
-    assert not r["errors"], r
+                                  keys["Field of Study"]: "Computer Science",
+                                  keys["How Did You Hear About Us?"]: "Online job board"})
+    assert not r["errors"] and not r["value_did_not_stick"], r
     with web.page() as pg:
         assert pg.evaluate("window.chosen") == {"address--countryRegion": "Maryland", "phoneNumber--phoneType": "Mobile",
-                                                "fos": "Computer Science"}
+                                                "fos": "Computer Science", "source": "Indeed"}

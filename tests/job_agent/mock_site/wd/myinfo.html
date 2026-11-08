@@ -28,6 +28,11 @@
   <input id="fos" data-automation-id="searchBox" placeholder="Search">
   <div id="fos-chosen"></div>
 </div>
+<div data-automation-id="formField-source">
+  <label for="src">How Did You Hear About Us?<abbr>*</abbr></label>
+  <ul class="pills"></ul>
+  <div><input id="src" data-automation-id="searchBox" placeholder="Search" aria-required="true"></div>
+</div>
 <script>
   const STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia",
     "Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland",
@@ -71,6 +76,30 @@
         o.addEventListener("click", () => { chosen.fos = t; document.getElementById("fos-chosen").textContent = t; fos.value = ""; close(); });
         box.appendChild(o); });
     fos.parentElement.appendChild(box);
+  });
+  // Nested search-select: categories open a second list; choices become pills in the formField.
+  const TREE = { "Career Fair": [], "Job Board": ["Indeed", "LinkedIn", "Glassdoor"], "Referral": ["Employee"] };
+  const src = document.getElementById("src");
+  function showList(items, onPick) {
+    close();
+    const box = document.createElement("div"); box.className = "popup"; box.setAttribute("data-automation-id", "activeListContainer");
+    items.forEach(t => { const o = document.createElement("div"); o.setAttribute("data-automation-id", "promptOption"); o.textContent = t;
+      o.addEventListener("click", () => onPick(t)); box.appendChild(o); });
+    src.parentElement.appendChild(box);
+  }
+  function pickSource(t) {
+    if (TREE[t] && TREE[t].length) return showList(TREE[t], pickSource);
+    chosen.source = t; close();
+    const li = document.createElement("li"); li.setAttribute("data-automation-id", "selectedItem"); li.textContent = t;
+    document.querySelector(".pills").appendChild(li);
+  }
+  src.addEventListener("click", () => showList(Object.keys(TREE), pickSource));
+  src.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const q = src.value.toLowerCase();
+    const hits = Object.values(TREE).flat().concat(Object.keys(TREE)).filter(t => q && t.toLowerCase().includes(q));
+    showList(q ? hits : Object.keys(TREE), pickSource);
   });
   window.chosen = chosen;
 </script>

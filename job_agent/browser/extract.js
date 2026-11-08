@@ -382,7 +382,10 @@
         if (filled) shown = textOf(el);
         break;
       case "combobox": {
-        const box = el.closest(".select__container, .select-shell, [data-field-path], .field-wrapper") || el.parentElement;
+        // Workday search-selects show their choices as pills elsewhere in the question's formField.
+        const box = el.closest(".select__container, .select-shell, [data-field-path], .field-wrapper") ||
+          (el.getAttribute("data-automation-id") === "searchBox" && el.closest("[data-automation-id^='formField']")) ||
+          el.parentElement;
         const chosen = box && box.querySelector("[class*='single-value' i], [class*='singleValue' i], [class*='multi-value' i], [data-automation-id='selectedItem']");
         filled = !!((el.value && el.value.trim()) || (chosen && textOf(chosen)));
         if (filled) shown = (chosen && textOf(chosen)) || clean(el.value);
