@@ -6,12 +6,13 @@
 name: job-hunt
 
 on:
-  schedule:
-    # Cron is UTC. One of these is 19:17 in New York depending on daylight
-    # saving; the gate below lets only that one through, so the report lands
-    # in the evening Eastern time all year.
-    - cron: "17 23 * * *"
-    - cron: "17 0 * * *"
+  # Paused: the daily schedule is off. To resume, uncomment these lines.
+  # schedule:
+  #   # Cron is UTC. One of these is 19:17 in New York depending on daylight
+  #   # saving; the gate below lets only that one through, so the report lands
+  #   # in the evening Eastern time all year.
+  #   - cron: "17 23 * * *"
+  #   - cron: "17 0 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
