@@ -319,6 +319,7 @@
       f.multiple = el.multiple;
     }
     if (kind === "combobox") f.multiple = /\[\]$/.test(el.name || el.id || "");
+    if (kind === "combobox" && el.getAttribute("data-automation-id") === "searchBox") f.search_on_enter = true;
     if (kind === "file") f.accept = el.getAttribute("accept") || "";
     addField(f, el);
   }

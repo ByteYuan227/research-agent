@@ -868,3 +868,18 @@ def test_workday_hidden_resume_input_is_listed_and_uploaded(site, profile, brows
     assert all(f.get("suggested") == pdf.name for f in files), files
     r = web.fill(state, profile, {files[0]["key"]: "resume"})
     assert files[0]["key"] in r["filled"] and not r["errors"] and not r["value_did_not_stick"], r
+
+
+@needs_browser
+def test_workday_dropdowns_behind_click_filter_long_lists_and_search(site, profile, browser):  # noqa: F811
+    job = _wd_job(site, "myinfo.html")
+    state = State()
+    state.jobs[job.id] = job
+    v = web.open_job(state, job, profile)
+    keys = {f["label"]: f["key"] for f in v["fields"]}
+    r = web.fill(state, profile, {keys["State"]: "Maryland", keys["Phone Device Type"]: "Mobile",
+                                  keys["Field of Study"]: "Computer Science"})
+    assert not r["errors"], r
+    with web.page() as pg:
+        assert pg.evaluate("window.chosen") == {"address--countryRegion": "Maryland", "phoneNumber--phoneType": "Mobile",
+                                                "fos": "Computer Science"}

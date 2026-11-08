@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Mock Corp - My Information</title>
+<style>
+  .wrap { position: relative; display: inline-block; }
+  .click_filter { position: absolute; inset: 0; }
+  .popup { position: absolute; background: #fff; border: 1px solid #999; max-height: 160px; overflow-y: auto; width: 220px; }
+  .popup li { height: 30px; list-style: none; }
+</style></head>
+<body>
+<h2>My Information</h2>
+<div data-automation-id="formField-state">
+  <label id="state-label">State<abbr>*</abbr></label>
+  <div class="wrap">
+    <button type="button" aria-haspopup="listbox" id="address--countryRegion" aria-labelledby="state-label" aria-required="true">Select One</button>
+    <div class="click_filter" data-automation-id="click_filter" data-for="address--countryRegion"></div>
+  </div>
+</div>
+<div data-automation-id="formField-phoneType">
+  <label id="phone-label">Phone Device Type<abbr>*</abbr></label>
+  <div class="wrap">
+    <button type="button" aria-haspopup="listbox" id="phoneNumber--phoneType" aria-labelledby="phone-label" aria-required="true">Select One</button>
+    <div class="click_filter" data-automation-id="click_filter" data-for="phoneNumber--phoneType"></div>
+  </div>
+</div>
+<div data-automation-id="formField-fieldOfStudy">
+  <label for="fos">Field of Study</label>
+  <input id="fos" data-automation-id="searchBox" placeholder="Search">
+  <div id="fos-chosen"></div>
+</div>
+<script>
+  const STATES = ["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia",
+    "Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland",
+    "Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey",
+    "New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island",
+    "South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
+  const OPTIONS = { "address--countryRegion": STATES, "phoneNumber--phoneType": ["Home", "Mobile", "Work"] };
+  const chosen = {};
+  function close() { document.querySelectorAll(".popup").forEach(p => p.remove()); }
+  function open(btn) {
+    close();
+    const all = OPTIONS[btn.id];
+    const ul = document.createElement("ul");
+    ul.className = "popup"; ul.setAttribute("role", "listbox"); ul.setAttribute("data-automation-id", "activeListContainer");
+    const r = btn.getBoundingClientRect();
+    ul.style.left = r.left + "px"; ul.style.top = (r.bottom + window.scrollY) + "px";
+    const render = () => {  // virtualized: only the rows in view exist
+      const first = Math.floor(ul.scrollTop / 30);
+      ul.innerHTML = "";
+      const top = document.createElement("div"); top.style.height = (first * 30) + "px"; ul.appendChild(top);
+      all.slice(first, first + 7).forEach(t => {
+        const li = document.createElement("li"); li.setAttribute("role", "option"); li.textContent = t;
+        li.addEventListener("click", () => { chosen[btn.id] = t; btn.textContent = t; close(); });
+        ul.appendChild(li);
+      });
+      const rest = document.createElement("div"); rest.style.height = Math.max(0, (all.length - first - 7) * 30) + "px"; ul.appendChild(rest);
+    };
+    ul.addEventListener("scroll", render);
+    document.body.appendChild(ul);
+    render();
+  }
+  // Workday's click_filter layer sits on top of the button and takes the clicks.
+  document.querySelectorAll(".click_filter").forEach(f => f.addEventListener("click", () => open(document.getElementById(f.dataset.for))));
+  const fos = document.getElementById("fos");
+  fos.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault(); close();
+    const box = document.createElement("div"); box.className = "popup"; box.setAttribute("data-automation-id", "activeListContainer");
+    ["Computer Science", "Computer Engineering", "Information Science"].filter(t => t.toLowerCase().includes(fos.value.toLowerCase().split(" ")[0]))
+      .forEach(t => { const o = document.createElement("div"); o.setAttribute("data-automation-id", "promptOption"); o.textContent = t;
+        o.addEventListener("click", () => { chosen.fos = t; document.getElementById("fos-chosen").textContent = t; fos.value = ""; close(); });
+        box.appendChild(o); });
+    fos.parentElement.appendChild(box);
+  });
+  window.chosen = chosen;
+</script>
+</body>
+</html>

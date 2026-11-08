@@ -679,7 +679,7 @@ def combobox_options(page, key: str, limit: int = 80) -> list[str]:
     el = locate(page, key)
     try:
         el.scroll_into_view_if_needed(timeout=3000)
-        el.click(timeout=4000)
+        _press(el)
         page.wait_for_timeout(500)
         opts = page.evaluate(OPTIONS_JS, key) or []
         if not opts:
@@ -693,10 +693,42 @@ def combobox_options(page, key: str, limit: int = 80) -> list[str]:
         return []
 
 
-def _click_option(page, key: str, wanted: str) -> bool:
+def _press(el) -> None:
+    """Open a dropdown, coping with overlays that swallow pointer events (Workday's click_filter layer)."""
+    try:
+        el.click(timeout=1500)
+        return
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        el.click(timeout=3000, force=True)
+    except Exception:  # noqa: BLE001
+        el.evaluate("e => e.click()")
+
+
+SCROLL_LIST_JS = """() => {
+  // Scroll the open option list one page down (long lists such as US states render only part of
+  // their options). Returns false at the end of the list.
+  const lists = Array.from(document.querySelectorAll("[role=listbox], [data-automation-id='activeListContainer']"))
+    .filter(l => l.scrollHeight > l.clientHeight + 2);
+  if (!lists.length) return false;
+  const l = lists[lists.length - 1];
+  const before = l.scrollTop;
+  l.scrollTop = before + Math.max(l.clientHeight - 20, 40);
+  return l.scrollTop > before;
+}"""
+
+
+def _click_option(page, key: str, wanted: str, scroll: bool = False) -> bool:
     """Click the option of field `key`'s open dropdown that best matches `wanted`."""
     opts = page.evaluate(OPTIONS_JS, key) or []
     choice = match_option(wanted, opts) if opts else None
+    for _ in range(25 if scroll and opts else 0):
+        if choice is not None or not page.evaluate(SCROLL_LIST_JS):
+            break
+        page.wait_for_timeout(150)
+        opts = page.evaluate(OPTIONS_JS, key) or []
+        choice = match_option(wanted, opts) if opts else None
     if choice is None:
         return False
     try:
@@ -742,12 +774,16 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
                     if not wanted:
                         return f"no option for {v}"
                 el.scroll_into_view_if_needed(timeout=3000)
-                el.click(timeout=4000)
+                _press(el)
                 page.wait_for_timeout(300)
                 if not _click_option(page, key, wanted):
                     query = wanted.split(",")[0] if is_place else wanted
                     el.fill(query[:60], timeout=3000)
                     page.wait_for_timeout(2000 if is_place else 900)  # place search hits a remote API
+                    if field.get("search_on_enter") and not _click_option(page, key, wanted):
+                        # Workday's search-select lists matches only after Enter; it sends no form.
+                        el.press("Enter")
+                        page.wait_for_timeout(1500)
                     if not _click_option(page, key, wanted) and not (is_place and _click_option(page, key, query)):
                         # Enter picks the highlighted suggestion. With no suggestion showing, Enter in a
                         # form field submits the whole form, so close the menu instead.
@@ -761,9 +797,9 @@ def fill_field(page, field: dict[str, Any], value: Any) -> str | None:
                 if not wanted:
                     return f"no option for {value}"
             el.scroll_into_view_if_needed(timeout=3000)
-            el.click(timeout=4000)
+            _press(el)
             page.wait_for_timeout(500)
-            if not _click_option(page, key, wanted):
+            if not _click_option(page, key, wanted, scroll=True):
                 page.keyboard.type(wanted[:30])
                 page.wait_for_timeout(500)
                 if not _click_option(page, key, wanted):
