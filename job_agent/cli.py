@@ -529,8 +529,8 @@ LEFT_TO_YOU = (
     (re.compile(r"dayforcehcm\.com", re.I), "Dayforce: the Confirm Email field rejects automated input"),
 )
 
-# Workday takes the longest and has not completed an application yet: only a few per run.
-WORKDAY_PER_RUN = 3
+# Workday takes the longest per application: a limited number per run.
+WORKDAY_PER_RUN = 10
 
 
 def left_to_you(url: str) -> str | None:

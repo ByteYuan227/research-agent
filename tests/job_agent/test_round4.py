@@ -827,6 +827,7 @@ def test_queue_puts_one_step_forms_first_and_google_to_you(home, capsys):
 
 
 def test_queue_sends_sites_that_never_complete_to_you_and_caps_workday(home, capsys, monkeypatch):
+    monkeypatch.setenv("JOBAGENT_WORKDAY_PER_RUN", "3")
     state = State()
     jobs = [_job(id=f"wd:{i}", ats="workday", score=90 - i, url=f"https://x.wd5.myworkdayjobs.com/{i}",
                  apply_url=f"https://x.wd5.myworkdayjobs.com/{i}") for i in range(5)]
@@ -849,3 +850,21 @@ def test_queue_sends_sites_that_never_complete_to_you_and_caps_workday(home, cap
     capsys.readouterr()
     cli.main(["queue"])
     assert capsys.readouterr().out.split() == ["gh:1", "wd:0", "wd:1", "wd:2", "wd:3", "wd:4"]
+
+
+@needs_browser
+def test_workday_hidden_resume_input_is_listed_and_uploaded(site, profile, browser):  # noqa: F811
+    from job_agent.apply import resume_path
+
+    job = _wd_job(site, "experience.html")
+    state = State()
+    state.jobs[job.id] = job
+    pdf = resume_path(job, profile)
+    pdf.parent.mkdir(parents=True, exist_ok=True)
+    pdf.write_bytes(b"%PDF-1.4 resume")
+    v = web.open_job(state, job, profile)
+    files = [f for f in v["fields"] if f["kind"] == "file"]
+    assert [f["label"] for f in files] == ["Resume/CV", "Resume/CV"], files
+    assert all(f.get("suggested") == pdf.name for f in files), files
+    r = web.fill(state, profile, {files[0]["key"]: "resume"})
+    assert files[0]["key"] in r["filled"] and not r["errors"] and not r["value_did_not_stick"], r

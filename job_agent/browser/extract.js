@@ -81,6 +81,19 @@
     return "";
   }
 
+  function fileSectionTitle(el) {
+    const HEAD = "h1, h2, h3, h4, h5, legend, label, [data-automation-id*='Heading' i], [data-automation-id*='title' i]";
+    let node = el.parentElement;
+    for (let depth = 0; node && depth < 8; depth++, node = node.parentElement) {
+      for (const h of node.querySelectorAll(HEAD)) {
+        if (h.contains(el)) continue;
+        const t = textOf(h);
+        if (t && t.length < 80 && /resume|\bcv\b|cover letter|attach|document/i.test(t)) return t;
+      }
+    }
+    return el.getAttribute("data-automation-id") === "file-upload-input-ref" ? "Resume/CV" : "";
+  }
+
   function description(container, el) {
     const parts = [];
     const ids = (el && el.getAttribute("aria-describedby")) || "";
@@ -270,6 +283,8 @@
     // Unlabelled, unfocusable inputs are validation helpers of custom widgets (react-select).
     if (type !== "file" && el.getAttribute("role") !== "combobox" && (el.getAttribute("aria-hidden") === "true" ||
         (el.getAttribute("tabindex") === "-1" && !label))) continue;
+    // Workday's hidden "Select files" input has no label: name it after its section ("Resume/CV").
+    if (type === "file" && !label) label = fileSectionTitle(el);
     if (type === "file") {
       // Ashby's "autofill from resume" helper re-parses the resume and overwrites answers.
       const around = textOf(el.closest("div") && el.closest("div").parentElement);
