@@ -12,9 +12,8 @@ import os
 import tarfile
 from pathlib import Path
 
-from cryptography.fernet import Fernet
-
 from .profile import jobagent_home
+from .store import seal, unseal
 
 KINDS = ("transcript",)
 SUFFIXES = (".pdf",)
@@ -48,13 +47,6 @@ def add(kind: str, src: Path) -> Path:
     return dst
 
 
-def _fernet(key: str | None = None) -> Fernet:
-    key = key or os.environ.get("JOBAGENT_STATE_KEY")
-    if not key:
-        raise RuntimeError("JOBAGENT_STATE_KEY is not set")
-    return Fernet(key.encode())
-
-
 def export(out: Path, key: str | None = None) -> dict[str, int]:
     """Encrypt every document into one file. Nothing is written when there are none."""
     docs = available()
@@ -65,12 +57,12 @@ def export(out: Path, key: str | None = None) -> dict[str, int]:
         for p in docs.values():
             tar.add(p, arcname=p.name)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes(_fernet(key).encrypt(buf.getvalue()))
+    out.write_bytes(seal(buf.getvalue(), key))
     return {"documents": len(docs)}
 
 
 def restore(src: Path, key: str | None = None) -> dict[str, int]:
-    data = _fernet(key).decrypt(src.read_bytes())
+    data = unseal(src.read_bytes(), key)
     doc_dir().mkdir(parents=True, exist_ok=True)
     n = 0
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar:

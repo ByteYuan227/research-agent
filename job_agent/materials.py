@@ -76,18 +76,18 @@ def build_zip(state: State) -> tuple[bytes, int]:
 
 
 def export(state: State, path: Path) -> dict[str, Any]:
-    from .store import _fernet
+    from .store import seal, unseal
 
     data, count = build_zip(state)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(_fernet().encrypt(data))
+    path.write_bytes(seal(data))
     return {"jobs": count, "bytes": len(data), "file": str(path)}
 
 
 def unpack(path: Path, out: Path) -> dict[str, Any]:
-    from .store import _fernet
+    from .store import seal, unseal
 
-    data = _fernet().decrypt(path.read_bytes())
+    data = unseal(path.read_bytes())
     out.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(io.BytesIO(data)) as zf:
         for name in zf.namelist():
@@ -104,11 +104,11 @@ def restore(state: State, path: Path) -> dict[str, Any]:
     """Put files from an earlier bundle back into each job's work folder, so older
     apply-by-hand jobs keep their materials across runs on throwaway CI machines."""
     from .apply import work_dir
-    from .store import _fernet
+    from .store import seal, unseal
 
     if not path.exists():
         return {"restored": 0}
-    with zipfile.ZipFile(io.BytesIO(_fernet().decrypt(path.read_bytes()))) as zf:
+    with zipfile.ZipFile(io.BytesIO(unseal(path.read_bytes()))) as zf:
         try:
             manifest = json.loads(zf.read("manifest.json"))
         except KeyError:

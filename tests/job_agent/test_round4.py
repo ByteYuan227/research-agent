@@ -884,3 +884,24 @@ def test_workday_dropdowns_behind_click_filter_long_lists_and_search(site, profi
     with web.page() as pg:
         assert pg.evaluate("window.chosen") == {"address--countryRegion": "Maryland", "phoneNumber--phoneType": "Mobile",
                                                 "fos": "Computer Science", "source": "Indeed"}
+
+
+def test_encrypted_files_are_binary_and_old_text_files_still_open(home, tmp_path, monkeypatch):
+    from cryptography.fernet import Fernet
+
+    from job_agent.store import decrypt_file, encrypt_file
+
+    key = Fernet.generate_key().decode()
+    monkeypatch.setenv("JOBAGENT_STATE_KEY", key)
+    src = tmp_path / "state.json"
+    src.write_text('{"jobs": {}}')
+    enc = tmp_path / "state.enc"
+    encrypt_file(src, enc)
+    raw = enc.read_bytes()
+    assert raw.startswith(b"JAB1") and not raw[4:].isascii()  # raw bytes, not base64 text
+    out = tmp_path / "out.json"
+    decrypt_file(enc, out)
+    assert out.read_text() == '{"jobs": {}}'
+    (tmp_path / "old.enc").write_bytes(Fernet(key.encode()).encrypt(b'{"old": 1}'))  # earlier runs
+    decrypt_file(tmp_path / "old.enc", out)
+    assert out.read_text() == '{"old": 1}'

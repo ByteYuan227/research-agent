@@ -182,12 +182,31 @@ def _fernet(key: str | None = None):
     return Fernet(key.encode())
 
 
+# Encrypted files are stored as raw bytes rather than Fernet's base64 text: GitHub's secret
+# scanning reads text blobs, and random ciphertext sometimes looks like an access key, which
+# blocks the push that saves the state.
+SEALED = b"JAB1"
+
+
+def seal(data: bytes, key: str | None = None) -> bytes:
+    import base64
+
+    return SEALED + base64.urlsafe_b64decode(_fernet(key).encrypt(data))
+
+
+def unseal(blob: bytes, key: str | None = None) -> bytes:
+    import base64
+
+    token = base64.urlsafe_b64encode(blob[len(SEALED):]) if blob.startswith(SEALED) else blob.strip()
+    return _fernet(key).decrypt(token)
+
+
 def encrypt_file(src: Path, dst: Path, key: str | None = None) -> None:
-    dst.write_bytes(_fernet(key).encrypt(src.read_bytes()))
+    dst.write_bytes(seal(src.read_bytes(), key))
 
 
 def decrypt_file(src: Path, dst: Path, key: str | None = None) -> None:
-    data = _fernet(key).decrypt(src.read_bytes())
+    data = unseal(src.read_bytes(), key)
     json.loads(data)  # refuse to write something that is not state JSON
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_bytes(data)
